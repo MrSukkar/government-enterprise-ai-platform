@@ -1,13 +1,13 @@
 # Project Status
 
-Status: **Phase 08 complete — Organization Knowledge Engine**
+Status: **Phase 09 complete — Institutional Package Registry**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
-- Current implementation phase: **Phase 08 complete**
-- Completed phases: **01 — Product Constitution** through **08 — Organization Knowledge Engine**
-- Phase 08 artifacts: `docs/phase-08/ORGANIZATION_KNOWLEDGE_ENGINE.md`, `docs/phase-08/PHASE_08_ACCEPTANCE.md`
-- Next permitted phase: **Phase 09 — Institutional Package Registry**
+- Current implementation phase: **Phase 09 complete**
+- Completed phases: **01 — Product Constitution** through **09 — Institutional Package Registry**
+- Phase 09 artifacts: `docs/phase-09/INSTITUTIONAL_PACKAGE_REGISTRY.md`, `docs/phase-09/PHASE_09_ACCEPTANCE.md`
+- Next permitted phase: **Phase 10 — Software Factory Engine**
 - Business/domain implementation: **None**
 
-The platform foundations, Enterprise Model base, and authorized knowledge retrieval pipeline are implemented. Delivery, operations, governance, and evidence capabilities remain in their approved future phases.
+The platform foundations, Enterprise Model, authorized knowledge retrieval, and institutional package registry are implemented. Delivery execution, operations, governance, and evidence capabilities remain in their approved future phases.

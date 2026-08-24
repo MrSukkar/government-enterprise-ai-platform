@@ -81,6 +81,19 @@ if ($phaseNumber -ge 8) {
     }
 }
 
+if ($phaseNumber -ge 9) {
+    $packagePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Packages\InstitutionalPackage.cs'
+    $eligibilityPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Packages\PackageEligibilityEvaluator.cs'
+    if (-not (Test-Path -LiteralPath $packagePath) -or -not (Test-Path -LiteralPath $eligibilityPath)) {
+        throw 'Institutional package registry artifacts are missing.'
+    }
+
+    $eligibility = Get-Content -LiteralPath $eligibilityPath -Raw
+    @('coordinate_mismatch', 'tenant_denied', 'environment_denied', 'sovereign_copy_required', 'approval_required', 'approval_expired') | ForEach-Object {
+        if ($eligibility -notmatch [regex]::Escape($_)) { throw "Package eligibility guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
