@@ -25,9 +25,20 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Seed verified WebAssembly SDK package
+        shell: pwsh
+        run: |
+          $packageName = 'microsoft.net.sdk.webassembly.pack.10.0.11.nupkg'
+          $packageUri = "https://api.nuget.org/v3-flatcontainer/microsoft.net.sdk.webassembly.pack/10.0.11/$packageName"
+          $expectedHash = '85+k2Ip7IfgFzROWQY9fidchrk4NE/nNXW0BSJAB97hlA4sDFgQsl6tpLOr3phEYN6fHkxFMSmhxDACMe2d6LA=='
+          New-Item -ItemType Directory -Force .\.nuget\source | Out-Null
+          Invoke-WebRequest -Uri $packageUri -OutFile ".\.nuget\source\$packageName"
+          $actualHash = [Convert]::ToBase64String([Security.Cryptography.SHA512]::HashData([IO.File]::ReadAllBytes(".\.nuget\source\$packageName")))
+          if ($actualHash -ne $expectedHash) { throw "WebAssembly SDK package hash mismatch." }
+
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache
+        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --source .\.nuget\source --source https://api.nuget.org/v3/index.json
 
       - name: Verify and build
         shell: pwsh
