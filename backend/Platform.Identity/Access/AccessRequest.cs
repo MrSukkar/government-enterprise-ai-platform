@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Platform.Domain.Security;
 
 namespace Platform.Identity.Access;
 

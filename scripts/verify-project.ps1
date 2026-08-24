@@ -50,6 +50,24 @@ if ($phaseNumber -ge 6) {
     }
 }
 
+if ($phaseNumber -ge 7) {
+    $enterpriseObjectPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Model\EnterpriseObject.cs'
+    $relationshipStatePath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Model\RelationshipKnowledgeState.cs'
+    if (-not (Test-Path -LiteralPath $enterpriseObjectPath) -or -not (Test-Path -LiteralPath $relationshipStatePath)) {
+        throw 'Enterprise Model base artifacts are missing.'
+    }
+
+    $enterpriseObject = Get-Content -LiteralPath $enterpriseObjectPath -Raw
+    @('Id', 'Type', 'State', 'OwnerId', 'Classification', 'Relationships', 'PolicyReferences', 'PermittedActions', 'Source', 'Confidence', 'EvidenceReferences', 'Lifecycle', 'CreatedAt', 'UpdatedAt') | ForEach-Object {
+        if ($enterpriseObject -notmatch "\b$($_)\b") { throw "Enterprise Object is missing required field '$($_)'." }
+    }
+
+    $relationshipState = Get-Content -LiteralPath $relationshipStatePath -Raw
+    @('Confirmed', 'Discovered', 'Inferred', 'Unknown') | ForEach-Object {
+        if ($relationshipState -notmatch "\b$($_)\b") { throw "Missing relationship state '$($_)'." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

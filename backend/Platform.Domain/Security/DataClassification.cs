@@ -1,4 +1,4 @@
-namespace Platform.Identity.Access;
+namespace Platform.Domain.Security;
 
 public enum DataClassification
 {
