@@ -1,2 +1,3 @@
-# government-enterprise-ai-platform
-Government Enterprise AI Platform — implementation aligned with PROJECT MASTER SPECIFICATION v2.
+# Government Enterprise AI Platform
+
+Open `GovernmentEnterpriseAIPlatform.sln` in Visual Studio 2022. This repository is an approved scaffold only; implementation phases have not started.
