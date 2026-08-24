@@ -48,6 +48,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		docs\phase-02\UX_AND_ROLES.md = docs\phase-02\UX_AND_ROLES.md
 		docs\phase-02\PERSONA_ACCESS_MATRIX.md = docs\phase-02\PERSONA_ACCESS_MATRIX.md
 		docs\phase-02\PHASE_02_ACCEPTANCE.md = docs\phase-02\PHASE_02_ACCEPTANCE.md
+		AGENTS.md = AGENTS.md
+		project-os\README.md = project-os\README.md
+		project-os\project-state.json = project-os\project-state.json
+		docs\REMOTE_WORKFLOW.md = docs\REMOTE_WORKFLOW.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project OS", "Project OS", "{2B478A5C-4CE0-4D1D-AF23-E4327092045D}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\show-project-state.ps1 = scripts\show-project-state.ps1
+		scripts\verify-project.ps1 = scripts\verify-project.ps1
 	EndProjectSection
 EndProject
 Global
