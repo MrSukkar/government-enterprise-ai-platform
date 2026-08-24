@@ -49,7 +49,11 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --configfile .\.nuget\NuGet.Config
+        run: |
+          dotnet restore .\frontend\Platform.Web\Platform.Web.csproj --force-evaluate --use-lock-file --packages .\.nuget\packages --no-http-cache --configfile .\.nuget\NuGet.Config
+          $lock = Get-Content .\frontend\Platform.Web\packages.lock.json -Raw | ConvertFrom-Json
+          $resolvedHash = $lock.dependencies.'net10.0'.'Microsoft.NET.Sdk.WebAssembly.Pack'.contentHash
+          throw "Resolved WebAssembly SDK lock hash: $resolvedHash"
 
       - name: Verify and build
         shell: pwsh
