@@ -15,6 +15,10 @@
     <ProjectReference Include="..\Platform.SoftwareFactory\Platform.SoftwareFactory.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Contracts\openapi.v1.json" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

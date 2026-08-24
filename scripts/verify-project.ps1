@@ -33,6 +33,23 @@ if ($projectCount -ne 15) {
     throw "Expected 15 projects, found $projectCount."
 }
 
+if ($phaseNumber -ge 6) {
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    if (-not (Test-Path -LiteralPath $openApiPath)) {
+        throw "Missing approved OpenAPI contract: $openApiPath"
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw | ConvertFrom-Json
+    if ($openApi.openapi -ne '3.1.0') {
+        throw "Expected OpenAPI 3.1.0, found '$($openApi.openapi)'."
+    }
+
+    $operationIds = @($openApi.paths.PSObject.Properties.Value.PSObject.Properties.Value.operationId | Where-Object { $_ })
+    if (($operationIds | Sort-Object -Unique).Count -ne $operationIds.Count) {
+        throw 'OpenAPI operationId values must be unique.'
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
@@ -41,4 +58,3 @@ if (-not $NoBuild) {
 }
 
 Write-Output ('VERIFIED: Phase {0:D2}, {1} projects, acceptance satisfied.' -f $phaseNumber, $projectCount)
-

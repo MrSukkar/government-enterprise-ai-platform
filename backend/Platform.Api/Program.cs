@@ -1,5 +1,6 @@
 using Platform.AgenticWork;
 using Platform.Api.Composition;
+using Platform.Api.Contracts;
 using Platform.EnterpriseModel;
 using Platform.Evidence;
 using Platform.Governance;
@@ -41,6 +42,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
+app.MapApprovedOpenApiContract();
 
 app.Run();
 
