@@ -143,6 +143,23 @@ if ($phaseNumber -ge 12) {
     }
 }
 
+if ($phaseNumber -ge 13) {
+    $workflowPath = Join-Path $repositoryRoot '.github\workflows\ci.yml'
+    $sbomScriptPath = Join-Path $repositoryRoot 'scripts\generate-sbom.ps1'
+    $supplyChainPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SupplyChain\SupplyChainVerificationPipeline.cs'
+    if (-not (Test-Path -LiteralPath $workflowPath) -or -not (Test-Path -LiteralPath $sbomScriptPath) -or -not (Test-Path -LiteralPath $supplyChainPath)) {
+        throw 'CI or supply-chain artifacts are missing.'
+    }
+
+    $lockFileCount = (Get-ChildItem -LiteralPath $repositoryRoot -Recurse -Filter 'packages.lock.json').Count
+    if ($lockFileCount -ne 15) { throw "Expected 15 dependency lock files, found $lockFileCount." }
+
+    $workflow = Get-Content -LiteralPath $workflowPath -Raw
+    @('--locked-mode', 'generate-sbom.ps1', 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6', 'checksums.txt', 'provenance.json') | ForEach-Object {
+        if ($workflow -notmatch [regex]::Escape($_)) { throw "CI supply-chain step '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

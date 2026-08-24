@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "platform.agenticwork": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.application": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.domain": {
+        "type": "Project"
+      },
+      "platform.enterprisemodel": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.evidence": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.governance": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.identity": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.infrastructure": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.integrations": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.knowledge": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )",
+          "Platform.Identity": "[1.0.0, )"
+        }
+      },
+      "platform.modeling": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.observability": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.softwarefactory": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      }
+    }
+  }
+}
