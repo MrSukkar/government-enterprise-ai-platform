@@ -37,6 +37,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{CE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platform.Web", "frontend\Platform.Web\Platform.Web.csproj", "{A3600741-4A89-4DC4-AF04-57B763730739}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{6D61E5DB-46A7-4C10-A99D-14A769A1F6A1}"
+	ProjectSection(SolutionItems) = preProject
+		PROJECT_STATUS.md = PROJECT_STATUS.md
+		docs\PROJECT_MASTER_SPECIFICATION_V2.md = docs\PROJECT_MASTER_SPECIFICATION_V2.md
+		docs\30_PHASE_ROADMAP.md = docs\30_PHASE_ROADMAP.md
+		docs\phase-01\PRODUCT_CONSTITUTION.md = docs\phase-01\PRODUCT_CONSTITUTION.md
+		docs\phase-01\ADR-001-PLATFORM-BOUNDARIES.md = docs\phase-01\ADR-001-PLATFORM-BOUNDARIES.md
+		docs\phase-01\PHASE_01_ACCEPTANCE.md = docs\phase-01\PHASE_01_ACCEPTANCE.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
