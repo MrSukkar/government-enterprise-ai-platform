@@ -38,7 +38,7 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --source .\.nuget\source --source https://api.nuget.org/v3/index.json
+        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --source ".\.nuget\source" --source "https://api.nuget.org/v3/index.json"
 
       - name: Verify and build
         shell: pwsh
