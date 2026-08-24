@@ -22,6 +22,7 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build());
 builder.Services.AddPlatformIdentityFoundation(builder.Configuration);
+builder.Services.AddPlatformKnowledgeFoundation();
 builder.Services.AddPlatformModules(
     new IdentityModule(),
     new GovernanceModule(),
