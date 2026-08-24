@@ -35,10 +35,20 @@ jobs:
           Invoke-WebRequest -Uri $packageUri -OutFile ".\.nuget\source\$packageName"
           $actualHash = [Convert]::ToBase64String([Security.Cryptography.SHA512]::HashData([IO.File]::ReadAllBytes(".\.nuget\source\$packageName")))
           if ($actualHash -ne $expectedHash) { throw "WebAssembly SDK package hash mismatch." }
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="verified-local" value=".\source" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+            </packageSources>
+          </configuration>
+          '@ | Set-Content .\.nuget\NuGet.Config
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --source ".\.nuget\source" --source "https://api.nuget.org/v3/index.json"
+        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache --configfile .\.nuget\NuGet.Config
 
       - name: Verify and build
         shell: pwsh
