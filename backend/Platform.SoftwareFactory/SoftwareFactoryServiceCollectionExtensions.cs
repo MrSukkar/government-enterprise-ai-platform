@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.Delivery;
 using Platform.SoftwareFactory.AiDevelopment;
+using Platform.SoftwareFactory.Sandbox;
+using Platform.SoftwareFactory.Validation;
 
 namespace Platform.SoftwareFactory;
 
@@ -13,6 +15,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton<IPackageEligibilityEvaluator, PackageEligibilityEvaluator>();
         services.AddSingleton<ISoftwareFactoryEngine, DeterministicSoftwareFactoryEngine>();
         services.AddScoped<GovernedAiDevelopmentService>();
+        services.AddScoped<CodeValidationPipeline>();
+        services.AddScoped<GovernedSandboxService>();
         return services;
     }
 }

@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 11,
-    "name": "AI Development Engine",
+    "number": 12,
+    "name": "Code Validation & Security Sandbox",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 12,
-    "name": "Code Validation & Security Sandbox"
+    "number": 13,
+    "name": "Git & CI Workflows"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-11/PHASE_11_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-12/PHASE_12_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
