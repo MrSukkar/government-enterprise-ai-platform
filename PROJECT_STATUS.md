@@ -1,13 +1,13 @@
 # Project Status
 
-Status: **Phase 04 complete — Frontend Foundation**
+Status: **Phase 05 complete — Identity & Access**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
-- Current implementation phase: **Phase 04 complete**
-- Completed phases: **01 — Product Constitution**, **02 — UX & Roles**, **03 — Backend Foundation**, **04 — Frontend Foundation**
-- Phase 04 artifacts: `docs/phase-04/FRONTEND_FOUNDATION.md`, `docs/phase-04/PHASE_04_ACCEPTANCE.md`
-- Next permitted phase: **Phase 05 — Identity & Access**
+- Current implementation phase: **Phase 05 complete**
+- Completed phases: **01 — Product Constitution** through **05 — Identity & Access**
+- Phase 05 artifacts: `docs/phase-05/IDENTITY_AND_ACCESS.md`, `docs/phase-05/PHASE_05_ACCEPTANCE.md`
+- Next permitted phase: **Phase 06 — OpenAPI Contract**
 - Business/domain implementation: **None**
 
-The backend and frontend foundations are implemented. No business/domain implementation has started.
+The backend, frontend, and identity/access foundations are implemented. No business/domain implementation has started.

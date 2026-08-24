@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 4,
-    "name": "Frontend Foundation",
+    "number": 5,
+    "name": "Identity & Access",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 5,
-    "name": "Identity & Access"
+    "number": 6,
+    "name": "OpenAPI Contract"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-04/PHASE_04_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-05/PHASE_05_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
