@@ -27,7 +27,7 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode
+        run: dotnet restore .\GovernmentEnterpriseAIPlatform.sln --locked-mode --packages .\.nuget\packages --no-http-cache
 
       - name: Verify and build
         shell: pwsh
