@@ -45,6 +45,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		docs\phase-01\PRODUCT_CONSTITUTION.md = docs\phase-01\PRODUCT_CONSTITUTION.md
 		docs\phase-01\ADR-001-PLATFORM-BOUNDARIES.md = docs\phase-01\ADR-001-PLATFORM-BOUNDARIES.md
 		docs\phase-01\PHASE_01_ACCEPTANCE.md = docs\phase-01\PHASE_01_ACCEPTANCE.md
+		docs\phase-02\UX_AND_ROLES.md = docs\phase-02\UX_AND_ROLES.md
+		docs\phase-02\PERSONA_ACCESS_MATRIX.md = docs\phase-02\PERSONA_ACCESS_MATRIX.md
+		docs\phase-02\PHASE_02_ACCEPTANCE.md = docs\phase-02\PHASE_02_ACCEPTANCE.md
 	EndProjectSection
 EndProject
 Global
