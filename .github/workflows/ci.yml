@@ -35,16 +35,17 @@ jobs:
           Invoke-WebRequest -Uri $packageUri -OutFile ".\.nuget\source\$packageName"
           $actualHash = [Convert]::ToBase64String([Security.Cryptography.SHA512]::HashData([IO.File]::ReadAllBytes(".\.nuget\source\$packageName")))
           if ($actualHash -ne $expectedHash) { throw "WebAssembly SDK package hash mismatch." }
-          @'
+          $sourcePath = (Resolve-Path .\.nuget\source).Path
+          @"
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
             <packageSources>
               <clear />
-              <add key="verified-local" value=".\source" />
+              <add key="verified-local" value="$sourcePath" />
               <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
             </packageSources>
           </configuration>
-          '@ | Set-Content .\.nuget\NuGet.Config
+          "@ | Set-Content .\.nuget\NuGet.Config
 
       - name: Restore
         shell: pwsh
