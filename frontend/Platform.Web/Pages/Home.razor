@@ -1,7 +1,35 @@
-﻿@page "/"
+@page "/"
 
 <PageTitle>Government Enterprise AI Platform</PageTitle>
 
-<h1>Government Enterprise AI Platform</h1>
+<section class="hero" aria-labelledby="platform-heading">
+    <div>
+        <p class="eyebrow">Sovereign · Governed · Evidence-centered</p>
+        <h1 id="platform-heading">Government Enterprise AI Platform</h1>
+        <p class="hero-copy">A single governed foundation for building, understanding, operating, and acting across the enterprise.</p>
+    </div>
+    <div class="foundation-status" role="status"><span class="status-dot" aria-hidden="true"></span>Frontend foundation active</div>
+</section>
 
-<p>Approved project scaffold. Implementation phases have not started.</p>
+<section aria-labelledby="operating-model-heading">
+    <div class="section-heading">
+        <div><p class="eyebrow">Approved operating model</p><h2 id="operating-model-heading">One platform, four connected outcomes</h2></div>
+        <p>Capabilities remain unavailable until their roadmap phase is implemented and accepted.</p>
+    </div>
+    <div class="area-grid">
+        @foreach (var area in PlatformArea.Approved)
+        {
+            <article class="area-card">
+                <div class="area-card-key">@area.Key</div>
+                <h3>@area.Name</h3>
+                <p>@area.Description</p>
+                <span>@area.PhaseAvailability</span>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="governance-notice" aria-labelledby="context-heading">
+    <div class="notice-icon" aria-hidden="true">i</div>
+    <div><h2 id="context-heading">Experience is not authorization</h2><p>Navigation and presentation never grant access. Identity, purpose, policy, classification, tenant, and resource scope will be enforced server-side in their approved phases.</p></div>
+</section>

@@ -1,15 +1,19 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject ExperienceContext ExperienceContext
+
 <div class="page">
-    <div class="sidebar">
+    <aside class="sidebar">
         <NavMenu />
-    </div>
-
+    </aside>
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+        <header class="top-row" aria-label="Active governed context">
+            <div>
+                <span class="context-label">Active context</span>
+                <strong>@ExperienceContext.Persona</strong>
+            </div>
+            <div class="phase-chip">Foundation · Phase 04</div>
+        </header>
+        <article class="content">
             @Body
         </article>
     </main>
