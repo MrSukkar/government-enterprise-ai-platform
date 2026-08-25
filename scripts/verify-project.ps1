@@ -716,6 +716,45 @@ if ($phaseNumber -ge 27) {
     }
 }
 
+if ($phaseNumber -ge 28) {
+    $architecturePath = Join-Path $repositoryRoot 'architecture\system-architecture.v2.json'
+    $architectureDocumentPath = Join-Path $repositoryRoot 'docs\phase-28\FINAL_SYSTEM_ARCHITECTURE.md'
+    $conformancePath = Join-Path $repositoryRoot 'docs\phase-28\ARCHITECTURE_CONFORMANCE_MATRIX.md'
+    @($architecturePath, $architectureDocumentPath, $conformancePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 28 artifact is missing: $_" }
+    }
+
+    $architecture = Get-Content -LiteralPath $architecturePath -Raw | ConvertFrom-Json
+    if ($architecture.architectureVersion -ne 'PROJECT MASTER SPECIFICATION v2 — APPROVED' -or
+        $architecture.style -ne 'ASP.NET Core modular monolith' -or
+        $architecture.backendTarget -ne 'net10.0' -or
+        $architecture.frontend -ne 'Blazor WebAssembly net10.0') {
+        throw 'Final architecture baseline does not match the approved specification.'
+    }
+    if ($architecture.modules.Count -ne 15 -or
+        ($architecture.modules.name | Sort-Object -Unique).Count -ne 15) {
+        throw 'Final architecture must record exactly 15 unique project boundaries.'
+    }
+    @('Platform.Api', 'Platform.AgenticWork', 'Platform.Application', 'Platform.Domain',
+      'Platform.EnterpriseModel', 'Platform.Evidence', 'Platform.Governance', 'Platform.Identity',
+      'Platform.Infrastructure', 'Platform.Integrations', 'Platform.Knowledge', 'Platform.Modeling',
+      'Platform.Observability', 'Platform.SoftwareFactory', 'Platform.Web') | ForEach-Object {
+        if ($architecture.modules.name -notcontains $_) { throw "Final architecture module '$($_)' is missing." }
+    }
+    @('No direct AI to production path', 'AI runtime is not policy authority',
+      'Retrieval is authorized before access and re-authorized before AI context',
+      'No numerical SLO before workload benchmarking') | ForEach-Object {
+        if ($architecture.invariants -notcontains $_) { throw "Final architecture invariant '$($_)' is missing." }
+    }
+    @('operatingModel', 'retrievalAuthorization', 'agenticGovernance', 'softwareFactory',
+      'observability', 'evidence') | ForEach-Object {
+        if ($architecture.flows.PSObject.Properties.Name -notcontains $_) { throw "Final architecture flow '$($_)' is missing." }
+    }
+    if ($architecture.technologyBaseline.vectorStores -ne 'pgvector or Qdrant conditional only') {
+        throw 'Conditional vector stores were promoted without Change Control.'
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

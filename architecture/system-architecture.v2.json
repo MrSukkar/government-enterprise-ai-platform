@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "architectureVersion": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
+  "style": "ASP.NET Core modular monolith",
+  "backendTarget": "net10.0",
+  "frontend": "Blazor WebAssembly net10.0",
+  "modules": [
+    { "name": "Platform.Domain", "boundary": "enterprise primitives and security classifications" },
+    { "name": "Platform.Application", "boundary": "application contracts and module composition" },
+    { "name": "Platform.Api", "boundary": "authenticated REST and OpenAPI 3.1 host" },
+    { "name": "Platform.Identity", "boundary": "OIDC/OAuth2, RBAC/ABAC, PKI, purpose and separation of duties" },
+    { "name": "Platform.Governance", "boundary": "signed policy, OPA, governed actions, MCP and action evidence" },
+    { "name": "Platform.Knowledge", "boundary": "authorized retrieval and controlled GraphRAG" },
+    { "name": "Platform.EnterpriseModel", "boundary": "enterprise objects, registration, understanding and proactive intelligence" },
+    { "name": "Platform.SoftwareFactory", "boundary": "governed delivery, AI development, validation, sandbox, supply chain, DX and closed loop" },
+    { "name": "Platform.AgenticWork", "boundary": "vendor-neutral agent runtime and durable non-effecting work" },
+    { "name": "Platform.Observability", "boundary": "OpenTelemetry, redaction and central telemetry experience" },
+    { "name": "Platform.Integrations", "boundary": "external system adapter contracts" },
+    { "name": "Platform.Modeling", "boundary": "impact analysis, isolated simulation and digital twin" },
+    { "name": "Platform.Infrastructure", "boundary": "sovereign deployment and government productization" },
+    { "name": "Platform.Evidence", "boundary": "cross-cutting evidence contract and Phase 30 proof engine" },
+    { "name": "Platform.Web", "boundary": "permission-aware Blazor Front Door" }
+  ],
+  "technologyBaseline": {
+    "primaryDatabase": "PostgreSQL",
+    "enterpriseGraph": "Neo4j baseline",
+    "retrieval": "abstraction with Neo4j baseline",
+    "vectorStores": "pgvector or Qdrant conditional only",
+    "policy": "OPA",
+    "agentRuntime": "vendor-neutral abstraction; Agent Framework candidate",
+    "sandbox": "ephemeral Firecracker-class isolation",
+    "telemetry": "OpenTelemetry",
+    "logsAndTraces": "OpenSearch",
+    "metrics": "Prometheus",
+    "source": "Git",
+    "deployment": "cloud, private cloud, hybrid, on-premises, air-gapped and sovereign"
+  },
+  "invariants": [
+    "Enterprise Model is the contextual source of truth",
+    "AI runtime is not policy authority",
+    "LLM has no workflow authority",
+    "No direct AI to production path",
+    "Retrieval is authorized before access and re-authorized before AI context",
+    "OPA policies are versioned, signed, verified, auditable and environment-aware",
+    "Agent state is governed enterprise data",
+    "Evidence is append-only, tamper-evident, ordered, traceable and access-controlled",
+    "Air-gapped operation has no mandatory external API, AI, SaaS or control-plane dependency",
+    "No numerical SLO before workload benchmarking"
+  ],
+  "flows": {
+    "operatingModel": "BUILD <-> UNDERSTAND <-> OPERATE <-> ACT",
+    "retrievalAuthorization": "Identity -> Purpose -> Policy -> Authorized Scope -> Retrieval -> Fusion -> Authorization Re-check -> AI Context",
+    "agenticGovernance": "Enterprise Workflow -> Deterministic Step/Approval/AI Step -> Agent Runtime -> Tool Gateway -> Identity -> OPA -> Action -> Evidence",
+    "softwareFactory": "Intent -> Enterprise Context -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Static Validation -> Security Validation -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> Registration -> Observability -> Evidence",
+    "observability": "Applications -> OpenTelemetry SDK -> Collector Agent -> Trace-aware Routing -> Collector Gateway -> Processing -> Logs/Metrics/Traces -> Storage -> Enterprise Model",
+    "evidence": "Request -> Context -> Knowledge -> Decision -> Policy -> Approval -> Action -> Result -> Telemetry -> Evidence"
+  },
+  "changeControl": "Change Request -> Impact Analysis -> Architectural Review -> Decision -> Master Specification Update -> Approval"
+}

@@ -1,13 +1,13 @@
 # Project Status
 
-Status: **Phase 27 complete — Closed Loop Engine**
+Status: **Phase 28 complete — System Architecture Finalization**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
-- Current implementation phase: **Phase 27 complete**
-- Completed phases: **01 — Product Constitution** through **27 — Closed Loop Engine**
-- Phase 27 artifacts: `docs/phase-27/CLOSED_LOOP_ENGINE.md`, `docs/phase-27/PHASE_27_ACCEPTANCE.md`
-- Next permitted phase: **Phase 28 — System Architecture Finalization**
+- Current implementation phase: **Phase 28 complete**
+- Completed phases: **01 — Product Constitution** through **28 — System Architecture Finalization**
+- Phase 28 artifacts: `architecture/system-architecture.v2.json`, `docs/phase-28/FINAL_SYSTEM_ARCHITECTURE.md`, `docs/phase-28/ARCHITECTURE_CONFORMANCE_MATRIX.md`, `docs/phase-28/PHASE_28_ACCEPTANCE.md`
+- Next permitted phase: **Phase 29 — Vertical Slice Delivery**
 - Business/domain implementation: **None**
 
-The platform now converts correlated delivery, registration, and telemetry evidence into non-effecting, human-reviewed improvement intents that restart the governed Software Factory lifecycle. Architecture finalization and later capabilities remain in their approved future phases.
+The approved architecture is now consolidated in human- and machine-readable records with all module boundaries, flows, invariants, conditional decisions, and sovereignty constraints preserved. Vertical Slice delivery and the final Evidence Engine remain.
