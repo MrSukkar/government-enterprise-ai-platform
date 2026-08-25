@@ -533,6 +533,41 @@ if ($phaseNumber -ge 22) {
     }
 }
 
+if ($phaseNumber -ge 23) {
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Intelligence\ProactiveIntelligenceRequest.cs'
+    $signalPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Intelligence\EnterpriseOperationalSignal.cs'
+    $snapshotPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Intelligence\ProactiveIntelligenceSnapshot.cs'
+    $reportPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Intelligence\ProactiveIntelligenceReport.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Intelligence\ProactiveIntelligenceEngine.cs'
+    @($requestPath, $signalPath, $snapshotPath, $reportPath, $enginePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 23 artifact is missing: $_" }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('enterprise.intelligence.evaluate', 'AuthorizedObjectScope', 'MaximumClassification',
+      'DetectionPolicy.Environment', 'WindowEnd <= WindowStart', 'RequestedAt < WindowEnd') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Proactive request guard '$($_)' is missing." }
+    }
+
+    $signal = Get-Content -LiteralPath $signalPath -Raw
+    @('TraceId', 'Classification', 'EvidenceReferences', 'ObservedAt') | ForEach-Object {
+        if ($signal -notmatch [regex]::Escape($_)) { throw "Operational signal field '$($_)' is missing." }
+    }
+
+    $report = Get-Content -LiteralPath $reportPath -Raw
+    @('IsExternallyEffecting => false', 'RequiresHumanReview => true',
+      'RequiresGovernanceForAction') | ForEach-Object {
+        if ($report -notmatch [regex]::Escape($_)) { throw "Proactive finding boundary '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('LoadAuthorizedContextAsync', 'PolicySignatureValid', 'exceeded authorized object scope',
+      'unauthorized signal', 'outside authorized context', 'duplicate findings',
+      'SHA256.HashData', 'RecommendGovernedAction') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Proactive intelligence guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
