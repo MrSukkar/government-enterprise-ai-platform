@@ -102,7 +102,7 @@ if ($phaseNumber -ge 10) {
     }
 
     $stages = Get-Content -LiteralPath $stagePath -Raw
-    @('Intent', 'EnterpriseContext', 'ExistingArchitecture', 'ApprovedPackages', 'AiPlanning', 'CodeGeneration', 'StaticValidation', 'SecurityValidation', 'Sandbox', 'Tests', 'HumanReview', 'Git', 'CiCd', 'Artifact', 'Deployment', 'Registration', 'Observability', 'Evidence') | ForEach-Object {
+    @('Intent', 'EnterpriseContext', 'ExistingSystems', 'ExistingArchitecture', 'ApprovedPackages', 'AiPlanning', 'CodeGeneration', 'StaticValidation', 'SecurityValidation', 'Sandbox', 'Tests', 'HumanReview', 'Git', 'CiCd', 'Artifact', 'Deployment', 'OpenTelemetry', 'AutomaticRegistration', 'EnterpriseModel', 'Evidence') | ForEach-Object {
         if ($stages -notmatch "\b$($_)\b") { throw "Software Factory stage '$($_)' is missing." }
     }
 
@@ -752,6 +752,54 @@ if ($phaseNumber -ge 28) {
     }
     if ($architecture.technologyBaseline.vectorStores -ne 'pgvector or Qdrant conditional only') {
         throw 'Conditional vector stores were promoted without Change Control.'
+    }
+}
+
+if ($phaseNumber -ge 29) {
+    $stagePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Delivery\DeliveryStage.cs'
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\VerticalSlice\InternalServiceVerticalSliceRequest.cs'
+    $storePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\VerticalSlice\IVerticalSliceRunStore.cs'
+    $runPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\VerticalSlice\VerticalSliceRun.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\VerticalSlice\InternalServiceVerticalSliceEngine.cs'
+    @($stagePath, $requestPath, $storePath, $runPath, $enginePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 29 artifact is missing: $_" }
+    }
+
+    $expectedStages = @('Intent', 'EnterpriseContext', 'ExistingSystems', 'ExistingArchitecture',
+        'ApprovedPackages', 'AiPlanning', 'CodeGeneration', 'StaticValidation', 'SecurityValidation',
+        'Sandbox', 'Tests', 'HumanReview', 'Git', 'CiCd', 'Artifact', 'Deployment', 'OpenTelemetry',
+        'AutomaticRegistration', 'EnterpriseModel', 'Evidence')
+    $stageContent = Get-Content -LiteralPath $stagePath -Raw
+    $actualStages = [regex]::Matches($stageContent, '(?m)^\s{4}([A-Za-z][A-Za-z0-9]*),?\s*$') |
+        ForEach-Object { $_.Groups[1].Value }
+    if (($actualStages -join '|') -ne ($expectedStages -join '|')) {
+        throw 'Vertical slice stages do not match the exact approved sequence.'
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('developer.internal-service.create', 'EnterpriseContextReferences', 'ExistingSystemReferences',
+      'ExistingArchitectureReference', 'ApprovedPackageReferences', 'IntentEvidenceReferences') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Vertical slice request guard '$($_)' is missing." }
+    }
+
+    $store = Get-Content -LiteralPath $storePath -Raw
+    @('CreateAtomicallyAsync', 'LoadAsync', 'AppendAtomicallyAsync', 'expectedVersion') | ForEach-Object {
+        if ($store -notmatch [regex]::Escape($_)) { throw "Vertical slice store contract '$($_)' is missing." }
+    }
+
+    $run = Get-Content -LiteralPath $runPath -Raw
+    @('Version != Receipts.Length', 'SequenceEqual', 'DeliveryStage.Evidence') | ForEach-Object {
+        if ($run -notmatch [regex]::Escape($_)) { throw "Vertical slice run invariant '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('StartAsync', 'AdvanceAsync', 'RunToCompletionAsync', 'vertical-slice:',
+      'Only the governed deployment stage may record an external effect',
+      'policy gate is required', 'human approval is required', 'separation of duties',
+      'Verified supply chain is required', 'OpenTelemetry evidence is required',
+      'Automatic Enterprise Model registration is required', 'ValidatePersisted',
+      'EquivalentRequest', 'EquivalentReceipt') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Vertical slice engine guard '$($_)' is missing." }
     }
 }
 

@@ -7,6 +7,7 @@ using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.SupplyChain;
 using Platform.SoftwareFactory.DeveloperExperience;
 using Platform.SoftwareFactory.ClosedLoop;
+using Platform.SoftwareFactory.VerticalSlice;
 
 namespace Platform.SoftwareFactory;
 
@@ -23,6 +24,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<SupplyChainVerificationPipeline>();
         services.AddScoped<GovernedDeveloperExperienceService>();
         services.AddScoped<ClosedLoopEngine>();
+        services.AddScoped<InternalServiceVerticalSliceEngine>();
         return services;
     }
 }

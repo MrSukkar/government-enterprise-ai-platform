@@ -4,6 +4,7 @@ public enum DeliveryStage
 {
     Intent,
     EnterpriseContext,
+    ExistingSystems,
     ExistingArchitecture,
     ApprovedPackages,
     AiPlanning,
@@ -17,7 +18,8 @@ public enum DeliveryStage
     CiCd,
     Artifact,
     Deployment,
-    Registration,
-    Observability,
+    OpenTelemetry,
+    AutomaticRegistration,
+    EnterpriseModel,
     Evidence
 }
