@@ -296,6 +296,39 @@ if ($phaseNumber -ge 16) {
     }
 }
 
+if ($phaseNumber -ge 17) {
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Registration\AutomaticRegistrationRequest.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Registration\AutomaticRegistrationEngine.cs'
+    $repositoryPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Registration\IAutomaticRegistrationRepository.cs'
+    $proposalPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Registration\AutomaticRegistrationProposal.cs'
+    $commitPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Registration\AutomaticRegistrationCommit.cs'
+    if (-not (Test-Path -LiteralPath $requestPath) -or -not (Test-Path -LiteralPath $enginePath) -or
+        -not (Test-Path -LiteralPath $repositoryPath) -or -not (Test-Path -LiteralPath $proposalPath) -or
+        -not (Test-Path -LiteralPath $commitPath)) {
+        throw 'Automatic registration artifacts are missing.'
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('ArtifactDigest', 'RegistryReference', 'DeploymentEvidenceReference', 'SupplyChainEvidenceReference',
+      'ObservabilityEvidenceReference', 'HumanApprovalReference', 'PolicyReferences', 'PermittedActions') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Automatic registration input '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('RegisterAtomicallyAsync', 'RequestFingerprint', 'SHA256.HashData', 'RelationshipKnowledgeState.Confirmed',
+      'automatic-registration', 'LifecycleState.Active', 'RegistrationDisposition') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Automatic registration invariant '$($_)' is missing." }
+    }
+
+    $repository = Get-Content -LiteralPath $repositoryPath -Raw
+    if ($repository -notmatch 'RegisterAtomicallyAsync') { throw 'Atomic registration repository boundary is missing.' }
+
+    $commit = Get-Content -LiteralPath $commitPath -Raw
+    @('RegistrationDisposition', 'EvidenceReference', 'CommittedAt') | ForEach-Object {
+        if ($commit -notmatch [regex]::Escape($_)) { throw "Registration commit evidence '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

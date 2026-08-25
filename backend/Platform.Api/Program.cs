@@ -26,6 +26,7 @@ builder.Services.AddPlatformKnowledgeFoundation();
 builder.Services.AddPlatformSoftwareFactoryFoundation();
 builder.Services.AddPlatformInfrastructureFoundation();
 builder.Services.AddPlatformObservabilityFoundation(builder.Configuration);
+builder.Services.AddPlatformEnterpriseModelFoundation();
 builder.Services.AddPlatformModules(
     new IdentityModule(),
     new GovernanceModule(),
