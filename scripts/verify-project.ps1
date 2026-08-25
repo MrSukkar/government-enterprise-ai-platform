@@ -460,6 +460,35 @@ if ($phaseNumber -ge 20) {
     }
 }
 
+if ($phaseNumber -ge 21) {
+    $modelingRequestPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Impact\EnterpriseModelingRequest.cs'
+    $snapshotProviderPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Impact\IEnterpriseModelSnapshotProvider.cs'
+    $impactPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Impact\EnterpriseImpact.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Impact\EnterpriseImpactAnalysisEngine.cs'
+    @($modelingRequestPath, $snapshotProviderPath, $impactPath, $enginePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 21 artifact is missing: $_" }
+    }
+
+    $request = Get-Content -LiteralPath $modelingRequestPath -Raw
+    @('enterprise.modeling.analyze', 'AuthorizedObjectScope', 'MaximumClassification',
+      'MaximumTraversalDepth', 'Change.TargetObjectId') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Modeling request guard '$($_)' is missing." }
+    }
+
+    $impact = Get-Content -LiteralPath $impactPath -Raw
+    @('ConfirmedRelationship', 'DiscoveredRelationship', 'InferredRelationship',
+      'UnknownRelationship', 'Confidence', 'EvidenceReferences') | ForEach-Object {
+        if ($impact -notmatch [regex]::Escape($_)) { throw "Impact knowledge field '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('LoadAuthorizedSnapshotAsync', 'ValidateSnapshot', 'exceeded authorized scope',
+      'excludedRelationshipCount', 'MaximumTraversalDepth', 'does not simulate outcomes',
+      'RelationshipKnowledgeState.Confirmed') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Enterprise impact guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

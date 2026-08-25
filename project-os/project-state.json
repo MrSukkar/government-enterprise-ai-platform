@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 20,
-    "name": "Governance & Action Framework",
+    "number": 21,
+    "name": "Enterprise Modeling",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 21,
-    "name": "Enterprise Modeling"
+    "number": 22,
+    "name": "Simulation & Digital Twin"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-20/PHASE_20_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-21/PHASE_21_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
