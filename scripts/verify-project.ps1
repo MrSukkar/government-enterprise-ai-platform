@@ -200,6 +200,51 @@ if ($phaseNumber -ge 14) {
     if ($service -notmatch 'EvidenceReference') { throw 'Sovereign deployment evidence receipt validation is missing.' }
 }
 
+if ($phaseNumber -ge 15) {
+    $observabilityProjectPath = Join-Path $repositoryRoot 'backend\Platform.Observability\Platform.Observability.csproj'
+    $registrationPath = Join-Path $repositoryRoot 'backend\Platform.Observability\ObservabilityServiceCollectionExtensions.cs'
+    $telemetryPath = Join-Path $repositoryRoot 'backend\Platform.Observability\OpenTelemetry\PlatformTelemetry.cs'
+    $processorPath = Join-Path $repositoryRoot 'backend\Platform.Observability\OpenTelemetry\RedactingActivityProcessor.cs'
+    $policyPath = Join-Path $repositoryRoot 'backend\Platform.Observability\Redaction\TelemetryRedactionPolicy.cs'
+    $lockPath = Join-Path $repositoryRoot 'backend\Platform.Observability\packages.lock.json'
+    if (-not (Test-Path -LiteralPath $registrationPath) -or -not (Test-Path -LiteralPath $telemetryPath) -or
+        -not (Test-Path -LiteralPath $processorPath) -or -not (Test-Path -LiteralPath $policyPath)) {
+        throw 'OpenTelemetry core or redaction artifacts are missing.'
+    }
+
+    $observabilityProject = Get-Content -LiteralPath $observabilityProjectPath -Raw
+    @('OpenTelemetry.Extensions.Hosting', 'OpenTelemetry.Instrumentation.AspNetCore', 'Version="1.17.0"') | ForEach-Object {
+        if ($observabilityProject -notmatch [regex]::Escape($_)) { throw "OpenTelemetry dependency control '$($_)' is missing." }
+    }
+
+    $registration = Get-Content -LiteralPath $registrationPath -Raw
+    @('AddOpenTelemetry', 'ConfigureResource', 'WithTracing', 'AddAspNetCoreInstrumentation',
+      'AddProcessor<RedactingActivityProcessor>', 'WithMetrics', 'AddMeter') | ForEach-Object {
+        if ($registration -notmatch [regex]::Escape($_)) { throw "OpenTelemetry registration '$($_)' is missing." }
+    }
+
+    $policy = Get-Content -LiteralPath $policyPath -Raw
+    @('authorization', 'cookie', 'credential', 'password', 'secret', 'token', 'api_key',
+      'url.query', 'exception.message', 'exception.stacktrace', '[REDACTED]') | ForEach-Object {
+        if ($policy -notmatch [regex]::Escape($_)) { throw "Telemetry redaction control '$($_)' is missing." }
+    }
+
+    $processor = Get-Content -LiteralPath $processorPath -Raw
+    @('OnStart', 'OnEnd', 'ClearBaggage', 'TelemetryAttributeDisposition.Drop') | ForEach-Object {
+        if ($processor -notmatch [regex]::Escape($_)) { throw "Redacting processor invariant '$($_)' is missing." }
+    }
+
+    $telemetry = Get-Content -LiteralPath $telemetryPath -Raw
+    @('ActivitySource', 'Meter', 'Counter<long>', 'Histogram<double>', 'low-cardinality lowercase tokens') | ForEach-Object {
+        if ($telemetry -notmatch [regex]::Escape($_)) { throw "Telemetry core invariant '$($_)' is missing." }
+    }
+
+    $lock = Get-Content -LiteralPath $lockPath -Raw
+    @('OpenTelemetry.Extensions.Hosting', 'OpenTelemetry.Instrumentation.AspNetCore', '"resolved": "1.17.0"') | ForEach-Object {
+        if ($lock -notmatch [regex]::Escape($_)) { throw "OpenTelemetry dependency lock '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
