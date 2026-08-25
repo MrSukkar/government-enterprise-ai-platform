@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Infrastructure.Sovereignty;
+using Platform.Infrastructure.Productization;
 
 namespace Platform.Infrastructure;
 
@@ -9,6 +10,7 @@ public static class InfrastructureServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped<GovernedSovereignDeploymentService>();
+        services.AddScoped<GovernmentProductizationService>();
         return services;
     }
 }

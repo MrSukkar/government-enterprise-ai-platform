@@ -568,6 +568,41 @@ if ($phaseNumber -ge 23) {
     }
 }
 
+if ($phaseNumber -ge 24) {
+    $jurisdictionPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Productization\JurisdictionProfile.cs'
+    $controlPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Productization\ComplianceControlMapping.cs'
+    $manifestPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Productization\GovernmentProductManifest.cs'
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Productization\GovernmentProductizationRequest.cs'
+    $servicePath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Productization\GovernmentProductizationService.cs'
+    @($jurisdictionPath, $controlPath, $manifestPath, $requestPath, $servicePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 24 artifact is missing: $_" }
+    }
+
+    $jurisdiction = Get-Content -LiteralPath $jurisdictionPath -Raw
+    @('DataResidencyReference', 'SupportedLanguages', 'MaximumClassification', 'AllowedTopologies',
+      'IdentityAuthorityReference', 'PolicyAuthorityReference', 'TrustBundleReference',
+      'RequiredComplianceControls') | ForEach-Object {
+        if ($jurisdiction -notmatch [regex]::Escape($_)) { throw "Jurisdiction field '$($_)' is missing." }
+    }
+
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw
+    @('ManifestSha256Digest', 'SignatureReference', 'ExternalLicenseCheckRequired',
+      'ExternalTelemetryRequired', 'SupportsOfflineInstallation', 'Artifacts', 'ComplianceControls') | ForEach-Object {
+        if ($manifest -notmatch [regex]::Escape($_)) { throw "Government manifest field '$($_)' is missing." }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('government.product.publish', 'separation of duties', 'AllowedTopologies', 'DeploymentProfile.TenantId') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Productization request guard '$($_)' is missing." }
+    }
+
+    $service = Get-Content -LiteralPath $servicePath -Raw
+    @('ValidateComplianceCoverage', 'RequiredComplianceControls.IsSubsetOf', 'VerifyAsync',
+      'SignatureValid', 'TrustBundleReference', 'RegisterAtomicallyAsync', 'ValidateRegistered') | ForEach-Object {
+        if ($service -notmatch [regex]::Escape($_)) { throw "Government product guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
