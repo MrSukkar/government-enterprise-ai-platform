@@ -1,32 +1,33 @@
+@inject ExperienceContext ExperienceContext
+
 <div class="brand-row">
     <a class="brand" href="" aria-label="Government Enterprise AI Platform home">
         <span class="brand-mark" aria-hidden="true">GE</span>
         <span>Government Enterprise<br /><strong>AI Platform</strong></span>
     </a>
-    <button type="button" title="Navigation menu" aria-label="Toggle navigation" aria-expanded="@(!collapseNavMenu)" class="nav-toggle" @onclick="ToggleNavMenu">
-        <span aria-hidden="true">☰</span>
-    </button>
+    <button type="button" title="Navigation menu" aria-label="Toggle navigation" aria-expanded="@(!collapseNavMenu)" class="nav-toggle" @onclick="ToggleNavMenu"><span aria-hidden="true">☰</span></button>
 </div>
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column" aria-label="Primary navigation">
-        <div class="nav-section">Platform</div>
-        <div class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All"><span aria-hidden="true">⌂</span> Overview</NavLink>
-        </div>
-        @foreach (var area in PlatformArea.Approved)
+        <div class="nav-section">Front Door</div>
+        <div class="nav-item"><NavLink class="nav-link" href="" Match="NavLinkMatch.All"><span aria-hidden="true">⌂</span> Outcomes</NavLink></div>
+        <div class="nav-section">Authorized destinations</div>
+        @foreach (var destination in FrontDoorCatalog.Destinations)
         {
+            var permitted = ExperienceContext.CanAccess(destination);
             <div class="nav-item">
-                <span class="nav-link disabled" aria-disabled="true">
-                    <span class="area-key" aria-hidden="true">@area.Key[0]</span> @area.Name
-                    <span class="future-label">Future</span>
-                </span>
+                @if (permitted)
+                {
+                    <a class="nav-link" href="@($"#{destination.Anchor}")"><span class="area-key" aria-hidden="true">@destination.Key[0]</span> @destination.Name <span class="available-label">Open</span></a>
+                }
+                else
+                {
+                    <span class="nav-link disabled" aria-disabled="true"><span class="area-key" aria-hidden="true">@destination.Key[0]</span> @destination.Name <span class="future-label">Locked</span></span>
+                }
             </div>
         }
-        <div class="nav-section">Trust</div>
-        <div class="nav-item">
-            <span class="nav-link disabled" aria-disabled="true"><span aria-hidden="true">◇</span> Evidence <span class="future-label">Future</span></span>
-        </div>
+        <div class="nav-assurance">Navigation never grants access. The API re-authorizes every operation.</div>
     </nav>
 </div>
 

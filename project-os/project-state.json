@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 24,
-    "name": "Sovereign Government Productization",
+    "number": 25,
+    "name": "The Front Door",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 25,
-    "name": "The Front Door"
+    "number": 26,
+    "name": "Developer Experience"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-24/PHASE_24_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-25/PHASE_25_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

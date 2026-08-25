@@ -603,6 +603,50 @@ if ($phaseNumber -ge 24) {
     }
 }
 
+if ($phaseNumber -ge 25) {
+    $contextPath = Join-Path $repositoryRoot 'frontend\Platform.Web\Foundation\ExperienceContext.cs'
+    $authorizedContextPath = Join-Path $repositoryRoot 'frontend\Platform.Web\FrontDoor\GovernedExperienceContext.cs'
+    $destinationPath = Join-Path $repositoryRoot 'frontend\Platform.Web\FrontDoor\FrontDoorDestination.cs'
+    $catalogPath = Join-Path $repositoryRoot 'frontend\Platform.Web\FrontDoor\FrontDoorCatalog.cs'
+    $homePath = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\Home.razor'
+    $navPath = Join-Path $repositoryRoot 'frontend\Platform.Web\Layout\NavMenu.razor'
+    $cssPath = Join-Path $repositoryRoot 'frontend\Platform.Web\wwwroot\css\app.css'
+    @($contextPath, $authorizedContextPath, $destinationPath, $catalogPath, $homePath, $navPath, $cssPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 25 artifact is missing: $_" }
+    }
+
+    $context = Get-Content -LiteralPath $contextPath -Raw
+    @('IsGovernedIdentityEstablished { get; private set; }', 'ApplyServerAuthorizedContext',
+      'AuthorizationEvidenceReference', 'Permissions.Contains', 'public void Clear') | ForEach-Object {
+        if ($context -notmatch [regex]::Escape($_)) { throw "Front Door context guard '$($_)' is missing." }
+    }
+
+    $authorizedContext = Get-Content -LiteralPath $authorizedContextPath -Raw
+    @('TenantId', 'Purpose', 'Permissions.IsEmpty', 'AuthorizationEvidenceReference',
+      'ExpiresAt <= IssuedAt', 'now >= ExpiresAt') | ForEach-Object {
+        if ($authorizedContext -notmatch [regex]::Escape($_)) { throw "Authorized experience guard '$($_)' is missing." }
+    }
+
+    $catalog = (Get-Content -LiteralPath $destinationPath -Raw) + (Get-Content -LiteralPath $catalogPath -Raw)
+    @('BUILD', 'UNDERSTAND', 'OPERATE', 'ACT', 'PROVE', 'RequiredPermission',
+      'frontdoor.act.request', 'frontdoor.evidence.read') | ForEach-Object {
+        if ($catalog -notmatch [regex]::Escape($_)) { throw "Front Door destination '$($_)' is missing." }
+    }
+
+    $homeContent = Get-Content -LiteralPath $homePath -Raw
+    @('Governed identity required', 'ExperienceContext.CanAccess', 'disabled="@(!permitted)"',
+      'Server-side authorization remains authoritative', 'aria-labelledby') | ForEach-Object {
+        if ($homeContent -notmatch [regex]::Escape($_)) { throw "Front Door UI guard '$($_)' is missing." }
+    }
+
+    $nav = Get-Content -LiteralPath $navPath -Raw
+    if ($nav -notmatch 'API re-authorizes every operation') { throw 'Front Door navigation assurance is missing.' }
+    $css = Get-Content -LiteralPath $cssPath -Raw
+    @('focus-visible', 'prefers-reduced-motion', '@media (max-width: 800px)', 'button:disabled') | ForEach-Object {
+        if ($css -notmatch [regex]::Escape($_)) { throw "Front Door accessibility style '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

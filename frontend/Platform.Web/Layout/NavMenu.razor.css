@@ -10,5 +10,7 @@
 .nav-link.disabled { color: #829aa4; cursor: not-allowed; }
 .area-key { width: 1.15rem; height: 1.15rem; display: grid; place-items: center; border: 1px solid currentColor; border-radius: .2rem; font-size: .62rem; }
 .future-label { margin-left: auto; font-size: .62rem; color: #68838e; }
+.available-label { margin-left: auto; font-size: .62rem; color: #7de3d4; }
+.nav-assurance { margin: 1.5rem .75rem 0; padding: 1rem 0; border-top: 1px solid rgba(255,255,255,.12); color: #80a0ad; font-size: .72rem; line-height: 1.5; }
 @media (max-width: 780px) { .nav-toggle { display: block; } .nav-scrollable.collapse { display: none; } }
 @media (min-width: 781px) { .nav-scrollable.collapse { display: block; } }

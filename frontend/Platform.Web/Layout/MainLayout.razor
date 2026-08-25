@@ -2,19 +2,12 @@
 @inject ExperienceContext ExperienceContext
 
 <div class="page">
-    <aside class="sidebar">
-        <NavMenu />
-    </aside>
+    <aside class="sidebar"><NavMenu /></aside>
     <main>
         <header class="top-row" aria-label="Active governed context">
-            <div>
-                <span class="context-label">Active context</span>
-                <strong>@ExperienceContext.Persona</strong>
-            </div>
-            <div class="phase-chip">Foundation · Phase 04</div>
+            <div><span class="context-label">Active context</span><strong>@ExperienceContext.Persona</strong></div>
+            <div class="phase-chip">Front Door · Phase 25</div>
         </header>
-        <article class="content">
-            @Body
-        </article>
+        <article class="content">@Body</article>
     </main>
 </div>

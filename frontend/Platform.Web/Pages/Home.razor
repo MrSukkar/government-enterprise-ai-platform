@@ -1,35 +1,56 @@
 @page "/"
+@inject ExperienceContext ExperienceContext
 
-<PageTitle>Government Enterprise AI Platform</PageTitle>
+<PageTitle>Front Door | Government Enterprise AI Platform</PageTitle>
 
-<section class="hero" aria-labelledby="platform-heading">
+<section class="frontdoor-hero" aria-labelledby="platform-heading">
     <div>
         <p class="eyebrow">Sovereign · Governed · Evidence-centered</p>
-        <h1 id="platform-heading">Government Enterprise AI Platform</h1>
-        <p class="hero-copy">A single governed foundation for building, understanding, operating, and acting across the enterprise.</p>
+        <h1 id="platform-heading">What outcome do you need?</h1>
+        <p class="hero-copy">One governed entry point for building, understanding, operating, acting, and proving across the enterprise.</p>
     </div>
-    <div class="foundation-status" role="status"><span class="status-dot" aria-hidden="true"></span>Frontend foundation active</div>
+    <aside class="identity-card" aria-label="Governed access status">
+        <span class="identity-state @(ExperienceContext.IsGovernedIdentityEstablished ? "established" : "locked")">
+            @(ExperienceContext.IsGovernedIdentityEstablished ? "Context established" : "Locked by default")
+        </span>
+        <strong>@ExperienceContext.Persona</strong>
+        <span>@ExperienceContext.Purpose</span>
+        @if (ExperienceContext.TenantId is not null)
+        {
+            <small>Tenant @ExperienceContext.TenantId</small>
+        }
+    </aside>
 </section>
 
-<section aria-labelledby="operating-model-heading">
+@if (!ExperienceContext.IsGovernedIdentityEstablished)
+{
+    <section class="access-notice" role="status" aria-labelledby="access-heading">
+        <div class="notice-icon" aria-hidden="true">!</div>
+        <div><h2 id="access-heading">Governed identity required</h2><p>The Front Door is visible, but every destination remains locked until the server establishes identity, tenant, purpose, policy, classification, and resource scope.</p></div>
+    </section>
+}
+
+<section aria-labelledby="destinations-heading">
     <div class="section-heading">
-        <div><p class="eyebrow">Approved operating model</p><h2 id="operating-model-heading">One platform, four connected outcomes</h2></div>
-        <p>Capabilities remain unavailable until their roadmap phase is implemented and accepted.</p>
+        <div><p class="eyebrow">Intent-based entry</p><h2 id="destinations-heading">Choose an enterprise outcome</h2></div>
+        <p>Navigation reflects the active context. Server-side authorization remains authoritative for every request.</p>
     </div>
-    <div class="area-grid">
-        @foreach (var area in PlatformArea.Approved)
+    <div class="destination-grid">
+        @foreach (var destination in FrontDoorCatalog.Destinations)
         {
-            <article class="area-card">
-                <div class="area-card-key">@area.Key</div>
-                <h3>@area.Name</h3>
-                <p>@area.Description</p>
-                <span>@area.PhaseAvailability</span>
+            var permitted = ExperienceContext.CanAccess(destination);
+            <article class="destination-card @(permitted ? "permitted" : "restricted")" id="@destination.Anchor">
+                <div class="destination-topline"><span class="destination-key">@destination.Key</span><span class="access-chip">@(permitted ? "Available" : "Restricted")</span></div>
+                <h3>@destination.Name</h3>
+                <p class="intent">@destination.Intent</p>
+                <p class="outcome">@destination.Outcome</p>
+                <footer><span>@destination.Availability</span><button type="button" disabled="@(!permitted)" aria-label="Open @destination.Name">@(permitted ? "Open workspace" : "Authorization required")</button></footer>
             </article>
         }
     </div>
 </section>
 
-<section class="governance-notice" aria-labelledby="context-heading">
-    <div class="notice-icon" aria-hidden="true">i</div>
-    <div><h2 id="context-heading">Experience is not authorization</h2><p>Navigation and presentation never grant access. Identity, purpose, policy, classification, tenant, and resource scope will be enforced server-side in their approved phases.</p></div>
+<section class="trust-strip" aria-labelledby="trust-heading">
+    <div><p class="eyebrow">Always enforced</p><h2 id="trust-heading">Experience is not authorization</h2></div>
+    <ul><li>Active identity and purpose</li><li>Tenant and classification scope</li><li>Policy and approval boundaries</li><li>Traceable evidence</li></ul>
 </section>
