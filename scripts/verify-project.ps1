@@ -364,6 +364,58 @@ if ($phaseNumber -ge 18) {
     }
 }
 
+if ($phaseNumber -ge 19) {
+    $definitionPath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\AgenticWorkDefinition.cs'
+    $statePath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\AgenticWorkState.cs'
+    $storePath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\IDurableAgenticWorkStore.cs'
+    $runtimePath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\IAgentRuntime.cs'
+    $resultPath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\AgentStepResult.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\DurableAgenticWorkEngine.cs'
+    $approvalPath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\AgenticWorkApproval.cs'
+    $resumePath = Join-Path $repositoryRoot 'backend\Platform.AgenticWork\Execution\AgenticWorkResume.cs'
+    if (-not (Test-Path -LiteralPath $definitionPath) -or -not (Test-Path -LiteralPath $statePath) -or
+        -not (Test-Path -LiteralPath $storePath) -or -not (Test-Path -LiteralPath $runtimePath) -or
+        -not (Test-Path -LiteralPath $resultPath) -or -not (Test-Path -LiteralPath $enginePath) -or
+        -not (Test-Path -LiteralPath $approvalPath) -or -not (Test-Path -LiteralPath $resumePath)) {
+        throw 'Agentic Work System artifacts are missing.'
+    }
+
+    $definition = Get-Content -LiteralPath $definitionPath -Raw
+    @('TenantId', 'InitiatorSubjectId', 'PolicyReferences', 'EvidenceReferences', 'Steps',
+      'contiguous and zero-based') | ForEach-Object {
+        if ($definition -notmatch [regex]::Escape($_)) { throw "Agentic work definition '$($_)' is missing." }
+    }
+
+    $state = Get-Content -LiteralPath $statePath -Raw
+    @('AwaitingApproval', 'Ready', 'Running', 'Suspended', 'Completed', 'Failed', 'Cancelled') | ForEach-Object {
+        if ($state -notmatch "\b$($_)\b") { throw "Agentic work state '$($_)' is missing." }
+    }
+
+    $store = Get-Content -LiteralPath $storePath -Raw
+    @('CreateAtomicallyAsync', 'LoadAsync', 'AppendAtomicallyAsync') | ForEach-Object {
+        if ($store -notmatch [regex]::Escape($_)) { throw "Durable agentic store operation '$($_)' is missing." }
+    }
+
+    $result = Get-Content -LiteralPath $resultPath -Raw
+    if ($result -notmatch 'IsExternallyEffecting\s*=>\s*false') {
+        throw 'Phase 19 agent results must remain non-effecting.'
+    }
+
+    $resume = Get-Content -LiteralPath $resumePath -Raw
+    if ($resume -notmatch 'agentic\.work\.resume') { throw 'Agentic work resume permission is missing.' }
+
+    $approval = Get-Content -LiteralPath $approvalPath -Raw
+    if ($approval -notmatch 'agentic\.work\.approve') { throw 'Agentic work approval permission is missing.' }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('AgenticWorkState.AwaitingApproval', 'separation of duties', 'idempotencyKey',
+      'AgenticWorkState.Running', 'DurableCheckpointReference', 'ValidatePersisted',
+      'SequenceEqual(expected.Definition.Steps)', 'Agentic work is not ready or resumable',
+      'externally effecting result') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Durable agentic guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
