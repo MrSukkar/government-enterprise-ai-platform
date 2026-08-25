@@ -155,7 +155,7 @@ if ($phaseNumber -ge 13) {
     if ($lockFileCount -ne 15) { throw "Expected 15 dependency lock files, found $lockFileCount." }
 
     $workflow = Get-Content -LiteralPath $workflowPath -Raw
-    @('--locked-mode', 'generate-sbom.ps1', 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6', 'checksums.txt', 'provenance.json') | ForEach-Object {
+    @('--force-evaluate', '--use-lock-file', 'Frontend dependency lock changed beyond the verified WebAssembly SDK content hash.', 'generate-sbom.ps1', 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6', 'checksums.txt', 'provenance.json') | ForEach-Object {
         if ($workflow -notmatch [regex]::Escape($_)) { throw "CI supply-chain step '$($_)' is missing." }
     }
 }

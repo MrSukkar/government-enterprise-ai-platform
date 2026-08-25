@@ -4,7 +4,7 @@ Status: **Satisfied**
 
 ## Evidence
 
-- [x] CI runs locked restore, verification, build, publication, SBOM, checksums, provenance, attestations, and evidence upload.
+- [x] CI enforces all committed dependency versions, permits only the verified SDK-generated WebAssembly content-hash variance, then runs verification, build, publication, SBOM, checksums, provenance, attestations, and evidence upload.
 - [x] All third-party Actions are pinned to immutable commit SHAs.
 - [x] Workflow permissions follow least privilege.
 - [x] All 15 projects contain dependency lock files.
@@ -14,4 +14,3 @@ Status: **Satisfied**
 - [x] Cryptographic implementation remains adaptable to sovereign PKI/HSM and local registries.
 - [x] No key, token, certificate, or credential is committed.
 - [x] All 15 projects build with zero warnings and zero errors.
-
