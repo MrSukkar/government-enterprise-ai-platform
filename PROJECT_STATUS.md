@@ -1,13 +1,13 @@
 # Project Status
 
-Status: **Phase 15 complete — OpenTelemetry Core & Redaction**
+Status: **Phase 16 complete — Central Observability Experience**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
-- Current implementation phase: **Phase 15 complete**
-- Completed phases: **01 — Product Constitution** through **15 — OpenTelemetry Core & Redaction**
-- Phase 15 artifacts: `docs/phase-15/OPENTELEMETRY_CORE_AND_REDACTION.md`, `docs/phase-15/PHASE_15_ACCEPTANCE.md`
-- Next permitted phase: **Phase 16 — Central Observability Experience**
+- Current implementation phase: **Phase 16 complete**
+- Completed phases: **01 — Product Constitution** through **16 — Central Observability Experience**
+- Phase 16 artifacts: `docs/phase-16/CENTRAL_OBSERVABILITY_EXPERIENCE.md`, `docs/phase-16/PHASE_16_ACCEPTANCE.md`
+- Next permitted phase: **Phase 17 — Automatic Registration Engine**
 - Business/domain implementation: **None**
 
-OpenTelemetry trace and metric foundations now enforce fail-closed telemetry redaction. Central observability, governance, and final evidence capabilities remain in their approved future phases.
+The central observability path now governs OTLP collection, OpenSearch/Prometheus storage boundaries, trace correlation, and authorized reads. Automatic registration, governance, and final evidence capabilities remain in their approved future phases.

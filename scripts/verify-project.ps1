@@ -245,6 +245,57 @@ if ($phaseNumber -ge 15) {
     }
 }
 
+if ($phaseNumber -ge 16) {
+    $observabilityProjectPath = Join-Path $repositoryRoot 'backend\Platform.Observability\Platform.Observability.csproj'
+    $registrationPath = Join-Path $repositoryRoot 'backend\Platform.Observability\ObservabilityServiceCollectionExtensions.cs'
+    $exportProfilePath = Join-Path $repositoryRoot 'backend\Platform.Observability\Collection\CollectorAgentExportProfile.cs'
+    $pipelinePath = Join-Path $repositoryRoot 'backend\Platform.Observability\Central\CollectorPipelineProfile.cs'
+    $storagePath = Join-Path $repositoryRoot 'backend\Platform.Observability\Central\TelemetryStorageBinding.cs'
+    $queryPath = Join-Path $repositoryRoot 'backend\Platform.Observability\Central\CentralObservabilityQuery.cs'
+    $servicePath = Join-Path $repositoryRoot 'backend\Platform.Observability\Central\CentralObservabilityService.cs'
+    if (-not (Test-Path -LiteralPath $exportProfilePath) -or -not (Test-Path -LiteralPath $pipelinePath) -or
+        -not (Test-Path -LiteralPath $storagePath) -or -not (Test-Path -LiteralPath $queryPath) -or
+        -not (Test-Path -LiteralPath $servicePath)) {
+        throw 'Central observability artifacts are missing.'
+    }
+
+    $observabilityProject = Get-Content -LiteralPath $observabilityProjectPath -Raw
+    @('OpenTelemetry.Exporter.OpenTelemetryProtocol', 'Version="1.17.0"') | ForEach-Object {
+        if ($observabilityProject -notmatch [regex]::Escape($_)) { throw "Central telemetry dependency '$($_)' is missing." }
+    }
+
+    $registration = Get-Content -LiteralPath $registrationPath -Raw
+    @('AddOtlpExporter', 'OtlpExportProtocol.HttpProtobuf', 'CollectorAgentExportProfile') | ForEach-Object {
+        if ($registration -notmatch [regex]::Escape($_)) { throw "Collector agent registration '$($_)' is missing." }
+    }
+
+    $exportProfile = Get-Content -LiteralPath $exportProfilePath -Raw
+    @('Observability:CollectorAgent', 'TrustAnchorReference', 'Uri.UriSchemeHttps') | ForEach-Object {
+        if ($exportProfile -notmatch [regex]::Escape($_)) { throw "Collector export control '$($_)' is missing." }
+    }
+
+    $pipeline = Get-Content -LiteralPath $pipelinePath -Raw
+    @('AgentEndpoint', 'GatewayEndpoint', 'TraceAwareRoutingEnabled', 'redaction', 'tenant_isolation',
+      'classification_enforcement', 'batch', 'IsLocallyOperated') | ForEach-Object {
+        if ($pipeline -notmatch [regex]::Escape($_)) { throw "Collector pipeline invariant '$($_)' is missing." }
+    }
+
+    $storage = Get-Content -LiteralPath $storagePath -Raw
+    @('OpenSearch', 'Prometheus', 'TelemetrySignalKind.Metrics') | ForEach-Object {
+        if ($storage -notmatch [regex]::Escape($_)) { throw "Observability storage invariant '$($_)' is missing." }
+    }
+
+    $query = Get-Content -LiteralPath $queryPath -Raw
+    @('observability.read', 'TenantId', 'EnvironmentName', 'MaximumClassification', 'Purpose') | ForEach-Object {
+        if ($query -notmatch [regex]::Escape($_)) { throw "Central observability authorization '$($_)' is missing." }
+    }
+
+    $service = Get-Content -LiteralPath $servicePath -Raw
+    @('outside the authorized scope', 'RedactedAttributes', 'CorrelationTraceId', 'EnterpriseObjectReferences') | ForEach-Object {
+        if ($service -notmatch [regex]::Escape($_)) { throw "Central observability query invariant '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
