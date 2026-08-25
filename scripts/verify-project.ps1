@@ -876,6 +876,18 @@ if ($phaseNumber -ge 30) {
     @('AddPlatformEvidenceFoundation', 'AddScoped<CryptographicEvidenceEngine>') | ForEach-Object {
         if ($registration -notmatch [regex]::Escape($_)) { throw "Evidence registration '$($_)' is missing." }
     }
+
+    $solutionContent = Get-Content -LiteralPath $solutionPath -Raw
+    1..30 | ForEach-Object {
+        $acceptanceReference = 'docs\phase-{0:D2}\PHASE_{0:D2}_ACCEPTANCE.md' -f $_
+        if ($solutionContent -notmatch [regex]::Escape($acceptanceReference)) {
+            throw "Visual Studio solution is missing '$acceptanceReference'."
+        }
+    }
+    @('backend\Platform.Evidence\Platform.Evidence.csproj',
+      'docs\phase-30\EVIDENCE_ENGINE.md', 'architecture\system-architecture.v2.json') | ForEach-Object {
+        if ($solutionContent -notmatch [regex]::Escape($_)) { throw "Visual Studio solution item '$($_)' is missing." }
+    }
 }
 
 if (-not $NoBuild) {
