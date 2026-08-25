@@ -5,6 +5,7 @@ using Platform.SoftwareFactory.AiDevelopment;
 using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.SupplyChain;
+using Platform.SoftwareFactory.DeveloperExperience;
 
 namespace Platform.SoftwareFactory;
 
@@ -19,6 +20,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<CodeValidationPipeline>();
         services.AddScoped<GovernedSandboxService>();
         services.AddScoped<SupplyChainVerificationPipeline>();
+        services.AddScoped<GovernedDeveloperExperienceService>();
         return services;
     }
 }

@@ -647,6 +647,41 @@ if ($phaseNumber -ge 25) {
     }
 }
 
+if ($phaseNumber -ge 26) {
+    $templatePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\DeveloperExperience\ApprovedDeveloperTemplate.cs'
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\DeveloperExperience\DeveloperWorkspaceRequest.cs'
+    $environmentPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\DeveloperExperience\DeveloperEnvironmentSnapshot.cs'
+    $planPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\DeveloperExperience\DeveloperWorkspacePlan.cs'
+    $servicePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\DeveloperExperience\GovernedDeveloperExperienceService.cs'
+    @($templatePath, $requestPath, $environmentPath, $planPath, $servicePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 26 artifact is missing: $_" }
+    }
+
+    $template = Get-Content -LiteralPath $templatePath -Raw
+    @('Sha256Digest', 'SignatureReference', 'ArchitectureReference', 'RequiredDotNetSdkVersion',
+      'ApprovedPackageReferences', 'EvidenceReferences') | ForEach-Object {
+        if ($template -notmatch [regex]::Escape($_)) { throw "Developer template field '$($_)' is missing." }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('developer.workspace.bootstrap', 'Path.IsPathRooted', 'Contains("..")',
+      'LocalPackageSourceReference', 'GitRepositoryReference') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Developer workspace guard '$($_)' is missing." }
+    }
+
+    $plan = Get-Content -LiteralPath $planPath -Raw
+    @('RestoreLockedDependencies', 'VerifyProject', 'ReviewChanges', 'SubmitToGitAndCi',
+      'IsProductionDeploymentCapable => false', 'RequiresHumanReview => true') | ForEach-Object {
+        if ($plan -notmatch [regex]::Escape($_)) { throw "Developer plan boundary '$($_)' is missing." }
+    }
+
+    $service = Get-Content -LiteralPath $servicePath -Raw
+    @('VerifyAsync', 'InspectAsync', 'HasProductionCredentials', 'OutboundNetworkRequired',
+      '--locked-mode', 'scripts/verify-project.ps1', 'RegisterAtomicallyAsync', 'ValidateRegistered') | ForEach-Object {
+        if ($service -notmatch [regex]::Escape($_)) { throw "Developer experience guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
