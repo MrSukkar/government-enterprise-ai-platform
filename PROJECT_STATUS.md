@@ -1,13 +1,13 @@
 # Project Status
 
-Status: **Phase 26 complete — Developer Experience**
+Status: **Phase 27 complete — Closed Loop Engine**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
-- Current implementation phase: **Phase 26 complete**
-- Completed phases: **01 — Product Constitution** through **26 — Developer Experience**
-- Phase 26 artifacts: `docs/phase-26/DEVELOPER_EXPERIENCE.md`, `docs/phase-26/PHASE_26_ACCEPTANCE.md`
-- Next permitted phase: **Phase 27 — Closed Loop Engine**
+- Current implementation phase: **Phase 27 complete**
+- Completed phases: **01 — Product Constitution** through **27 — Closed Loop Engine**
+- Phase 27 artifacts: `docs/phase-27/CLOSED_LOOP_ENGINE.md`, `docs/phase-27/PHASE_27_ACCEPTANCE.md`
+- Next permitted phase: **Phase 28 — System Architecture Finalization**
 - Business/domain implementation: **None**
 
-The platform now provides an approved-template, sovereign-ready, evidence-grounded developer golden path through verification, build, test, human review, Git, and CI. Closed-loop feedback and later capabilities remain in their approved future phases.
+The platform now converts correlated delivery, registration, and telemetry evidence into non-effecting, human-reviewed improvement intents that restart the governed Software Factory lifecycle. Architecture finalization and later capabilities remain in their approved future phases.

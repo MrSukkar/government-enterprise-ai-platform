@@ -6,6 +6,7 @@ using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.SupplyChain;
 using Platform.SoftwareFactory.DeveloperExperience;
+using Platform.SoftwareFactory.ClosedLoop;
 
 namespace Platform.SoftwareFactory;
 
@@ -21,6 +22,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedSandboxService>();
         services.AddScoped<SupplyChainVerificationPipeline>();
         services.AddScoped<GovernedDeveloperExperienceService>();
+        services.AddScoped<ClosedLoopEngine>();
         return services;
     }
 }

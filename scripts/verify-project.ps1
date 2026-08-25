@@ -682,6 +682,40 @@ if ($phaseNumber -ge 26) {
     }
 }
 
+if ($phaseNumber -ge 27) {
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\ClosedLoop\ClosedLoopEvaluationRequest.cs'
+    $contextPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\ClosedLoop\ClosedLoopContext.cs'
+    $proposalPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\ClosedLoop\ImprovementProposal.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\ClosedLoop\ClosedLoopEngine.cs'
+    @($requestPath, $contextPath, $proposalPath, $enginePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 27 artifact is missing: $_" }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('software.closedloop.evaluate', 'EnterpriseObjectReference', 'ReleaseArtifactSha256Digest',
+      'ReleaseProvenanceReference', 'ObservationWindowEnd <= ObservationWindowStart', 'RequestedAt < ObservationWindowEnd') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Closed-loop request guard '$($_)' is missing." }
+    }
+
+    $context = Get-Content -LiteralPath $contextPath -Raw
+    @('DeliveryEvidenceReferences', 'RegistrationEvidenceReferences', 'TelemetryEvidenceReferences',
+      'PolicyVerificationEvidenceReference', 'PolicySignatureValid') | ForEach-Object {
+        if ($context -notmatch [regex]::Escape($_)) { throw "Closed-loop context field '$($_)' is missing." }
+    }
+
+    $proposal = Get-Content -LiteralPath $proposalPath -Raw
+    @('IsExternallyEffecting => false', 'RequiresHumanReview => true',
+      'RequiresNewSoftwareDeliveryRun => true') | ForEach-Object {
+        if ($proposal -notmatch [regex]::Escape($_)) { throw "Improvement proposal boundary '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('LoadAuthorizedContextAsync', 'PolicySignatureValid', 'outside the closed-loop context',
+      'SHA256.HashData', 'duplicate improvement intents', 'CreateAtomicallyAsync', 'ValidatePersisted') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Closed-loop engine guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
