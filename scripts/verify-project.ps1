@@ -329,6 +329,41 @@ if ($phaseNumber -ge 17) {
     }
 }
 
+if ($phaseNumber -ge 18) {
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\UnderstandingRequest.cs'
+    $factPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\UnderstandingFact.cs'
+    $candidatePath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\UnderstandingCandidate.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\GovernedUnderstandingEngine.cs'
+    $contextPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\IUnderstandingContextProvider.cs'
+    $analyzerPath = Join-Path $repositoryRoot 'backend\Platform.EnterpriseModel\Understanding\IUnderstandingAnalyzer.cs'
+    if (-not (Test-Path -LiteralPath $requestPath) -or -not (Test-Path -LiteralPath $factPath) -or
+        -not (Test-Path -LiteralPath $candidatePath) -or -not (Test-Path -LiteralPath $enginePath) -or
+        -not (Test-Path -LiteralPath $contextPath) -or -not (Test-Path -LiteralPath $analyzerPath)) {
+        throw 'Understanding Engine artifacts are missing.'
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('enterprise.understanding.read', 'ObjectScope', 'MaximumClassification', 'Purpose') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Understanding authorization '$($_)' is missing." }
+    }
+
+    $fact = Get-Content -LiteralPath $factPath -Raw
+    @('RelationshipKnowledgeState', 'EvidenceReferences', 'EnterpriseObjectReferences', 'Unknown facts cannot assert confidence') | ForEach-Object {
+        if ($fact -notmatch [regex]::Escape($_)) { throw "Understanding fact invariant '$($_)' is missing." }
+    }
+
+    $candidate = Get-Content -LiteralPath $candidatePath -Raw
+    if ($candidate -notmatch 'IsExecutable\s*=>\s*false') { throw 'Understanding candidates must remain non-executable.' }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('LoadAuthorizedSnapshotAsync', 'AnalyzeAsync', 'outside the authorized request scope',
+      'Confirmed and discovered claims must match grounded facts exactly',
+      'Inferred claims require grounded supporting facts', 'cannot downgrade source classification',
+      'summary cannot downgrade its claims or exceed authorization') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Understanding Engine guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

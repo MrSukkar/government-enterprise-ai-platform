@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 17,
-    "name": "Automatic Registration Engine",
+    "number": 18,
+    "name": "Understanding Engine",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 18,
-    "name": "Understanding Engine"
+    "number": 19,
+    "name": "Agentic Work System"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-17/PHASE_17_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-18/PHASE_18_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
