@@ -160,6 +160,46 @@ if ($phaseNumber -ge 13) {
     }
 }
 
+if ($phaseNumber -ge 14) {
+    $profilePath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\SovereignDeploymentProfile.cs'
+    $artifactPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\VerifiedDeploymentArtifact.cs'
+    $runtimePath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\ISovereignDeploymentRuntime.cs'
+    $servicePath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\GovernedSovereignDeploymentService.cs'
+    $dependencyPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\SovereignDependencyKind.cs'
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.Infrastructure\Sovereignty\SovereignDeploymentRequest.cs'
+    if (-not (Test-Path -LiteralPath $profilePath) -or -not (Test-Path -LiteralPath $artifactPath) -or
+        -not (Test-Path -LiteralPath $runtimePath) -or -not (Test-Path -LiteralPath $servicePath) -or
+        -not (Test-Path -LiteralPath $dependencyPath) -or -not (Test-Path -LiteralPath $requestPath)) {
+        throw 'Sovereign deployment platform artifacts are missing.'
+    }
+
+    $profile = Get-Content -LiteralPath $profilePath -Raw
+    @('AirGapped', 'ExternalControlPlaneAllowed', 'ExternalApiAllowed', 'ExternalAiServiceAllowed',
+      'ExternalSaasAllowed', 'OutboundNetworkDefaultDeny', 'IsLocallyOperated') | ForEach-Object {
+        if ($profile -notmatch [regex]::Escape($_)) { throw "Sovereign deployment invariant '$($_)' is missing." }
+    }
+
+    $dependencies = Get-Content -LiteralPath $dependencyPath -Raw
+    @('ModelRuntime', 'ArtifactRegistry', 'PackageRegistry', 'PolicyAuthority', 'IdentityProvider',
+      'EvidenceStore', 'ObservabilityBackend', 'SecretsManager', 'KeyManagement') | ForEach-Object {
+        if ($dependencies -notmatch "\b$($_)\b") { throw "Sovereign dependency '$($_)' is missing." }
+    }
+
+    $artifact = Get-Content -LiteralPath $artifactPath -Raw
+    @('SbomReference', 'BuildAttestationReference', 'SignatureReference', 'SupplyChainVerificationEvidenceReference') | ForEach-Object {
+        if ($artifact -notmatch [regex]::Escape($_)) { throw "Verified deployment artifact control '$($_)' is missing." }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    if ($request -notmatch 'HumanApprovalReference') { throw 'Sovereign deployment requires human approval evidence.' }
+
+    $runtime = Get-Content -LiteralPath $runtimePath -Raw
+    if ($runtime -notmatch 'ISovereignDeploymentRuntime') { throw 'Vendor-neutral sovereign deployment runtime abstraction is missing.' }
+
+    $service = Get-Content -LiteralPath $servicePath -Raw
+    if ($service -notmatch 'EvidenceReference') { throw 'Sovereign deployment evidence receipt validation is missing.' }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

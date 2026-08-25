@@ -3,19 +3,19 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 13,
-    "name": "Git & CI Workflows",
+    "number": 14,
+    "name": "Sovereign Deployment Platform",
     "status": "complete"
   },
   "nextPermittedPhase": {
-    "number": 14,
-    "name": "Sovereign Deployment Platform"
+    "number": 15,
+    "name": "OpenTelemetry Core & Redaction"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-13/PHASE_13_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-14/PHASE_14_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
