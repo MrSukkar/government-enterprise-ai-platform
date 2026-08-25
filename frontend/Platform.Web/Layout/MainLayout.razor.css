@@ -1,9 +1,9 @@
-.page { min-height: 100vh; display: grid; grid-template-columns: 17rem minmax(0, 1fr); background: #f4f7f9; }
+.page { min-height: 100vh; display: grid; grid-template-columns: 17rem minmax(0, 1fr); background: #f9fafb; }
 main { min-width: 0; }
-.sidebar { min-height: 100vh; background: #071f2b; color: #fff; }
+.sidebar { min-height: 100vh; background: #111927; color: #fff; border-top: 4px solid #dba102; }
 .top-row { min-height: 4.5rem; padding: .8rem clamp(1.25rem, 4vw, 3.5rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: rgba(255,255,255,.96); border-bottom: 1px solid #dce4e8; position: sticky; top: 0; z-index: 10; }
 .top-row > div:first-child { display: grid; }
 .context-label { color: #657783; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
-.phase-chip { padding: .45rem .75rem; border: 1px solid #b9cbc8; border-radius: 999px; color: #174b47; font-size: .82rem; }
+.phase-chip { padding: .45rem .75rem; border: 1px solid #9ed4b5; border-radius: 999px; color: #14573a; font-size: .82rem; }
 .content { padding: clamp(1.5rem, 4vw, 3.5rem); }
 @media (max-width: 780px) { .page { grid-template-columns: 1fr; } .sidebar { min-height: auto; position: sticky; top: 0; z-index: 20; } .top-row { position: static; } }

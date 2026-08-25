@@ -27,7 +27,25 @@
         }
       }
     },
-    "/openapi/v1.json": {
+    "/health/ready": {
+      "get": {
+        "operationId": "getPlatformReadiness",
+        "summary": "Read fail-closed runtime readiness.",
+        "description": "Returns 503 until every required runtime boundary is connected. Contract visibility does not make an unavailable capability executable.",
+        "tags": ["Platform"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "All required runtime boundaries are connected.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "503": {
+            "description": "One or more runtime boundaries are not connected; the platform remains fail-closed.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },    "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
         "summary": "Read this approved API contract.",

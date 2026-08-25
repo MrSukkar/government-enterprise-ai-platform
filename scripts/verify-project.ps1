@@ -724,8 +724,9 @@ if ($phaseNumber -ge 28) {
         if (-not (Test-Path -LiteralPath $_)) { throw "Phase 28 artifact is missing: $_" }
     }
 
-    $architecture = Get-Content -LiteralPath $architecturePath -Raw | ConvertFrom-Json
-    if ($architecture.architectureVersion -ne 'PROJECT MASTER SPECIFICATION v2 — APPROVED' -or
+    $architecture = Get-Content -LiteralPath $architecturePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $approvedArchitectureVersion = 'PROJECT MASTER SPECIFICATION v2 ' + [char]0x2014 + ' APPROVED'
+    if ($architecture.architectureVersion -ne $approvedArchitectureVersion -or
         $architecture.style -ne 'ASP.NET Core modular monolith' -or
         $architecture.backendTarget -ne 'net10.0' -or
         $architecture.frontend -ne 'Blazor WebAssembly net10.0') {
@@ -895,6 +896,12 @@ if (-not $NoBuild) {
     if ($LASTEXITCODE -ne 0) {
         throw "Solution build failed with exit code $LASTEXITCODE."
     }
+
+    $runtimeVerificationPath = Join-Path $repositoryRoot 'scripts\verify-runtime.ps1'
+    if (-not (Test-Path -LiteralPath $runtimeVerificationPath)) {
+        throw "Missing runtime verification script: $runtimeVerificationPath"
+    }
+    & $runtimeVerificationPath
 }
 
-Write-Output ('VERIFIED: Phase {0:D2}, {1} projects, acceptance satisfied.' -f $phaseNumber, $projectCount)
+Write-Output ('VERIFIED: Phase {0:D2}, {1} projects, acceptance and runtime satisfied.' -f $phaseNumber, $projectCount)

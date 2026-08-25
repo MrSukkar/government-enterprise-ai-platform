@@ -1,16 +1,16 @@
 .brand-row { min-height: 5rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,.12); }
 .brand { display: flex; align-items: center; gap: .75rem; color: white; text-decoration: none; font-size: .82rem; line-height: 1.25; }
-.brand-mark { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border: 1px solid #57c7b7; color: #7de3d4; font-weight: 800; letter-spacing: -.04em; }
+.brand-mark { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border: 1px solid #dba102; color: #f4c95d; font-weight: 800; letter-spacing: -.04em; }
 .nav-toggle { display: none; border: 1px solid rgba(255,255,255,.3); border-radius: .4rem; padding: .45rem; background: transparent; color: white; }
 .nav-scrollable { padding: 1rem .75rem; }
 .nav-section { padding: 1rem .75rem .45rem; color: #80a0ad; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
 .nav-item { margin: .15rem 0; }
 .nav-item ::deep .nav-link, .nav-link { min-height: 2.7rem; display: flex; align-items: center; gap: .65rem; padding: .65rem .75rem; border-radius: .45rem; color: #cfe0e6; text-decoration: none; }
-.nav-item ::deep .nav-link.active { color: white; background: #174756; }
+.nav-item ::deep .nav-link.active { color: white; background: #1b8354; }
 .nav-link.disabled { color: #829aa4; cursor: not-allowed; }
 .area-key { width: 1.15rem; height: 1.15rem; display: grid; place-items: center; border: 1px solid currentColor; border-radius: .2rem; font-size: .62rem; }
 .future-label { margin-left: auto; font-size: .62rem; color: #68838e; }
-.available-label { margin-left: auto; font-size: .62rem; color: #7de3d4; }
+.available-label { margin-left: auto; font-size: .62rem; color: #9ed4b5; }
 .nav-assurance { margin: 1.5rem .75rem 0; padding: 1rem 0; border-top: 1px solid rgba(255,255,255,.12); color: #80a0ad; font-size: .72rem; line-height: 1.5; }
 @media (max-width: 780px) { .nav-toggle { display: block; } .nav-scrollable.collapse { display: none; } }
 @media (min-width: 781px) { .nav-scrollable.collapse { display: block; } }

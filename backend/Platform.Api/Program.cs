@@ -1,6 +1,8 @@
 using Platform.AgenticWork;
 using Platform.Api.Composition;
 using Platform.Api.Contracts;
+using Platform.Api.Developers;
+using Platform.Api.Operations;
 using Platform.EnterpriseModel;
 using Platform.Evidence;
 using Platform.Governance;
@@ -44,14 +46,38 @@ builder.Services.AddPlatformModules(
     new EvidenceModule(),
     new InfrastructureModule());
 
+var runtimeReadiness = PlatformRuntimeReadiness.Inspect(builder.Services);
+builder.Services.AddSingleton(runtimeReadiness);
+
+if (builder.Environment.IsDevelopment())
+{
+    // Boundary adapters remain fail-closed when resolved. Development startup is
+    // allowed so liveness, readiness, the approved contract, and diagnostics can run.
+    builder.Host.UseDefaultServiceProvider(options =>
+    {
+        options.ValidateScopes = true;
+        options.ValidateOnBuild = false;
+    });
+}
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseStaticFiles();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
+app.MapPlatformOperationalReadiness();
 app.MapApprovedOpenApiContract();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapDeveloperPortal();
+}
 
 app.Run();
 
