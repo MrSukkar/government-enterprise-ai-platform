@@ -489,6 +489,50 @@ if ($phaseNumber -ge 21) {
     }
 }
 
+if ($phaseNumber -ge 22) {
+    $scenarioPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\SimulationScenario.cs'
+    $requestPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\EnterpriseSimulationRequest.cs'
+    $twinPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\DigitalTwinSnapshot.cs'
+    $isolationPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\SimulationIsolationProfile.cs'
+    $resultPath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\SimulationResult.cs'
+    $storePath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\ISimulationRunStore.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.Modeling\Simulation\EnterpriseSimulationEngine.cs'
+    @($scenarioPath, $requestPath, $twinPath, $isolationPath, $resultPath, $storePath, $enginePath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 22 artifact is missing: $_" }
+    }
+
+    $scenario = Get-Content -LiteralPath $scenarioPath -Raw
+    @('RecoveryPlanReference', 'RecoveryPlanVersion', 'RecoveryPlanSha256Digest',
+      'RecoveryEvidenceReferences', 'Perturbations') | ForEach-Object {
+        if ($scenario -notmatch [regex]::Escape($_)) { throw "Resilience scenario field '$($_)' is missing." }
+    }
+
+    $request = Get-Content -LiteralPath $requestPath -Raw
+    @('enterprise.simulation.run', 'AuthorizedObjectScope', 'MaximumClassification',
+      'Every perturbation target must be inside authorized scope') | ForEach-Object {
+        if ($request -notmatch [regex]::Escape($_)) { throw "Simulation request guard '$($_)' is missing." }
+    }
+
+    $isolation = Get-Content -LiteralPath $isolationPath -Raw
+    @('HasProductionCredentials => false', 'AllowsExternalEffects => false',
+      'SimulationNetworkAccess.None') | ForEach-Object {
+        if ($isolation -notmatch [regex]::Escape($_)) { throw "Simulation isolation '$($_)' is missing." }
+    }
+
+    $result = Get-Content -LiteralPath $resultPath -Raw
+    @('IsExternallyEffecting => false', 'IsAuthoritativeDecision => false',
+      'RecoveryAssessmentReference') | ForEach-Object {
+        if ($result -notmatch [regex]::Escape($_)) { throw "Simulation result boundary '$($_)' is missing." }
+    }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('LoadAuthorizedIsolatedSnapshotAsync', 'ValidateDigitalTwin', 'IsProductionConnected',
+      'CreateAtomicallyAsync', 'CompleteAtomicallyAsync', 'idempotencyKey',
+      'changed the governed assumptions', 'exceeded authorized scope', 'ValidatePersisted') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Simulation engine guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
