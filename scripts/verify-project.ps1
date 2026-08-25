@@ -803,6 +803,81 @@ if ($phaseNumber -ge 29) {
     }
 }
 
+if ($phaseNumber -ge 30) {
+    $stagePath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceStage.cs'
+    $appendPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceAppendRequest.cs'
+    $verifyPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceVerificationRequest.cs'
+    $entryPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceEntry.cs'
+    $signaturePath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\SignatureEnvelope.cs'
+    $accessPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceAuthorizationDecision.cs'
+    $storePath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\IEvidenceChainStore.cs'
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\CryptographicEvidenceEngine.cs'
+    $proofPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\Chain\EvidenceProofReport.cs'
+    $registrationPath = Join-Path $repositoryRoot 'backend\Platform.Evidence\EvidenceServiceCollectionExtensions.cs'
+    $programPath = Join-Path $repositoryRoot 'backend\Platform.Api\Program.cs'
+    @($stagePath, $appendPath, $verifyPath, $entryPath, $signaturePath, $accessPath, $storePath, $enginePath, $proofPath, $registrationPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 30 artifact is missing: $_" }
+    }
+
+    $expectedStages = @('Request', 'Context', 'Knowledge', 'Decision', 'Policy',
+        'Approval', 'Action', 'Result', 'Telemetry', 'Evidence')
+    $stageContent = Get-Content -LiteralPath $stagePath -Raw
+    $actualStages = [regex]::Matches($stageContent, '(?m)^\s{4}([A-Za-z][A-Za-z0-9]*),?\s*$') |
+        ForEach-Object { $_.Groups[1].Value }
+    if (($actualStages -join '|') -ne ($expectedStages -join '|')) {
+        throw 'Evidence stages do not match the exact approved sequence.'
+    }
+
+    $append = Get-Content -LiteralPath $appendPath -Raw
+    @('evidence.append', 'TenantId', 'CorrelationId', 'Classification', 'Purpose',
+      'PayloadSha256Digest', 'TraceReferences') | ForEach-Object {
+        if ($append -notmatch [regex]::Escape($_)) { throw "Evidence append guard '$($_)' is missing." }
+    }
+    $verify = Get-Content -LiteralPath $verifyPath -Raw
+    @('evidence.verify', 'MaximumAuthorizedClassification', 'Purpose', 'TenantId') | ForEach-Object {
+        if ($verify -notmatch [regex]::Escape($_)) { throw "Evidence verification guard '$($_)' is missing." }
+    }
+
+    $entry = Get-Content -LiteralPath $entryPath -Raw
+    @('PreviousEntrySha256Digest', 'EntrySha256Digest', 'SignatureEnvelope',
+      'AuthorizationEvidenceReference', 'ValidateShape') | ForEach-Object {
+        if ($entry -notmatch [regex]::Escape($_)) { throw "Evidence entry field '$($_)' is missing." }
+    }
+    $signature = Get-Content -LiteralPath $signaturePath -Raw
+    @('IEvidenceSigner', 'IEvidenceSignatureVerifier', 'Algorithm', 'KeyId',
+      'SignatureBase64', 'CertificateChainReference', 'SignedAt') | ForEach-Object {
+        if ($signature -notmatch [regex]::Escape($_)) { throw "Evidence signature contract '$($_)' is missing." }
+    }
+
+    $access = Get-Content -LiteralPath $accessPath -Raw
+    @('AuthorizeAppendAsync', 'AuthorizeVerificationAsync', 'AuthorizeClassificationAsync', 'Demand') | ForEach-Object {
+        if ($access -notmatch [regex]::Escape($_)) { throw "Evidence access guard '$($_)' is missing." }
+    }
+    $store = Get-Content -LiteralPath $storePath -Raw
+    @('AppendAtomicallyAsync', 'expectedSequence', 'expectedPreviousEntrySha256Digest',
+      'maximumAuthorizedClassification', 'authorizationEvidenceReference', 'LoadOrderedAsync') | ForEach-Object {
+        if ($store -notmatch [regex]::Escape($_)) { throw "Evidence store contract '$($_)' is missing." }
+    }
+    if ($store -match '(?i)Delete|Update') { throw 'Evidence store must not expose update or deletion operations.' }
+
+    $engine = Get-Content -LiteralPath $enginePath -Raw
+    @('ApprovedSequence', 'exact next approved stage', 'GenesisSha256Digest', 'SHA256.HashData',
+      'ComputeDigest', 'ValidateHeadAsync', 'signatureVerifier.VerifyAsync', 'ValidatePersisted',
+      'signed append-only entry', 'chain_link_invalid', 'stage_order_invalid',
+      'AuthorizeClassificationAsync') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Cryptographic evidence guard '$($_)' is missing." }
+    }
+    $proof = Get-Content -LiteralPath $proofPath -Raw
+    @('IsComplete', 'RootSha256Digest', 'HeadSha256Digest', 'EntryProofs', 'Failures',
+      'HashValid', 'SignatureValid', 'AuthorizationEvidenceReference') | ForEach-Object {
+        if ($proof -notmatch [regex]::Escape($_)) { throw "Evidence proof field '$($_)' is missing." }
+    }
+    $registration = (Get-Content -LiteralPath $registrationPath -Raw) + (Get-Content -LiteralPath $programPath -Raw)
+    @('AddPlatformEvidenceFoundation', 'AddScoped<CryptographicEvidenceEngine>') | ForEach-Object {
+        if ($registration -notmatch [regex]::Escape($_)) { throw "Evidence registration '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

@@ -3,19 +3,16 @@
   "project": "Government Enterprise AI Platform",
   "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
   "currentPhase": {
-    "number": 29,
-    "name": "Vertical Slice Delivery",
+    "number": 30,
+    "name": "Evidence Engine",
     "status": "complete"
   },
-  "nextPermittedPhase": {
-    "number": 30,
-    "name": "Evidence Engine"
-  },
+  "nextPermittedPhase": null,
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/PHASE_29_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-30/PHASE_30_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
