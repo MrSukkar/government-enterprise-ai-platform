@@ -10,6 +10,13 @@
       },
       "platform.domain": {
         "type": "Project"
+      },
+      "platform.enterprisemodel": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
       }
     }
   }
