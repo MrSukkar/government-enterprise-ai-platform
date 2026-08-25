@@ -416,6 +416,50 @@ if ($phaseNumber -ge 19) {
     }
 }
 
+if ($phaseNumber -ge 20) {
+    $actionRequestPath = Join-Path $repositoryRoot 'backend\Platform.Governance\GovernedActions\GovernedActionRequest.cs'
+    $gatewayPath = Join-Path $repositoryRoot 'backend\Platform.Governance\GovernedActions\GovernedActionGateway.cs'
+    $policyBundlePath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\SignedPolicyBundleReference.cs'
+    $policyVerifierPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\IPolicyBundleVerifier.cs'
+    $opaPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\IOpaPolicyDecisionPoint.cs'
+    $evidencePath = Join-Path $repositoryRoot 'backend\Platform.Governance\Evidence\IGovernanceEvidenceJournal.cs'
+    $mcpBindingPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Mcp\McpToolBinding.cs'
+    $mcpExecutorPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Mcp\McpGovernedActionExecutor.cs'
+    @($actionRequestPath, $gatewayPath, $policyBundlePath, $policyVerifierPath, $opaPath,
+      $evidencePath, $mcpBindingPath, $mcpExecutorPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Phase 20 artifact is missing: $_" }
+    }
+
+    $actionRequest = Get-Content -LiteralPath $actionRequestPath -Raw
+    @('governance.action.execute', 'separation of duties', 'ApprovalEvidenceReference',
+      'Policy bundle environment does not match') | ForEach-Object {
+        if ($actionRequest -notmatch [regex]::Escape($_)) { throw "Governed action guard '$($_)' is missing." }
+    }
+
+    $policyBundle = Get-Content -LiteralPath $policyBundlePath -Raw
+    @('Version', 'Sha256Digest', 'SignatureReference', 'Environment', 'ActivatedAt') | ForEach-Object {
+        if ($policyBundle -notmatch [regex]::Escape($_)) { throw "Signed policy field '$($_)' is missing." }
+    }
+
+    $gateway = Get-Content -LiteralPath $gatewayPath -Raw
+    @('VerifyAsync', 'EvaluateAsync', 'SignatureValid', 'OpaDecisionOutcome.Permit',
+      'GovernanceEvidenceStage.ActionIntent', 'action_denied_fail_closed', 'idempotencyKey',
+      'ValidateResult') | ForEach-Object {
+        if ($gateway -notmatch [regex]::Escape($_)) { throw "Governance gateway boundary '$($_)' is missing." }
+    }
+
+    $mcpBinding = Get-Content -LiteralPath $mcpBindingPath -Raw
+    @('TenantId', 'Environment', 'InputSchemaSha256Digest', 'MaximumClassification', 'Enabled') | ForEach-Object {
+        if ($mcpBinding -notmatch [regex]::Escape($_)) { throw "MCP binding guard '$($_)' is missing." }
+    }
+
+    $mcpExecutor = Get-Content -LiteralPath $mcpExecutorPath -Raw
+    @('AuthorizedActionCommand', 'No governed MCP tool binding exists', 'command.Classification',
+      'ValidateMcpResult', 'InputSchemaSha256Digest', 'IdempotencyKey') | ForEach-Object {
+        if ($mcpExecutor -notmatch [regex]::Escape($_)) { throw "MCP action guard '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
