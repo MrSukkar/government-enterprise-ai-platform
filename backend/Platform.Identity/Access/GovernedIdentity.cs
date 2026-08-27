@@ -10,6 +10,7 @@ public sealed record GovernedIdentity(
     bool IsAuthenticated,
     DataClassification Clearance,
     ImmutableHashSet<string> Roles,
+    ImmutableHashSet<string> Permissions,
     ImmutableDictionary<string, string> Attributes,
     string? CertificateThumbprint)
 {

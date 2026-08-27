@@ -1,18 +1,19 @@
 @page "/build/internal-services"
 @inject ExperienceContext ExperienceContext
+@inject HttpClient Http
 
 <PageTitle>Create Internal Service | Government Enterprise AI Platform</PageTitle>
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 01 / Build</p>
+        <p class="eyebrow">Operational increment 02 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">WORKSPACE PREVIEW</span>
-        <strong>Material execution is fail-closed</strong>
-        <small>Identity, policy, runtime adapters, and approval are required.</small>
+        <span class="state-chip">GOVERNED SUBMISSION</span>
+        <strong>Validation only; execution is fail-closed</strong>
+        <small>OPA, persistence, runtime adapters, and approval remain required.</small>
     </aside>
 </section>
 
@@ -25,11 +26,13 @@
         <textarea id="service-mission" @bind="Mission" rows="4" placeholder="What public or institutional outcome must improve?"></textarea>
         <div class="field-grid">
             <div><label for="service-users">Primary users</label><input id="service-users" @bind="PrimaryUsers" placeholder="Residents, inspectors, analysts..." /></div>
-            <div><label for="classification">Classification</label><select id="classification" @bind="Classification"><option value="">Select</option><option>Public</option><option>Internal</option><option>Confidential</option><option>Restricted</option></select></div>
+            <div><label for="classification">Classification</label><select id="classification" @bind="Classification"><option value="">Select</option><option>Public</option><option>Internal</option><option>Confidential</option><option>Secret</option><option>TopSecret</option></select></div>
         </div>
+        <label for="intent-evidence">Intent evidence reference</label>
+        <input id="intent-evidence" @bind="IntentEvidenceReference" placeholder="evidence://intent/..." />
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
-            <button type="button" class="primary-action" disabled="@(!ExperienceContext.IsGovernedIdentityEstablished)">Create governed intent</button>
+            <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
     </div>
@@ -37,13 +40,13 @@
     <aside class="workspace-card context-panel">
         <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
         <ul class="context-list">
-            <li><span>Identity and purpose</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Identity and purpose</span><strong class="@(ExperienceContext.IsGovernedIdentityEstablished ? "available" : "waiting")">@(ExperienceContext.IsGovernedIdentityEstablished ? "Established" : "Waiting")</strong></li>
             <li><span>Enterprise Model</span><strong class="waiting">Waiting</strong></li>
             <li><span>Existing systems</span><strong class="waiting">Waiting</strong></li>
             <li><span>Approved architecture</span><strong class="available">Baseline ready</strong></li>
             <li><span>Approved packages</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Why it is locked</strong><p>Previewing and evaluating a local draft creates no institutional fact. Submission requires server-authorized context and evidence.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The API re-authorizes identity, tenant, purpose, classification, permission, and evidence. A successful response validates the intent but does not persist it, evaluate OPA, or execute work.</p></div>
     </aside>
 </section>
 
@@ -69,8 +72,20 @@
     private string Mission { get; set; } = "Reduce renewal effort while preserving eligibility, policy, and audit controls.";
     private string PrimaryUsers { get; set; } = "Residents and permit officers";
     private string Classification { get; set; } = "Internal";
+    private string IntentEvidenceReference { get; set; } = string.Empty;
     private int DraftScore { get; set; } = 100;
     private string EvaluationMessage { get; set; } = "Draft is complete enough for governed context discovery. Submission remains locked.";
+    private bool IsSubmitting { get; set; }
+
+    private bool CanSubmit =>
+        ExperienceContext.HasPermission("developer.internal-service.create") &&
+        !string.IsNullOrWhiteSpace(ExperienceContext.TenantId) &&
+        !string.IsNullOrWhiteSpace(ExperienceContext.AuthorizationEvidenceReference) &&
+        !string.IsNullOrWhiteSpace(ServiceName) &&
+        !string.IsNullOrWhiteSpace(Mission) &&
+        !string.IsNullOrWhiteSpace(PrimaryUsers) &&
+        !string.IsNullOrWhiteSpace(Classification) &&
+        !string.IsNullOrWhiteSpace(IntentEvidenceReference);
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -98,12 +113,58 @@
 
     private void EvaluateDraft()
     {
-        var values = new[] { ServiceName, Mission, PrimaryUsers, Classification };
-        DraftScore = values.Count(value => !string.IsNullOrWhiteSpace(value)) * 25;
+        var values = new[] { ServiceName, Mission, PrimaryUsers, Classification, IntentEvidenceReference };
+        DraftScore = values.Count(value => !string.IsNullOrWhiteSpace(value)) * 20;
         EvaluationMessage = DraftScore == 100
             ? "Draft is complete enough for governed context discovery. Submission remains locked."
             : $"Complete the missing fields before governed submission. Current completeness: {DraftScore}%.";
     }
 
+    private async Task SubmitIntentAsync()
+    {
+        if (!CanSubmit)
+        {
+            EvaluationMessage = "Submission requires governed identity, tenant, permission, and intent evidence.";
+            return;
+        }
+
+        IsSubmitting = true;
+        try
+        {
+            var request = new IntentSubmissionRequest(
+                Guid.NewGuid(),
+                ExperienceContext.TenantId!,
+                ExperienceContext.Purpose,
+                Classification,
+                ServiceName,
+                Mission,
+                PrimaryUsers,
+                ExperienceContext.AuthorizationEvidenceReference!,
+                [IntentEvidenceReference]);
+            var response = await Http.PostAsJsonAsync("api/v1/internal-services/intents", request);
+            EvaluationMessage = response.IsSuccessStatusCode
+                ? "Intent validated by the server. It was not persisted and cannot execute until OPA and governed persistence are approved."
+                : "Server validation denied the submission. Verify governed identity, tenant, permission, classification, and evidence.";
+        }
+        catch (HttpRequestException)
+        {
+            EvaluationMessage = "The governed submission boundary is unavailable. No intent was persisted.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
+    private sealed record IntentSubmissionRequest(
+        Guid SubmissionId,
+        string TenantId,
+        string Purpose,
+        string Classification,
+        string ServiceName,
+        string Mission,
+        string PrimaryUsers,
+        string AuthorizationEvidenceReference,
+        IReadOnlyList<string> IntentEvidenceReferences);
 }

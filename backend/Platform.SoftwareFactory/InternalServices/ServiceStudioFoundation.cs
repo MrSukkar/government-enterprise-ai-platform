@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 01 - Governed Intent Workspace",
-        "Preview available; material execution fail-closed",
+        "Operational Increment 02 - Governed Intent Submission",
+        "Authenticated server validation available; persistence, policy, and execution fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -36,6 +36,8 @@ public static class InternalServiceFoundationCatalog
             "Development startup is smoke-tested",
             "Readiness remains fail-closed",
             "OpenAPI contract is available",
+            "Anonymous intent submission is rejected with a bearer challenge",
+            "Validated intent is never persisted or executed",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

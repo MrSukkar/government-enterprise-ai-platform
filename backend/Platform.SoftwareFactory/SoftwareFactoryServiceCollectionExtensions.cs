@@ -8,6 +8,7 @@ using Platform.SoftwareFactory.SupplyChain;
 using Platform.SoftwareFactory.DeveloperExperience;
 using Platform.SoftwareFactory.ClosedLoop;
 using Platform.SoftwareFactory.VerticalSlice;
+using Platform.SoftwareFactory.InternalService;
 
 namespace Platform.SoftwareFactory;
 
@@ -25,6 +26,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedDeveloperExperienceService>();
         services.AddScoped<ClosedLoopEngine>();
         services.AddScoped<InternalServiceVerticalSliceEngine>();
+        services.AddSingleton<GovernedIntentSubmissionValidator>();
         return services;
     }
 }

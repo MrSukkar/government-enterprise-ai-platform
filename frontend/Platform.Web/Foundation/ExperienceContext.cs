@@ -30,6 +30,9 @@ public sealed class ExperienceContext
     public bool CanAccess(FrontDoorDestination destination) =>
         IsGovernedIdentityEstablished && Permissions.Contains(destination.RequiredPermission);
 
+    public bool HasPermission(string permission) =>
+        IsGovernedIdentityEstablished && Permissions.Contains(permission);
+
     public void Clear() =>
         (Persona, Purpose, TenantId, Permissions, AuthorizationEvidenceReference, ExpiresAt,
             IsGovernedIdentityEstablished) =

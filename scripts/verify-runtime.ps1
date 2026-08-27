@@ -83,6 +83,10 @@ try {
     $openApi = $client.GetAsync("$baseAddress/openapi/v1.json").GetAwaiter().GetResult()
     $developerPortal = $client.GetAsync("$baseAddress/developers").GetAwaiter().GetResult()
     $internalService = $client.GetAsync("$baseAddress/api/v1/internal-services/foundation").GetAwaiter().GetResult()
+    $intentContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $intentSubmission = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/intents",
+        $intentContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -95,6 +99,10 @@ try {
     }
     if ([int]$internalService.StatusCode -ne 200) {
         throw "Expected Create Internal Service status 200, received $([int]$internalService.StatusCode)."
+    }
+    if ([int]$intentSubmission.StatusCode -ne 401 -or
+        $intentSubmission.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous governed intent submission did not fail closed with a bearer challenge.'
     }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -114,6 +122,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
+        $internalServiceBody.increment -ne 'Operational Increment 02 - Governed Intent Submission' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -122,8 +131,9 @@ try {
     $openApiBody = $openApi.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($openApiBody.openapi -ne '3.1.0' -or
         -not $openApiBody.paths.'/health/ready' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/foundation') {
-        throw 'Runtime OpenAPI response does not contain the approved readiness and product-foundation endpoints.'
+        -not $openApiBody.paths.'/api/v1/internal-services/foundation' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/intents') {
+        throw 'Runtime OpenAPI response does not contain the approved readiness, foundation, and governed intent endpoints.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()

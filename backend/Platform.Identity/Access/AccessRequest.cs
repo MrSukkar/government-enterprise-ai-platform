@@ -11,5 +11,6 @@ public sealed record AccessRequest(
     string ResourceTenantId,
     DataClassification ResourceClassification,
     ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<string> RequiredPermissions,
     string? InitiatorSubjectId,
     bool RequiresDistinctApprover);

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using System.Text.Json.Serialization;
 using Platform.AgenticWork;
 using Platform.Api.Composition;
 using Platform.Api.Contracts;
@@ -19,6 +20,8 @@ using Platform.SoftwareFactory;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHealthChecks();
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorizationBuilder()
@@ -87,6 +90,7 @@ app.MapHealthChecks("/health").AllowAnonymous();
 app.MapPlatformOperationalReadiness();
 app.MapApprovedOpenApiContract();
 app.MapInternalServiceFoundation();
+app.MapInternalServiceIntentSubmission();
 
 if (app.Environment.IsDevelopment())
 {

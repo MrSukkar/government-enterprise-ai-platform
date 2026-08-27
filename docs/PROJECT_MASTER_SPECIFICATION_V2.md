@@ -134,6 +134,8 @@ The first business/domain implementation is **Create Internal Service Workspace*
 
 Operational Increment 01 is the **Governed Intent Workspace**. It exposes a non-authoritative product preview, validates service intent, and publishes the approved delivery sequence. Material execution remains unavailable until governed identity, tenant, purpose, classification, OPA policy, required human approval, and runtime readiness are established.
 
+Operational Increment 02 is **Governed Intent Submission**. It adds a protected REST contract and server-side validation of authenticated subject, tenant, purpose, classification clearance, explicit permission, authorization evidence, and intent evidence. The result is a deterministic validation receipt only: it is not persisted, is not an OPA decision, grants no workflow authority, and cannot execute material work. Until a governed OIDC/OAuth2 adapter is configured, authentication fails closed.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`

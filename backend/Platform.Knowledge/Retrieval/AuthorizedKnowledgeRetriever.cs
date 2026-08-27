@@ -25,6 +25,7 @@ public sealed class AuthorizedKnowledgeRetriever(
             query.TenantId,
             query.MaximumClassification,
             query.RequiredRoles,
+            RequiredPermissions: [],
             InitiatorSubjectId: null,
             RequiresDistinctApprover: false));
 
@@ -59,6 +60,7 @@ public sealed class AuthorizedKnowledgeRetriever(
                 candidate.TenantId,
                 candidate.Classification,
                 query.RequiredRoles,
+                RequiredPermissions: [],
                 InitiatorSubjectId: null,
                 RequiresDistinctApprover: false));
 

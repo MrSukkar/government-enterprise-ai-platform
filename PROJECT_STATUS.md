@@ -8,8 +8,9 @@ Status: **Phase 30 complete — Evidence Engine**
 - Completed phases: **01 — Product Constitution** through **30 — Evidence Engine**
 - Phase 30 artifacts: `backend/Platform.Evidence/Chain`, `docs/phase-30/EVIDENCE_ENGINE.md`, `docs/phase-30/PHASE_30_ACCEPTANCE.md`
 - Next permitted phase: **None — the approved 30-phase roadmap is complete**
-- Business/domain implementation: **Create Internal Service Workspace — Operational Increment 01 authorized under CR-001**
-- Current product increment: **Governed Intent Workspace — complete and verified**
-- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_01_ACCEPTANCE.md`
+- Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–02 authorized under CR-001**
+- Current product increment: **Governed Intent Submission — complete and verified**
+- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_02_ACCEPTANCE.md`
+- Execution boundary: **Intent validation only; persistence, OPA, workflow advancement, and material execution remain fail-closed**
 
 The approved platform foundation is complete through Phase 30. Evidence is append-only, tenant- and classification-scoped, tamper-evident, cryptographically signed and verifiable, strictly ordered, correlated, traceable, and suitable for sovereign or air-gapped key-management implementations.

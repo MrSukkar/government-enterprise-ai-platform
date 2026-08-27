@@ -62,6 +62,45 @@
         }
       }
     },
+    "/api/v1/internal-services/intents": {
+      "post": {
+        "operationId": "submitInternalServiceIntent",
+        "summary": "Validate a governed internal-service intent submission.",
+        "description": "Requires authenticated identity, tenant, purpose, classification, permission, and authorization evidence. A successful validation is not persisted, is not an OPA decision, and cannot execute material work.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GovernedIntentSubmission" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The intent passed server validation but was not persisted and cannot execute.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GovernedIntentValidationReceipt" }
+              }
+            }
+          },
+          "400": {
+            "description": "The submission shape or classification is invalid.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "401": {
+            "description": "A governed authenticated identity is required.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "403": {
+            "description": "Tenant, permission, clearance, purpose, or authorization evidence validation failed.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -87,6 +126,59 @@
       }
     },
     "schemas": {
+      "GovernedIntentSubmission": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "submissionId", "tenantId", "purpose", "classification", "serviceName",
+          "mission", "primaryUsers", "authorizationEvidenceReference", "intentEvidenceReferences"
+        ],
+        "properties": {
+          "submissionId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "classification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "serviceName": { "type": "string", "minLength": 1 },
+          "mission": { "type": "string", "minLength": 1 },
+          "primaryUsers": { "type": "string", "minLength": 1 },
+          "authorizationEvidenceReference": { "type": "string", "minLength": 1 },
+          "intentEvidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "GovernedIntentValidationReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "submissionId", "tenantId", "subjectId", "classification", "intentDigest",
+          "validatedAt", "status", "isPersisted", "isPolicyEvaluated", "canExecute",
+          "nextRequiredGate", "evidenceReferences"
+        ],
+        "properties": {
+          "submissionId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" },
+          "subjectId": { "type": "string" },
+          "classification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "intentDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "validatedAt": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "const": "validated-not-persisted" },
+          "isPersisted": { "type": "boolean", "const": false },
+          "isPolicyEvaluated": { "type": "boolean", "const": false },
+          "canExecute": { "type": "boolean", "const": false },
+          "nextRequiredGate": { "type": "string" },
+          "evidenceReferences": { "type": "array", "items": { "type": "string" } }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {

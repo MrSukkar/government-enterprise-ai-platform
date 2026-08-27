@@ -31,6 +31,11 @@ public sealed class DefaultAccessPolicyEvaluator : IAccessPolicyEvaluator
             return AccessDecision.Deny("role_denied", "One or more required roles are absent.");
         }
 
+        if (!request.RequiredPermissions.IsSubsetOf(request.Identity.Permissions))
+        {
+            return AccessDecision.Deny("permission_denied", "One or more required permissions are absent.");
+        }
+
         if (request.RequiresDistinctApprover &&
             StringComparer.Ordinal.Equals(request.Identity.SubjectId, request.InitiatorSubjectId))
         {
