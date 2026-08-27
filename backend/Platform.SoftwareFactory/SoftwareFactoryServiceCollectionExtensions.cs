@@ -27,6 +27,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<ClosedLoopEngine>();
         services.AddScoped<InternalServiceVerticalSliceEngine>();
         services.AddSingleton<GovernedIntentSubmissionValidator>();
+        services.AddSingleton<GovernedIntentRegistrationEngine>();
         return services;
     }
 }

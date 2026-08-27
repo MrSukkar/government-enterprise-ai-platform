@@ -1,6 +1,6 @@
 # CR-001 — Create Internal Service Workspace
 
-Status: **Approved through Operational Increment 02**
+Status: **Approved through Operational Increment 03**
 Authority: Repository owner authorization in the active delivery record
 Foundation authority: `PROJECT MASTER SPECIFICATION v2 — APPROVED`
 
@@ -35,12 +35,26 @@ An authorized developer can describe a service outcome and progress through the 
 - Blazor submission behavior that remains disabled without server-authorized context and required evidence.
 - Runtime verification that anonymous submission returns `401` with a bearer challenge.
 
+### In scope for Increment 03
+
+- A protected REST contract for governed intent registration.
+- Revalidation of authenticated subject, tenant, classification clearance, registration permission, and authorization evidence.
+- A signed-policy reference and OPA policy-gate boundary that must return a structurally matching, evidence-bearing decision.
+- Strict ordering in which OPA denial cannot reach the repository.
+- Deterministic registration idempotency and optimistic expected-version checks.
+- A vendor-neutral atomic repository boundary that must persist the intent together with cryptographic registration evidence.
+- Structural validation of every persisted field, policy binding, version, evidence reference, and registration result.
+- Explicit fail-closed readiness when the sovereign OPA gate or atomic repository adapter is unavailable.
+- OpenAPI, frontend boundary communication, and runtime non-regression verification.
+
 ### Out of scope
 
 - Production deployment.
 - Fake or in-memory production adapters.
 - Live identity-provider credentials or a custom token parser.
 - Institutional intent persistence or Enterprise Model mutation.
+- A concrete PostgreSQL provider or schema migration before institutional package and deployment configuration is supplied.
+- A live OPA endpoint, policy bundle, key, credential, or non-sovereign control-plane dependency.
 - OPA evaluation, approval, workflow advancement, or material execution.
 - Direct AI execution.
 - New database or graph decisions.
@@ -57,7 +71,7 @@ An authorized developer can describe a service outcome and progress through the 
 
 ## 3. Architectural Review
 
-Decision: **Conforms without architectural deviation through Increment 02**.
+Decision: **Conforms without architectural deviation through Increment 03**.
 
 - The solution remains a 15-project .NET 10 Modular Monolith.
 - PostgreSQL remains the primary database baseline; no persistence adapter is invented in Increment 01.
@@ -70,10 +84,13 @@ Decision: **Conforms without architectural deviation through Increment 02**.
 - The protected submission endpoint validates an authenticated request but produces no institutional state or executable command.
 - Claims are consumed only after authentication; no JWT, bearer token, or credential parser is added.
 - OPA remains unevaluated and therefore fail-closed for advancement.
+- Increment 03 cannot invoke persistence until an evidence-bearing OPA permit has been structurally revalidated.
+- The repository contract requires one atomic intent-and-evidence commit with idempotency and optimistic concurrency.
+- No in-memory or fake production adapter is introduced; unavailable adapters remain visible in runtime readiness.
 
 ## 4. Decision
 
-Approve Create Internal Service Workspace as the first business/domain product. Approve Increment 01 as a safe product surface and approve Increment 02 as a protected, server-validated intent boundary while persistence, OPA, workflow advancement, and material execution remain fail-closed.
+Approve Create Internal Service Workspace as the first business/domain product. Approve Increment 01 as a safe product surface, Increment 02 as a protected server-validation boundary, and Increment 03 as the fail-closed OPA-gated atomic registration contract. Concrete policy and persistence adapters remain deployment-controlled prerequisites.
 
 Future increments require the same control record to be extended or a new Change Request when scope or architecture changes.
 
@@ -88,6 +105,7 @@ Approved scope:
 - Product: Create Internal Service Workspace.
 - Increment: 01 — Governed Intent Workspace.
 - Increment: 02 — Governed Intent Submission.
+- Increment: 03 — Governed Intent Registration.
 - Authorization: implementation, verification, source control, and governed CI.
 - Release authority: remains subject to successful CI and acceptance evidence.
 
@@ -111,3 +129,15 @@ Approved scope:
 6. The UI cannot submit without governed context, permission, tenant, and intent evidence.
 7. No identity credential, custom token parser, database adapter, OPA decision, workflow advancement, or material action is introduced.
 8. All 15 projects build with zero warnings and zero errors and runtime verification succeeds.
+
+### Increment 03 acceptance criteria
+
+1. Registration requires authenticated tenant scope, classification clearance, explicit registration permission, and matching authorization evidence.
+2. A signed policy bundle reference is mandatory and the OPA decision is revalidated against request, tenant, environment, bundle identity, digest, time, reasons, and evidence.
+3. OPA denial returns a non-persisted receipt and never calls the repository.
+4. OPA permit is required before the atomic repository boundary can be invoked.
+5. Registration uses a deterministic idempotency key and expected-version concurrency guard.
+6. The repository result is accepted only when every governed field, policy binding, version, and evidence boundary matches.
+7. Missing OPA or repository adapters remain fail-closed and visible in runtime readiness; no fake adapter is supplied.
+8. No AI, Enterprise Model mutation, workflow advancement, action, or deployment path is introduced.
+9. OpenAPI 3.1, the frontend boundary, all 15 projects, and runtime verification remain valid.

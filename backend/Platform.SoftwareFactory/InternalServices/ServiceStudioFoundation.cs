@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 02 - Governed Intent Submission",
-        "Authenticated server validation available; persistence, policy, and execution fail-closed",
+        "Operational Increment 03 - Governed Intent Registration",
+        "OPA-gated atomic registration contract available; runtime adapters and execution fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -38,6 +38,8 @@ public static class InternalServiceFoundationCatalog
             "OpenAPI contract is available",
             "Anonymous intent submission is rejected with a bearer challenge",
             "Validated intent is never persisted or executed",
+            "Registration requires an OPA policy gate and atomic evidence-bearing repository",
+            "Missing registration adapters return service unavailable without mutation",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

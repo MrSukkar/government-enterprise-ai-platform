@@ -10,11 +10,11 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 02 - Governed Intent Submission",
+    "increment": "Operational Increment 03 - Governed Intent Registration",
     "status": "complete",
     "changeControl": "docs/change-control/CR-001-INTERNAL-SERVICE-VERTICAL-SLICE.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_02_ACCEPTANCE.md",
-    "executionBoundary": "validation-only; persistence, OPA, workflow advancement, and material execution fail-closed"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_03_ACCEPTANCE.md",
+    "executionBoundary": "OPA-gated atomic registration contract verified; policy and repository adapters unavailable; no institutional mutation or advancement"
   },
   "lastVerified": {
     "projects": 15,

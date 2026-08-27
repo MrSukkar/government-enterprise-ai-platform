@@ -91,6 +91,7 @@ app.MapPlatformOperationalReadiness();
 app.MapApprovedOpenApiContract();
 app.MapInternalServiceFoundation();
 app.MapInternalServiceIntentSubmission();
+app.MapInternalServiceIntentRegistration();
 
 if (app.Environment.IsDevelopment())
 {

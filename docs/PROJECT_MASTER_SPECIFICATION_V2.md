@@ -136,6 +136,8 @@ Operational Increment 01 is the **Governed Intent Workspace**. It exposes a non-
 
 Operational Increment 02 is **Governed Intent Submission**. It adds a protected REST contract and server-side validation of authenticated subject, tenant, purpose, classification clearance, explicit permission, authorization evidence, and intent evidence. The result is a deterministic validation receipt only: it is not persisted, is not an OPA decision, grants no workflow authority, and cannot execute material work. Until a governed OIDC/OAuth2 adapter is configured, authentication fails closed.
 
+Operational Increment 03 is **Governed Intent Registration**. It defines an OPA-gated registration command, deterministic idempotency, optimistic version checks, and an atomic repository boundary that must commit the governed intent with cryptographic registration evidence. OPA denial cannot reach persistence. Missing sovereign policy or repository adapters return service unavailable without mutation. No fake persistence, external credential, AI step, workflow advancement, or material execution is introduced.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`

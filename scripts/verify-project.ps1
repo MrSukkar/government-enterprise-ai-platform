@@ -891,6 +891,52 @@ if ($phaseNumber -ge 30) {
     }
 }
 
+$increment03AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_03_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment03AcceptancePath) {
+    $intentRegistrationPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedIntentRegistration.cs'
+    $intentEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    @($intentRegistrationPath, $intentEndpointPath, $readinessPath, $openApiPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Operational Increment 03 artifact is missing: $_" }
+    }
+
+    $intentRegistration = Get-Content -LiteralPath $intentRegistrationPath -Raw
+    @('developer.internal-service.intent.register', 'PolicySignatureValid',
+      'PolicyVerificationEvidenceReference', 'GovernedIntentPolicyOutcome.Permit',
+      'RegisterAtomicallyAsync', 'ExpectedVersion', 'idempotencyKey',
+      'pending-atomic-registration', 'ValidatePersisted', 'CanAdvance: false',
+      'OPA returned a mismatched intent decision') | ForEach-Object {
+        if ($intentRegistration -notmatch [regex]::Escape($_)) {
+            throw "Governed intent registration guard '$($_)' is missing."
+        }
+    }
+
+    $intentEndpoint = Get-Content -LiteralPath $intentEndpointPath -Raw
+    @('/api/v1/internal-services/intents/register', 'RequiredPermissions',
+      'IGovernedIntentPolicyGate', 'IGovernedIntentRegistrationRepository',
+      'Status503ServiceUnavailable', 'Status409Conflict', 'RequireAuthorization') | ForEach-Object {
+        if ($intentEndpoint -notmatch [regex]::Escape($_)) {
+            throw "Governed intent endpoint guard '$($_)' is missing."
+        }
+    }
+
+    $readiness = Get-Content -LiteralPath $readinessPath -Raw
+    @('Governed intent OPA policy gate', 'Governed intent atomic registration repository') | ForEach-Object {
+        if ($readiness -notmatch [regex]::Escape($_)) {
+            throw "Governed intent readiness dependency '$($_)' is missing."
+        }
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw
+    @('/api/v1/internal-services/intents/register', 'GovernedIntentRegistrationInput',
+      'GovernedIntentRegistrationReceipt', 'expectedVersion', '503') | ForEach-Object {
+        if ($openApi -notmatch [regex]::Escape($_)) {
+            throw "Governed intent OpenAPI boundary '$($_)' is missing."
+        }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

@@ -14,6 +14,7 @@ using Platform.SoftwareFactory.ClosedLoop;
 using Platform.SoftwareFactory.DeveloperExperience;
 using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.VerticalSlice;
+using Platform.SoftwareFactory.InternalService;
 
 namespace Platform.Api.Operations;
 
@@ -57,7 +58,9 @@ internal sealed class PlatformRuntimeReadiness
             ("OPA policy bundle verifier", typeof(IPolicyBundleVerifier)),
             ("Enterprise Model snapshot provider", typeof(IEnterpriseModelSnapshotProvider)),
             ("Digital-twin snapshot provider", typeof(IDigitalTwinSnapshotProvider)),
-            ("Cryptographic evidence-chain store", typeof(IEvidenceChainStore))
+            ("Cryptographic evidence-chain store", typeof(IEvidenceChainStore)),
+            ("Governed intent OPA policy gate", typeof(IGovernedIntentPolicyGate)),
+            ("Governed intent atomic registration repository", typeof(IGovernedIntentRegistrationRepository))
         };
 
         var dependencies = requiredDependencies

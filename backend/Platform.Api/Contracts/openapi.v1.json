@@ -101,6 +101,53 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/register": {
+      "post": {
+        "operationId": "registerInternalServiceIntent",
+        "summary": "Register a validated internal-service intent after OPA approval.",
+        "description": "Requires authenticated authorization plus configured OPA and atomic evidence-bearing persistence adapters. Missing adapters, policy denial, or concurrency failure cannot create institutional state.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GovernedIntentRegistrationInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "An idempotent retry matched the existing governed registration.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedIntentRegistrationReceipt" } } }
+          },
+          "201": {
+            "description": "OPA permitted the request and intent plus registration evidence were created atomically.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedIntentRegistrationReceipt" } } }
+          },
+          "400": {
+            "description": "The registration request, policy reference, or persisted response is invalid.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "401": {
+            "description": "A governed authenticated identity is required.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "403": {
+            "description": "Authorization or OPA denied the registration.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "409": {
+            "description": "The expected registration version did not match.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "503": {
+            "description": "The OPA policy gate or atomic registration repository is unavailable; no mutation occurred.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -177,6 +224,54 @@
           "canExecute": { "type": "boolean", "const": false },
           "nextRequiredGate": { "type": "string" },
           "evidenceReferences": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "IntentPolicyBundleReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bundleId", "version", "sha256Digest", "signatureReference", "environment", "activatedAt"],
+        "properties": {
+          "bundleId": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "minLength": 1 },
+          "sha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "signatureReference": { "type": "string", "minLength": 1 },
+          "environment": { "type": "string", "minLength": 1 },
+          "activatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GovernedIntentRegistrationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["registrationId", "submission", "environment", "policyBundle", "expectedVersion"],
+        "properties": {
+          "registrationId": { "type": "string", "format": "uuid" },
+          "submission": { "$ref": "#/components/schemas/GovernedIntentSubmission" },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" },
+          "expectedVersion": { "type": "integer", "format": "int64", "minimum": -1 }
+        }
+      },
+      "GovernedIntentRegistrationReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "registrationId", "submissionId", "tenantId", "intentSha256Digest", "policyOutcome",
+          "isPersisted", "canAdvance", "evidenceReferences", "nextRequiredGate", "completedAt"
+        ],
+        "properties": {
+          "registrationId": { "type": "string", "format": "uuid" },
+          "submissionId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" },
+          "intentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isPersisted": { "type": "boolean" },
+          "canAdvance": { "type": "boolean", "const": false },
+          "disposition": { "type": ["string", "null"], "enum": ["Created", "Unchanged", null] },
+          "version": { "type": ["integer", "null"], "format": "int64" },
+          "registrationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string" } },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
         }
       },
       "ProblemDetails": {
