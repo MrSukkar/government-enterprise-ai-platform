@@ -3,6 +3,7 @@ html, body { margin: 0; min-height: 100%; font-family: "IBMPlexSansArabic", syst
 *, *::before, *::after { box-sizing: border-box; }
 a { color: var(--accent); }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+h1:focus { outline: none; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { max-width: 16ch; font-size: clamp(2.2rem, 5vw, 4.6rem); line-height: .98; letter-spacing: -.045em; }
 h2 { font-size: clamp(1.35rem, 2vw, 2rem); }
@@ -46,6 +47,7 @@ section + section { margin-top: clamp(2.5rem, 6vw, 5rem); }
 .destination-card footer span { color: var(--muted); font-size: .72rem; }
 .destination-card button { min-height: 2.5rem; padding: .55rem .8rem; border: 0; border-radius: .3rem; background: var(--accent); color: #fff; font-weight: 700; }
 .destination-card button:disabled { background: #dce4e7; color: #677b84; cursor: not-allowed; }
+.preview-link { color: var(--accent); font-size: .75rem; font-weight: 700; white-space: nowrap; }
 .trust-strip { display: grid; grid-template-columns: minmax(14rem, .75fr) 1.25fr; gap: 2rem; padding: 1.75rem; color: #fff; background: #111927; border-top: 4px solid var(--gold); }
 .trust-strip ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1.5rem; margin: 0; padding-left: 1.2rem; color: #cfe0e6; }
 #blazor-error-ui { display: none; position: fixed; inset: auto 0 0; padding: .8rem 1.2rem; background: #8b281e; color: white; z-index: 1000; }

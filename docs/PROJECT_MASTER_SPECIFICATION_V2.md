@@ -127,3 +127,17 @@ This proves `BUILD -> REGISTER -> OPERATE -> PROVE`, then expands to `UNDERSTAND
 `Change Request -> Impact Analysis -> Architectural Review -> Decision -> Master Specification Update -> Approval`
 
 No architectural deviation is permitted outside this process.
+
+## Approved business implementation addendum — CR-001
+
+The first business/domain implementation is **Create Internal Service Workspace**. It is delivered as product increments and does not create Phase 31.
+
+Operational Increment 01 is the **Governed Intent Workspace**. It exposes a non-authoritative product preview, validates service intent, and publishes the approved delivery sequence. Material execution remains unavailable until governed identity, tenant, purpose, classification, OPA policy, required human approval, and runtime readiness are established.
+
+The governing path remains:
+
+`Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
+
+This addendum introduces no new project, service boundary, database, policy authority, workflow authority, AI-to-production path, or conditional technology decision. The Modular Monolith and all v2 constitutional controls remain unchanged.
+
+Change-control record: `docs/change-control/CR-001-INTERNAL-SERVICE-VERTICAL-SLICE.md`.

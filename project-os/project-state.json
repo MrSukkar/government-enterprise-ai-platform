@@ -8,6 +8,13 @@
     "status": "complete"
   },
   "nextPermittedPhase": null,
+  "businessImplementation": {
+    "product": "Create Internal Service Workspace",
+    "increment": "Operational Increment 01 - Governed Intent Workspace",
+    "status": "complete",
+    "changeControl": "docs/change-control/CR-001-INTERNAL-SERVICE-VERTICAL-SLICE.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_01_ACCEPTANCE.md"
+  },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,

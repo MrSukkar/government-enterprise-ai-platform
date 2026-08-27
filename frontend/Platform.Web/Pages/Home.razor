@@ -44,7 +44,14 @@
                 <h3>@destination.Name</h3>
                 <p class="intent">@destination.Intent</p>
                 <p class="outcome">@destination.Outcome</p>
-                <footer><span>@destination.Availability</span><button type="button" disabled="@(!permitted)" aria-label="Open @destination.Name">@(permitted ? "Open workspace" : "Authorization required")</button></footer>
+                <footer>
+                    <span>@destination.Availability</span>
+                    @if (destination.Key == "BUILD")
+                    {
+                        <a class="preview-link" href="build/internal-services">Preview Studio</a>
+                    }
+                    <button type="button" disabled="@(!permitted)" aria-label="Open @destination.Name">@(permitted ? "Open workspace" : "Authorization required")</button>
+                </footer>
             </article>
         }
     </div>

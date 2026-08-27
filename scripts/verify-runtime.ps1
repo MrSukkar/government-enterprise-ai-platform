@@ -21,15 +21,32 @@ $logId = [Guid]::NewGuid().ToString('N')
 $stdoutPath = Join-Path ([IO.Path]::GetTempPath()) "platform-api-$logId.stdout.log"
 $stderrPath = Join-Path ([IO.Path]::GetTempPath()) "platform-api-$logId.stderr.log"
 $previousEnvironment = [Environment]::GetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', 'Process')
+$processEnvironment = [Environment]::GetEnvironmentVariables('Process')
+$uppercasePathEntry = $processEnvironment.GetEnumerator() |
+    Where-Object { $_.Key -ceq 'PATH' } |
+    Select-Object -First 1
 $apiProcess = $null
+$httpHandler = $null
 $client = $null
 
 try {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', 'Development', 'Process')
+    if ($null -ne $uppercasePathEntry) {
+        [Environment]::SetEnvironmentVariable('PATH', $null, 'Process')
+    }
 
-    $apiProcess = Start-Process -FilePath $apiExecutable -ArgumentList @('--urls', $baseAddress) -WorkingDirectory (Split-Path -Parent $apiExecutable) -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
+    try {
+        $apiProcess = Start-Process -FilePath $apiExecutable -ArgumentList @('--urls', $baseAddress) -WorkingDirectory (Split-Path -Parent $apiExecutable) -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
+    }
+    finally {
+        if ($null -ne $uppercasePathEntry) {
+            [Environment]::SetEnvironmentVariable('PATH', [string]$uppercasePathEntry.Value, 'Process')
+        }
+    }
 
-    $client = [Net.Http.HttpClient]::new()
+    $httpHandler = [Net.Http.HttpClientHandler]::new()
+    $httpHandler.UseProxy = $false
+    $client = [Net.Http.HttpClient]::new($httpHandler)
     $client.Timeout = [TimeSpan]::FromSeconds(2)
     $deadline = (Get-Date).AddSeconds(30)
     $liveness = $null
@@ -56,12 +73,16 @@ try {
     while (($null -eq $liveness -or [int]$liveness.StatusCode -ne 200) -and (Get-Date) -lt $deadline)
 
     if ($null -eq $liveness -or [int]$liveness.StatusCode -ne 200) {
-        throw 'Development API did not become live within 30 seconds.'
+        $stdout = Get-Content -LiteralPath $stdoutPath -Raw -ErrorAction SilentlyContinue
+        $stderr = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
+        $separator = [Environment]::NewLine
+        throw "Development API did not become live within 30 seconds.$separator$stdout$separator$stderr"
     }
 
     $readiness = $client.GetAsync("$baseAddress/health/ready").GetAwaiter().GetResult()
     $openApi = $client.GetAsync("$baseAddress/openapi/v1.json").GetAwaiter().GetResult()
     $developerPortal = $client.GetAsync("$baseAddress/developers").GetAwaiter().GetResult()
+    $internalService = $client.GetAsync("$baseAddress/api/v1/internal-services/foundation").GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -72,6 +93,9 @@ try {
     if ([int]$developerPortal.StatusCode -ne 200) {
         throw "Expected developer portal status 200, received $([int]$developerPortal.StatusCode)."
     }
+    if ([int]$internalService.StatusCode -ne 200) {
+        throw "Expected Create Internal Service status 200, received $([int]$internalService.StatusCode)."
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
@@ -80,10 +104,26 @@ try {
         throw 'Readiness response did not disclose the expected 16 fail-closed runtime dependencies.'
     }
 
+    $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
+    $expectedDeliveryStages = @(
+        'Intent', 'EnterpriseContext', 'ExistingSystems', 'ExistingArchitecture',
+        'ApprovedPackages', 'AiPlanning', 'CodeGeneration', 'StaticValidation',
+        'SecurityValidation', 'Sandbox', 'Tests', 'HumanReview', 'Git', 'CiCd',
+        'Artifact', 'Deployment', 'OpenTelemetry', 'AutomaticRegistration',
+        'EnterpriseModel', 'Evidence'
+    )
+    $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
+    if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
+        [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
+        ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
+        throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
+    }
+
     $openApiBody = $openApi.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($openApiBody.openapi -ne '3.1.0' -or
-        -not $openApiBody.paths.'/health/ready') {
-        throw 'Runtime OpenAPI response does not contain the approved readiness endpoint.'
+        -not $openApiBody.paths.'/health/ready' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/foundation') {
+        throw 'Runtime OpenAPI response does not contain the approved readiness and product-foundation endpoints.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -93,13 +133,17 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, readiness fail-closed, OpenAPI and developer portal available.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, readiness fail-closed, OpenAPI, developer portal, and Create Internal Service available.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')
 
     if ($null -ne $client) {
         $client.Dispose()
+    }
+
+    if ($null -ne $httpHandler) {
+        $httpHandler.Dispose()
     }
 
     if ($null -ne $apiProcess -and -not $apiProcess.HasExited) {

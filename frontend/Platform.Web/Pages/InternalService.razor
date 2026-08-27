@@ -1,0 +1,109 @@
+@page "/build/internal-services"
+@inject ExperienceContext ExperienceContext
+
+<PageTitle>Create Internal Service | Government Enterprise AI Platform</PageTitle>
+
+<section class="studio-hero" aria-labelledby="studio-heading">
+    <div>
+        <p class="eyebrow">Operational increment 01 / Build</p>
+        <h1 id="studio-heading">Create Internal Service Workspace</h1>
+        <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
+    </div>
+    <aside class="studio-state" aria-label="Product execution status">
+        <span class="state-chip">WORKSPACE PREVIEW</span>
+        <strong>Material execution is fail-closed</strong>
+        <small>Identity, policy, runtime adapters, and approval are required.</small>
+    </aside>
+</section>
+
+<section class="studio-grid" aria-label="Create Internal Service workspace">
+    <div class="workspace-card intent-workspace">
+        <div class="card-heading"><div><p class="eyebrow">01 / Governed intent</p><h2>Describe the service mission</h2></div><span class="score">@DraftScore%</span></div>
+        <label for="service-name">Service name</label>
+        <input id="service-name" @bind="ServiceName" placeholder="e.g. Permit Renewal Service" />
+        <label for="service-mission">Mission and measurable outcome</label>
+        <textarea id="service-mission" @bind="Mission" rows="4" placeholder="What public or institutional outcome must improve?"></textarea>
+        <div class="field-grid">
+            <div><label for="service-users">Primary users</label><input id="service-users" @bind="PrimaryUsers" placeholder="Residents, inspectors, analysts..." /></div>
+            <div><label for="classification">Classification</label><select id="classification" @bind="Classification"><option value="">Select</option><option>Public</option><option>Internal</option><option>Confidential</option><option>Restricted</option></select></div>
+        </div>
+        <div class="intent-actions">
+            <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
+            <button type="button" class="primary-action" disabled="@(!ExperienceContext.IsGovernedIdentityEstablished)">Create governed intent</button>
+        </div>
+        <p class="evaluation" role="status">@EvaluationMessage</p>
+    </div>
+
+    <aside class="workspace-card context-panel">
+        <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
+        <ul class="context-list">
+            <li><span>Identity and purpose</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Enterprise Model</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Existing systems</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Approved architecture</span><strong class="available">Baseline ready</strong></li>
+            <li><span>Approved packages</span><strong class="waiting">Waiting</strong></li>
+        </ul>
+        <div class="policy-note"><strong>Why it is locked</strong><p>Previewing and evaluating a local draft creates no institutional fact. Submission requires server-authorized context and evidence.</p></div>
+    </aside>
+</section>
+
+<section class="delivery-map" aria-labelledby="delivery-heading">
+    <div class="section-heading"><div><p class="eyebrow">Approved execution path</p><h2 id="delivery-heading">From intent to proof</h2></div><p>No stage can be skipped by AI, UI, or an operator.</p></div>
+    <ol class="stage-grid">
+        @foreach (var stage in Stages)
+        {
+            <li class="stage-card"><span>@stage.Ordinal.ToString("00")</span><strong>@stage.Name</strong><small>@stage.Gate</small></li>
+        }
+    </ol>
+</section>
+
+<section class="assurance-bar" aria-label="Create Internal Service assurance">
+    <div><strong>OPA decides</strong><span>Policy authority</span></div>
+    <div><strong>Humans approve</strong><span>Separation of duties</span></div>
+    <div><strong>Git records</strong><span>Immutable change history</span></div>
+    <div><strong>Evidence proves</strong><span>Cryptographic trust chain</span></div>
+</section>
+
+@code {
+    private string ServiceName { get; set; } = "National Permit Renewal";
+    private string Mission { get; set; } = "Reduce renewal effort while preserving eligibility, policy, and audit controls.";
+    private string PrimaryUsers { get; set; } = "Residents and permit officers";
+    private string Classification { get; set; } = "Internal";
+    private int DraftScore { get; set; } = 100;
+    private string EvaluationMessage { get; set; } = "Draft is complete enough for governed context discovery. Submission remains locked.";
+
+    private static IReadOnlyList<StudioStage> Stages { get; } =
+    [
+        new(1, "Intent", "Identity + purpose"),
+        new(2, "Enterprise context", "Authorized retrieval"),
+        new(3, "Existing systems", "Scoped dependencies"),
+        new(4, "Existing architecture", "Approved baseline"),
+        new(5, "Approved packages", "Verified sources"),
+        new(6, "AI planning", "Proposal only"),
+        new(7, "Code generation", "No production path"),
+        new(8, "Static validation", "Deterministic checks"),
+        new(9, "Security validation", "Security gate"),
+        new(10, "Sandbox", "Isolated execution"),
+        new(11, "Tests", "Deterministic gates"),
+        new(12, "Human review", "Separation of duties"),
+        new(13, "Git", "Immutable source"),
+        new(14, "CI/CD", "Signed provenance"),
+        new(15, "Artifact", "Verified supply chain"),
+        new(16, "Deployment", "Approved artifact"),
+        new(17, "OpenTelemetry", "Correlated telemetry"),
+        new(18, "Automatic registration", "Governed registration"),
+        new(19, "Enterprise Model", "Context source of truth"),
+        new(20, "Evidence", "Cryptographic trust chain")
+    ];
+
+    private void EvaluateDraft()
+    {
+        var values = new[] { ServiceName, Mission, PrimaryUsers, Classification };
+        DraftScore = values.Count(value => !string.IsNullOrWhiteSpace(value)) * 25;
+        EvaluationMessage = DraftScore == 100
+            ? "Draft is complete enough for governed context discovery. Submission remains locked."
+            : $"Complete the missing fields before governed submission. Current completeness: {DraftScore}%.";
+    }
+
+    private sealed record StudioStage(int Ordinal, string Name, string Gate);
+}

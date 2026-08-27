@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.DataProtection;
 using Platform.AgenticWork;
 using Platform.Api.Composition;
 using Platform.Api.Contracts;
 using Platform.Api.Developers;
 using Platform.Api.Operations;
+using Platform.Api.InternalService;
 using Platform.EnterpriseModel;
 using Platform.Evidence;
 using Platform.Governance;
@@ -51,6 +53,17 @@ builder.Services.AddSingleton(runtimeReadiness);
 
 if (builder.Environment.IsDevelopment())
 {
+    // The development smoke-test host writes only to its captured console stream;
+    // governed deployments retain their configured observability providers.
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+
+    // Development smoke tests must not depend on or mutate a workstation key ring.
+    // Governed environments continue to require their configured sovereign key boundary.
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(
+            Path.Combine(AppContext.BaseDirectory, ".development-keys")));
+
     // Boundary adapters remain fail-closed when resolved. Development startup is
     // allowed so liveness, readiness, the approved contract, and diagnostics can run.
     builder.Host.UseDefaultServiceProvider(options =>
@@ -73,6 +86,7 @@ app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapPlatformOperationalReadiness();
 app.MapApprovedOpenApiContract();
+app.MapInternalServiceFoundation();
 
 if (app.Environment.IsDevelopment())
 {

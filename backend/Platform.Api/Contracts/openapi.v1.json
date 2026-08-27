@@ -10,7 +10,8 @@
     { "url": "/", "description": "Current sovereign deployment" }
   ],
   "tags": [
-    { "name": "Platform", "description": "Platform-level technical endpoints." }
+    { "name": "Platform", "description": "Platform-level technical endpoints." },
+    { "name": "Create Internal Service", "description": "Governed internal-service product boundary." }
   ],
   "paths": {
     "/health": {
@@ -45,7 +46,23 @@
           }
         }
       }
-    },    "/openapi/v1.json": {
+    },
+    "/api/v1/internal-services/foundation": {
+      "get": {
+        "operationId": "getInternalServiceFoundation",
+        "summary": "Read the approved Create Internal Service product foundation.",
+        "description": "Returns public product metadata and the governed delivery sequence. It grants no execution authority.",
+        "tags": ["Create Internal Service"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The approved Create Internal Service product foundation.",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          }
+        }
+      }
+    },
+    "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
         "summary": "Read this approved API contract.",
