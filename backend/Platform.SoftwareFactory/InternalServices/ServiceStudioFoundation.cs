@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 06 - Authorized Existing Architecture Discovery",
-        "OPA-scoped Existing Architecture discovery contract available; all live adapters fail-closed",
+        "Operational Increment 07 - Governed Approved Packages Selection",
+        "OPA-scoped exact Approved Packages selection contract available; all live adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -49,6 +49,9 @@ public static class InternalServiceFoundationCatalog
             "Existing Architecture discovery is bound to an evidence-bearing Existing Systems snapshot",
             "Only approved, constitutionally conformant architecture facts can be released",
             "Missing architecture adapters return service unavailable without source access",
+            "Approved Packages selection accepts only exact immutable coordinates",
+            "Eligibility, provenance, SBOM, signature, and sovereign registry assurance are mandatory",
+            "Package transfer, execution, registry mutation, and AI Planning remain unavailable",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

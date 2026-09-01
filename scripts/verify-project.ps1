@@ -1219,6 +1219,81 @@ if (Test-Path -LiteralPath $increment06AcceptancePath) {
     }
 }
 
+$increment07AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_07_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment07AcceptancePath) {
+    $packagesEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedApprovedPackagesSelection.cs'
+    $registryReaderPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Packages\IInstitutionalPackageRegistryReader.cs'
+    $endpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changeControlPath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-04-APPROVED-PACKAGES.md'
+    @($packagesEnginePath, $registryReaderPath, $endpointPath, $readinessPath, $openApiPath, $changeControlPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Operational Increment 07 artifact is missing: $_" }
+    }
+
+    $changeControl = Get-Content -LiteralPath $changeControlPath -Raw
+    @('Status: **Approved for Operational Increment 07**', 'Decision: **Approved by the repository owner',
+      'Operational Increment 07 — Governed Approved Packages Selection') | ForEach-Object {
+        if ($changeControl -notmatch [regex]::Escape($_)) { throw "Increment 07 approval '$($_)' is missing." }
+    }
+
+    $reader = Get-Content -LiteralPath $registryReaderPath -Raw
+    @('IInstitutionalPackageRegistryReader', 'FindExactAsync') | ForEach-Object {
+        if ($reader -notmatch [regex]::Escape($_)) { throw "Approved Packages registry read boundary '$($_)' is missing." }
+    }
+    if ($reader -match '(?i)SaveAsync|UpdateAsync|DeleteAsync|Download|Install|Execute') {
+        throw 'Approved Packages registry reader must expose exact read only.'
+    }
+
+    $engine = Get-Content -LiteralPath $packagesEnginePath -Raw
+    @('developer.internal-service.packages.select', 'IAuthorizedExistingArchitectureSnapshotReader',
+      'IApprovedPackagesPolicyGate', 'PolicySignatureValid', 'AllowedCoordinates.SetEquals',
+      'IInstitutionalPackageRegistryReader', 'FindExactAsync', 'IPackageEligibilityEvaluator',
+      'IApprovedPackageSupplyChainVerifier', 'DigestVerified', 'ProvenanceVerified',
+      'SbomVerified', 'SignatureVerified', 'SovereignRegistryVerified', 'PackageTransferred',
+      'PackageExecuted', 'ExternalEffectOccurred', 'IApprovedPackageResultAuthorizer',
+      'approved-package.read', 'IApprovedPackagesEvidenceRecorder', 'SelectionSha256Digest',
+      'CanAdvance', 'Separately approved AI Planning',
+      'OPA returned a mismatched Approved Packages decision') | ForEach-Object {
+        if ($engine -notmatch [regex]::Escape($_)) { throw "Approved Packages guard '$($_)' is missing." }
+    }
+    $policyIndex = $engine.IndexOf('ValidateDecision(input', [StringComparison]::Ordinal)
+    $registryIndex = $engine.IndexOf('registryReader.FindExactAsync', [StringComparison]::Ordinal)
+    if ($policyIndex -lt 0 -or $registryIndex -lt 0 -or $policyIndex -ge $registryIndex) {
+        throw 'Institutional registry access is not structurally ordered after OPA validation.'
+    }
+
+    $endpoint = Get-Content -LiteralPath $endpointPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages',
+      'developer.internal-service.packages.select', 'IAuthorizedExistingArchitectureSnapshotReader',
+      'IApprovedPackagesPolicyGate', 'IInstitutionalPackageRegistryReader',
+      'IApprovedPackageSupplyChainVerifier', 'IApprovedPackageResultAuthorizer',
+      'IApprovedPackagesEvidenceRecorder', 'Status503ServiceUnavailable', 'RequireAuthorization') | ForEach-Object {
+        if ($endpoint -notmatch [regex]::Escape($_)) { throw "Approved Packages endpoint guard '$($_)' is missing." }
+    }
+
+    $readiness = Get-Content -LiteralPath $readinessPath -Raw
+    @('Authorized Existing Architecture snapshot reader', 'Approved Packages OPA policy gate',
+      'Institutional package registry reader', 'Approved Package supply-chain verifier',
+      'Approved Package result authorizer', 'Approved Packages evidence recorder') | ForEach-Object {
+        if ($readiness -notmatch [regex]::Escape($_)) { throw "Approved Packages readiness '$($_)' is missing." }
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages',
+      'ApprovedPackagesSelectionInput', 'GovernedApprovedPackagesSelectionReceipt',
+      'expectedArchitectureSha256Digest', 'requestedCoordinates', 'GovernedApprovedPackage',
+      'selectionSha256Digest', 'canAdvance', '503') | ForEach-Object {
+        if ($openApi -notmatch [regex]::Escape($_)) { throw "Approved Packages OpenAPI '$($_)' is missing." }
+    }
+
+    $acceptance = Get-Content -LiteralPath $increment07AcceptancePath -Raw
+    @('Status: **Satisfied**', 'CR-001-AMENDMENT-04-APPROVED-PACKAGES.md',
+      'all 39 required runtime dependencies remain fail-closed') | ForEach-Object {
+        if ($acceptance -notmatch [regex]::Escape($_)) { throw "Increment 07 acceptance '$($_)' is missing." }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

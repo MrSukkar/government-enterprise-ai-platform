@@ -18,6 +18,7 @@ using Platform.SoftwareFactory.InternalService;
 using Platform.Knowledge.Retrieval;
 using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
+using Platform.SoftwareFactory.Packages;
 
 namespace Platform.Api.Operations;
 
@@ -78,7 +79,13 @@ internal sealed class PlatformRuntimeReadiness
             ("Existing Architecture source", typeof(IExistingArchitectureSource)),
             ("Existing Architecture conformance validator", typeof(IExistingArchitectureConformanceValidator)),
             ("Existing Architecture result authorizer", typeof(IExistingArchitectureResultAuthorizer)),
-            ("Existing Architecture evidence recorder", typeof(IExistingArchitectureEvidenceRecorder))
+            ("Existing Architecture evidence recorder", typeof(IExistingArchitectureEvidenceRecorder)),
+            ("Authorized Existing Architecture snapshot reader", typeof(IAuthorizedExistingArchitectureSnapshotReader)),
+            ("Approved Packages OPA policy gate", typeof(IApprovedPackagesPolicyGate)),
+            ("Institutional package registry reader", typeof(IInstitutionalPackageRegistryReader)),
+            ("Approved Package supply-chain verifier", typeof(IApprovedPackageSupplyChainVerifier)),
+            ("Approved Package result authorizer", typeof(IApprovedPackageResultAuthorizer)),
+            ("Approved Packages evidence recorder", typeof(IApprovedPackagesEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

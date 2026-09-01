@@ -31,6 +31,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<AuthorizedEnterpriseContextDiscoveryEngine>();
         services.AddScoped<AuthorizedExistingSystemsDiscoveryEngine>();
         services.AddScoped<AuthorizedExistingArchitectureDiscoveryEngine>();
+        services.AddScoped<GovernedApprovedPackagesSelectionEngine>();
         return services;
     }
 }

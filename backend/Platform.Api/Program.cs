@@ -95,6 +95,7 @@ app.MapInternalServiceIntentRegistration();
 app.MapInternalServiceEnterpriseContextDiscovery();
 app.MapInternalServiceExistingSystemsDiscovery();
 app.MapInternalServiceExistingArchitectureDiscovery();
+app.MapInternalServiceApprovedPackagesSelection();
 
 if (app.Environment.IsDevelopment())
 {

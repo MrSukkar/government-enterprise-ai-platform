@@ -1,6 +1,6 @@
 # CR-001 — Create Internal Service Workspace
 
-Status: **Approved through Operational Increment 06**
+Status: **Approved through Operational Increment 07**
 Authority: Repository owner authorization in the active delivery record
 Foundation authority: `PROJECT MASTER SPECIFICATION v2 — APPROVED`
 
@@ -100,6 +100,8 @@ Operational Increment 05 is governed by the approved amendment `docs/change-cont
 
 Operational Increment 06 is governed by the approved amendment `docs/change-control/CR-001-AMENDMENT-03-EXISTING-ARCHITECTURE.md` and remains limited to Authorized Existing Architecture Discovery.
 
+Operational Increment 07 is governed by the approved amendment `docs/change-control/CR-001-AMENDMENT-04-APPROVED-PACKAGES.md` and remains limited to Governed Approved Packages Selection.
+
 ## 5. Master Specification Update
 
 `docs/PROJECT_MASTER_SPECIFICATION_V2.md` includes the CR-001 business implementation addendum. The constitutional architecture and the fixed 30-phase roadmap are unchanged.
@@ -115,6 +117,7 @@ Approved scope:
 - Increment: 04 — Authorized Enterprise Context Discovery, as bounded by Amendment 01.
 - Increment: 05 — Authorized Existing Systems Discovery, as bounded by Amendment 02.
 - Increment: 06 — Authorized Existing Architecture Discovery, as bounded by Amendment 03.
+- Increment: 07 — Governed Approved Packages Selection, as bounded by Amendment 04.
 - Authorization: implementation, verification, source control, and governed CI.
 - Release authority: remains subject to successful CI and acceptance evidence.
 

@@ -5,6 +5,7 @@ using Platform.Knowledge.Retrieval;
 using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.InternalService;
+using Platform.SoftwareFactory.Packages;
 
 namespace Platform.Api.InternalService;
 
@@ -42,6 +43,19 @@ internal static class InternalServiceEndpoint
         string ExpectedIntentSha256Digest,
         string ExpectedContextSha256Digest,
         string ExpectedInventorySha256Digest,
+        string Purpose,
+        DataClassification MaximumClassification,
+        string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record ApprovedPackagesSelectionInput(
+        Guid SelectionId,
+        long ExpectedRegistrationVersion,
+        string ExpectedIntentSha256Digest,
+        string ExpectedContextSha256Digest,
+        string ExpectedInventorySha256Digest,
+        string ExpectedArchitectureSha256Digest,
+        System.Collections.Immutable.ImmutableArray<PackageCoordinate> RequestedCoordinates,
         string Purpose,
         DataClassification MaximumClassification,
         string Environment,
@@ -545,6 +559,101 @@ internal static class InternalServiceEndpoint
             .Accepts<ExistingArchitectureDiscoveryInput>("application/json")
             .Produces<AuthorizedExistingArchitectureDiscoveryReceipt>(StatusCodes.Status200OK)
             .Produces<AuthorizedExistingArchitectureDiscoveryReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceApprovedPackagesSelection(
+        this IEndpointRouteBuilder endpoints)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages",
+            async (
+                Guid registrationId,
+                Guid contextDiscoveryId,
+                Guid systemsDiscoveryId,
+                Guid architectureDiscoveryId,
+                ApprovedPackagesSelectionInput input,
+                HttpContext httpContext,
+                IServiceProvider services,
+                GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedApprovedPackagesSelectionEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    ArgumentNullException.ThrowIfNull(input.PolicyBundle);
+                    var requestContext = contextFactory.Create(httpContext.User);
+                    var accessDecision = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        requestContext.Identity, input.Purpose, "internal-service.approved-packages.select",
+                        architectureDiscoveryId.ToString("D"), requestContext.Identity.TenantId,
+                        input.MaximumClassification, RequiredRoles: [],
+                        RequiredPermissions: ["developer.internal-service.packages.select"],
+                        InitiatorSubjectId: requestContext.Identity.SubjectId, RequiresDistinctApprover: false));
+                    if (!accessDecision.IsAllowed)
+                        throw new UnauthorizedAccessException($"Approved Packages selection denied: {accessDecision.Code}.");
+
+                    var architectureReader = services.GetService<IAuthorizedExistingArchitectureSnapshotReader>();
+                    var policyGate = services.GetService<IApprovedPackagesPolicyGate>();
+                    var registryReader = services.GetService<IInstitutionalPackageRegistryReader>();
+                    var supplyChainVerifier = services.GetService<IApprovedPackageSupplyChainVerifier>();
+                    var resultAuthorizer = services.GetService<IApprovedPackageResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<IApprovedPackagesEvidenceRecorder>();
+                    if (architectureReader is null || policyGate is null || registryReader is null ||
+                        supplyChainVerifier is null || resultAuthorizer is null || evidenceRecorder is null)
+                        return Results.Problem(
+                            statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Governed Approved Packages selection is not operationally ready.");
+
+                    var request = new GovernedApprovedPackagesSelectionRequest(
+                        input.SelectionId, architectureDiscoveryId, systemsDiscoveryId, contextDiscoveryId,
+                        registrationId, input.ExpectedRegistrationVersion, input.ExpectedIntentSha256Digest,
+                        input.ExpectedContextSha256Digest, input.ExpectedInventorySha256Digest,
+                        input.ExpectedArchitectureSha256Digest, input.RequestedCoordinates,
+                        requestContext.Identity, input.Purpose, input.MaximumClassification,
+                        requestContext.AuthorizationEvidenceReference, input.Environment,
+                        input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.SelectAsync(
+                        request, architectureReader, policyGate, registryReader, supplyChainVerifier,
+                        resultAuthorizer, evidenceRecorder, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status403Forbidden,
+                        title: "Governed Approved Packages selection denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status404NotFound,
+                        title: "Authorized Existing Architecture snapshot was not found.");
+                }
+                catch (ApprovedPackagesDependencyUnavailableException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "An Approved Packages dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
+                        title: "Approved Packages request or boundary result is invalid.");
+                }
+            })
+            .WithName("SelectInternalServiceApprovedPackages")
+            .WithTags("Create Internal Service")
+            .WithSummary("Select exact institutionally approved packages for an authorized architecture snapshot.")
+            .WithDescription("OPA authorizes exact immutable coordinates before registry reads. Eligibility, provenance, SBOM, signature, sovereign-registry assurance, and per-result authorization are required. No package transfer, execution, or AI Planning advancement is available.")
+            .Accepts<ApprovedPackagesSelectionInput>("application/json")
+            .Produces<GovernedApprovedPackagesSelectionReceipt>(StatusCodes.Status200OK)
+            .Produces<GovernedApprovedPackagesSelectionReceipt>(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)

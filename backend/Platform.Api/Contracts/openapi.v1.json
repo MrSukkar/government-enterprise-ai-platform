@@ -328,6 +328,33 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages": {
+      "post": {
+        "operationId": "selectInternalServiceApprovedPackages",
+        "summary": "Select exact institutionally approved packages for an authorized architecture snapshot.",
+        "description": "OPA authorizes exact immutable coordinates before registry reads. Eligibility, provenance, SBOM, signature, sovereign-registry assurance, and per-result authorization are required. No package transfer, execution, registry mutation, or AI Planning advancement is available.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApprovedPackagesSelectionInput" } } }
+        },
+        "responses": {
+          "200": { "description": "Exact packages passed all governed controls and were released in a non-advancing evidence-bearing snapshot.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedApprovedPackagesSelectionReceipt" } } } },
+          "400": { "description": "The request or a governed package boundary result is invalid.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "A governed authenticated identity is required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Authorization, OPA, eligibility, assurance, or result authorization denied selection.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedApprovedPackagesSelectionReceipt" } }, "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "404": { "description": "The authorized Existing Architecture snapshot was not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A required architecture, policy, registry, assurance, authorization, or evidence adapter is unavailable; no registry access, package transfer, or mutation occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -767,6 +794,78 @@
             "type": "array",
             "items": { "type": "string", "minLength": 1 }
           },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PackageCoordinate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "name", "version", "contentDigest"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["NuGet", "FrontendDependency", "ContainerImage", "AiModel", "PolicyBundle", "SandboxImage"] },
+          "name": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "minLength": 1 },
+          "contentDigest": { "type": "string", "pattern": "^[A-Za-z0-9_-]+:[0-9A-Fa-f]+$" }
+        }
+      },
+      "ApprovedPackagesSelectionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selectionId", "expectedRegistrationVersion", "expectedIntentSha256Digest", "expectedContextSha256Digest", "expectedInventorySha256Digest", "expectedArchitectureSha256Digest", "requestedCoordinates", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "selectionId": { "type": "string", "format": "uuid" },
+          "expectedRegistrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "expectedIntentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedContextSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedInventorySha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedArchitectureSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "requestedCoordinates": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/components/schemas/PackageCoordinate" } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedApprovedPackage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["coordinate", "source", "publisher", "provenanceReference", "licenseExpression", "sbomReference", "signatureReference", "approvalEvidenceReference", "approvalDecidedAt", "supplyChainEvidenceReferences", "authorizationEvidenceReferences"],
+        "properties": {
+          "coordinate": { "$ref": "#/components/schemas/PackageCoordinate" },
+          "source": { "type": "string", "minLength": 1 },
+          "publisher": { "type": "string", "minLength": 1 },
+          "provenanceReference": { "type": "string", "minLength": 1 },
+          "licenseExpression": { "type": "string", "minLength": 1 },
+          "sbomReference": { "type": "string", "minLength": 1 },
+          "signatureReference": { "type": "string", "minLength": 1 },
+          "approvalEvidenceReference": { "type": "string", "minLength": 1 },
+          "approvalDecidedAt": { "type": "string", "format": "date-time" },
+          "approvalExpiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "supplyChainEvidenceReferences": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "authorizationEvidenceReferences": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      },
+      "GovernedApprovedPackagesSelectionReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selectionId", "architectureDiscoveryId", "systemsDiscoveryId", "contextDiscoveryId", "registrationId", "registrationVersion", "tenantId", "architectureSha256Digest", "policyOutcome", "isSelectionReleased", "canAdvance", "packages", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "selectionId": { "type": "string", "format": "uuid" },
+          "architectureDiscoveryId": { "type": "string", "format": "uuid" },
+          "systemsDiscoveryId": { "type": "string", "format": "uuid" },
+          "contextDiscoveryId": { "type": "string", "format": "uuid" },
+          "registrationId": { "type": "string", "format": "uuid" },
+          "registrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "architectureSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isSelectionReleased": { "type": "boolean" },
+          "canAdvance": { "type": "boolean", "const": false },
+          "selectionSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "packages": { "type": "array", "items": { "$ref": "#/components/schemas/GovernedApprovedPackage" } },
+          "selectionEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" },
           "completedAt": { "type": "string", "format": "date-time" }
         }
