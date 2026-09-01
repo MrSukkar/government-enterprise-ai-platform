@@ -28,6 +28,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<InternalServiceVerticalSliceEngine>();
         services.AddSingleton<GovernedIntentSubmissionValidator>();
         services.AddSingleton<GovernedIntentRegistrationEngine>();
+        services.AddScoped<AuthorizedEnterpriseContextDiscoveryEngine>();
         return services;
     }
 }

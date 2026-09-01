@@ -1,5 +1,7 @@
+using Platform.Domain.Security;
 using Platform.Identity.Access;
 using Platform.Identity.Authentication;
+using Platform.Knowledge.Retrieval;
 using Platform.SoftwareFactory.InternalService;
 
 namespace Platform.Api.InternalService;
@@ -12,6 +14,15 @@ internal static class InternalServiceEndpoint
         string Environment,
         IntentPolicyBundleReference PolicyBundle,
         long ExpectedVersion);
+
+    private sealed record EnterpriseContextDiscoveryInput(
+        Guid DiscoveryId,
+        long ExpectedRegistrationVersion,
+        string ExpectedIntentSha256Digest,
+        string Purpose,
+        DataClassification RegistrationClassification,
+        string Environment,
+        IntentPolicyBundleReference PolicyBundle);
 
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
@@ -180,6 +191,111 @@ internal static class InternalServiceEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceEnterpriseContextDiscovery(
+        this IEndpointRouteBuilder endpoints)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapPost("/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context", async (
+                Guid registrationId,
+                EnterpriseContextDiscoveryInput input,
+                HttpContext httpContext,
+                IServiceProvider services,
+                GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator,
+                AuthorizedEnterpriseContextDiscoveryEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    ArgumentNullException.ThrowIfNull(input.PolicyBundle);
+                    var requestContext = contextFactory.Create(httpContext.User);
+                    var accessDecision = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        requestContext.Identity,
+                        input.Purpose,
+                        "internal-service.enterprise-context.discover",
+                        registrationId.ToString("D"),
+                        requestContext.Identity.TenantId,
+                        input.RegistrationClassification,
+                        RequiredRoles: [],
+                        RequiredPermissions: ["developer.internal-service.context.discover"],
+                        InitiatorSubjectId: requestContext.Identity.SubjectId,
+                        RequiresDistinctApprover: false));
+                    if (!accessDecision.IsAllowed)
+                        throw new UnauthorizedAccessException(
+                            $"Enterprise Context discovery denied: {accessDecision.Code}.");
+
+                    var registrationReader = services.GetService<IGovernedIntentRegistrationReader>();
+                    var policyGate = services.GetService<IEnterpriseContextPolicyGate>();
+                    var evidenceRecorder = services.GetService<IEnterpriseContextEvidenceRecorder>();
+                    var retrievalSources = services.GetServices<IKnowledgeRetrievalSource>().ToArray();
+                    if (registrationReader is null || policyGate is null || evidenceRecorder is null ||
+                        retrievalSources.Length == 0)
+                        return Results.Problem(
+                            statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Authorized Enterprise Context discovery is not operationally ready.");
+
+                    var request = new AuthorizedEnterpriseContextDiscoveryRequest(
+                        input.DiscoveryId,
+                        registrationId,
+                        input.ExpectedRegistrationVersion,
+                        input.ExpectedIntentSha256Digest,
+                        requestContext.Identity,
+                        input.Purpose,
+                        input.RegistrationClassification,
+                        requestContext.AuthorizationEvidenceReference,
+                        input.Environment,
+                        input.PolicyBundle,
+                        DateTimeOffset.UtcNow);
+                    var receipt = await engine.DiscoverAsync(
+                        request,
+                        registrationReader,
+                        policyGate,
+                        evidenceRecorder,
+                        cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status403Forbidden,
+                        title: "Authorized Enterprise Context discovery denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status404NotFound,
+                        title: "Governed intent registration was not found.");
+                }
+                catch (EnterpriseContextDependencyUnavailableException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "An authorized Enterprise Context retrieval dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "Enterprise Context discovery request or boundary result is invalid.");
+                }
+            })
+            .WithName("DiscoverInternalServiceEnterpriseContext")
+            .WithTags("Create Internal Service")
+            .WithSummary("Discover authorized Enterprise Context for a registered governed intent.")
+            .WithDescription("OPA establishes explicit retrieval scope before source access; every candidate is re-authorized and cryptographically evidenced. The result cannot advance to Existing Systems or invoke AI.")
+            .Accepts<EnterpriseContextDiscoveryInput>("application/json")
+            .Produces<AuthorizedEnterpriseContextDiscoveryReceipt>(StatusCodes.Status200OK)
+            .Produces<AuthorizedEnterpriseContextDiscoveryReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
             .RequireAuthorization();
     }

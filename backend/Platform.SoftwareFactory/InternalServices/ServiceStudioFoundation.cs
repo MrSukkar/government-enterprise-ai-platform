@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 03 - Governed Intent Registration",
-        "OPA-gated atomic registration contract available; runtime adapters and execution fail-closed",
+        "Operational Increment 04 - Authorized Enterprise Context Discovery",
+        "OPA-scoped Enterprise Context contract available; source and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -40,6 +40,9 @@ public static class InternalServiceFoundationCatalog
             "Validated intent is never persisted or executed",
             "Registration requires an OPA policy gate and atomic evidence-bearing repository",
             "Missing registration adapters return service unavailable without mutation",
+            "Enterprise Context policy establishes explicit scope before source access",
+            "Every context candidate is re-authorized before evidence-bearing release",
+            "Missing discovery adapters return service unavailable without source access",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

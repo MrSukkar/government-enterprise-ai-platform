@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 03 / Build</p>
+        <p class="eyebrow">Operational increment 04 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA-GATED REGISTRATION</span>
-        <strong>Registration contract ready; adapters fail-closed</strong>
-        <small>No institutional state is created until OPA and atomic evidence-bearing persistence are connected.</small>
+        <span class="state-chip">AUTHORIZED CONTEXT</span>
+        <strong>Enterprise Context contract ready; adapters fail-closed</strong>
+        <small>No source is accessed until registration, OPA scope, authorized retrieval, and evidence boundaries are connected.</small>
     </aside>
 </section>
 
@@ -41,14 +41,15 @@
         <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
         <ul class="context-list">
             <li><span>Identity and purpose</span><strong class="@(ExperienceContext.IsGovernedIdentityEstablished ? "available" : "waiting")">@(ExperienceContext.IsGovernedIdentityEstablished ? "Established" : "Waiting")</strong></li>
-            <li><span>OPA policy gate</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Atomic intent repository</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Enterprise Model</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Registered intent reader</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Enterprise Context OPA gate</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Authorized retrieval sources</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Context evidence recorder</span><strong class="waiting">Not connected</strong></li>
             <li><span>Existing systems</span><strong class="waiting">Waiting</strong></li>
             <li><span>Approved architecture</span><strong class="available">Baseline ready</strong></li>
             <li><span>Approved packages</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The API validates intent today. Registration additionally requires signed-policy evaluation and an atomic repository that commits institutional state with registration evidence; missing adapters return service unavailable without mutation.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds discovery to a persisted governed intent. OPA must establish explicit scope before retrieval, every candidate is re-authorized, and release requires evidence. Missing adapters return service unavailable without source access or mutation.</p></div>
     </aside>
 </section>
 
@@ -76,7 +77,7 @@
     private string Classification { get; set; } = "Internal";
     private string IntentEvidenceReference { get; set; } = string.Empty;
     private int DraftScore { get; set; } = 100;
-    private string EvaluationMessage { get; set; } = "Draft is complete enough for governed context discovery. Submission remains locked.";
+    private string EvaluationMessage { get; set; } = "Draft is complete enough for governed intent submission. Submission remains locked.";
     private bool IsSubmitting { get; set; }
 
     private bool CanSubmit =>
@@ -118,7 +119,7 @@
         var values = new[] { ServiceName, Mission, PrimaryUsers, Classification, IntentEvidenceReference };
         DraftScore = values.Count(value => !string.IsNullOrWhiteSpace(value)) * 20;
         EvaluationMessage = DraftScore == 100
-            ? "Draft is complete enough for governed context discovery. Submission remains locked."
+            ? "Draft is complete enough for governed intent submission. Submission remains locked."
             : $"Complete the missing fields before governed submission. Current completeness: {DraftScore}%.";
     }
 

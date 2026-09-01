@@ -15,6 +15,7 @@ using Platform.SoftwareFactory.DeveloperExperience;
 using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.VerticalSlice;
 using Platform.SoftwareFactory.InternalService;
+using Platform.Knowledge.Retrieval;
 
 namespace Platform.Api.Operations;
 
@@ -60,7 +61,11 @@ internal sealed class PlatformRuntimeReadiness
             ("Digital-twin snapshot provider", typeof(IDigitalTwinSnapshotProvider)),
             ("Cryptographic evidence-chain store", typeof(IEvidenceChainStore)),
             ("Governed intent OPA policy gate", typeof(IGovernedIntentPolicyGate)),
-            ("Governed intent atomic registration repository", typeof(IGovernedIntentRegistrationRepository))
+            ("Governed intent atomic registration repository", typeof(IGovernedIntentRegistrationRepository)),
+            ("Governed intent registration reader", typeof(IGovernedIntentRegistrationReader)),
+            ("Enterprise Context OPA policy gate", typeof(IEnterpriseContextPolicyGate)),
+            ("Enterprise Context retrieval source", typeof(IKnowledgeRetrievalSource)),
+            ("Enterprise Context evidence recorder", typeof(IEnterpriseContextEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

@@ -937,6 +937,84 @@ if (Test-Path -LiteralPath $increment03AcceptancePath) {
     }
 }
 
+$increment04AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_04_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment04AcceptancePath) {
+    $contextEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AuthorizedEnterpriseContextDiscovery.cs'
+    $intentEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $softwareFactoryProjectPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Platform.SoftwareFactory.csproj'
+    $changeControlPath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-01-ENTERPRISE-CONTEXT.md'
+    @($contextEnginePath, $intentEndpointPath, $readinessPath, $openApiPath,
+      $softwareFactoryProjectPath, $changeControlPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Operational Increment 04 artifact is missing: $_" }
+    }
+
+    $changeControl = Get-Content -LiteralPath $changeControlPath -Raw
+    @('Status: **Approved for Operational Increment 04**',
+      'Decision: **Approved by the repository owner',
+      'Operational Increment 04 — Authorized Enterprise Context Discovery') | ForEach-Object {
+        if ($changeControl -notmatch [regex]::Escape($_)) {
+            throw "Increment 04 Change Control approval '$($_)' is missing."
+        }
+    }
+
+    $contextEngine = Get-Content -LiteralPath $contextEnginePath -Raw
+    @('developer.internal-service.context.discover', 'IGovernedIntentRegistrationReader',
+      'IEnterpriseContextPolicyGate', 'PolicySignatureValid',
+      'PolicyVerificationEvidenceReference', 'AllowedResourceIds.IsEmpty',
+      'AllowedModalities.IsEmpty', 'AuthorizedKnowledgeRetriever',
+      'IsSubsetOf(_availableRetrievalModalities)', 'EnterpriseContextDependencyUnavailableException',
+      'Knowledge retrieval released an out-of-scope Enterprise Context candidate',
+      'IEnterpriseContextEvidenceRecorder', 'ContextSha256Digest',
+      'CanAdvance: false', 'Separately approved Existing Systems discovery',
+      'OPA returned a mismatched Enterprise Context decision') | ForEach-Object {
+        if ($contextEngine -notmatch [regex]::Escape($_)) {
+            throw "Enterprise Context discovery guard '$($_)' is missing."
+        }
+    }
+    $decisionValidationIndex = $contextEngine.IndexOf('ValidateDecision(policyInput', [StringComparison]::Ordinal)
+    $retrievalIndex = $contextEngine.IndexOf('var context = await _knowledgeRetriever.RetrieveAsync', [StringComparison]::Ordinal)
+    if ($decisionValidationIndex -lt 0 -or $retrievalIndex -lt 0 -or $decisionValidationIndex -ge $retrievalIndex) {
+        throw 'Enterprise Context retrieval is not structurally ordered after OPA decision validation.'
+    }
+
+    $intentEndpoint = Get-Content -LiteralPath $intentEndpointPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context',
+      'developer.internal-service.context.discover', 'IGovernedIntentRegistrationReader',
+      'IEnterpriseContextPolicyGate', 'IEnterpriseContextEvidenceRecorder',
+      'GetServices<IKnowledgeRetrievalSource>', 'Status503ServiceUnavailable',
+      'RequireAuthorization') | ForEach-Object {
+        if ($intentEndpoint -notmatch [regex]::Escape($_)) {
+            throw "Enterprise Context endpoint guard '$($_)' is missing."
+        }
+    }
+
+    $readiness = Get-Content -LiteralPath $readinessPath -Raw
+    @('Governed intent registration reader', 'Enterprise Context OPA policy gate',
+      'Enterprise Context retrieval source', 'Enterprise Context evidence recorder') | ForEach-Object {
+        if ($readiness -notmatch [regex]::Escape($_)) {
+            throw "Enterprise Context readiness dependency '$($_)' is missing."
+        }
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId}/enterprise-context',
+      'EnterpriseContextDiscoveryInput', 'AuthorizedEnterpriseContextDiscoveryReceipt',
+      'expectedRegistrationVersion', 'expectedIntentSha256Digest', 'canAdvance', '503') | ForEach-Object {
+        if ($openApi -notmatch [regex]::Escape($_)) {
+            throw "Enterprise Context OpenAPI boundary '$($_)' is missing."
+        }
+    }
+
+    $softwareFactoryProject = Get-Content -LiteralPath $softwareFactoryProjectPath -Raw
+    @('Platform.Identity\Platform.Identity.csproj', 'Platform.Knowledge\Platform.Knowledge.csproj') | ForEach-Object {
+        if ($softwareFactoryProject -notmatch [regex]::Escape($_)) {
+            throw "Software Factory module dependency '$($_)' is missing."
+        }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

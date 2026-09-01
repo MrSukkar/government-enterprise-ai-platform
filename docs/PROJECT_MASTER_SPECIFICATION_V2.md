@@ -138,6 +138,8 @@ Operational Increment 02 is **Governed Intent Submission**. It adds a protected 
 
 Operational Increment 03 is **Governed Intent Registration**. It defines an OPA-gated registration command, deterministic idempotency, optimistic version checks, and an atomic repository boundary that must commit the governed intent with cryptographic registration evidence. OPA denial cannot reach persistence. Missing sovereign policy or repository adapters return service unavailable without mutation. No fake persistence, external credential, AI step, workflow advancement, or material execution is introduced.
 
+Operational Increment 04 is **Authorized Enterprise Context Discovery**. It defines a protected, OPA-scoped discovery request for a previously registered governed intent. Authorization is required before any Enterprise Model or knowledge source access and is re-checked for every candidate before release into a deterministic, evidence-bearing context snapshot. Missing registered-intent, sovereign policy, retrieval, or evidence adapters fail closed without source access or institutional mutation. The result cannot advance to Existing Systems, AI planning, code generation, workflow execution, or material action.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -145,3 +147,4 @@ The governing path remains:
 This addendum introduces no new project, service boundary, database, policy authority, workflow authority, AI-to-production path, or conditional technology decision. The Modular Monolith and all v2 constitutional controls remain unchanged.
 
 Change-control record: `docs/change-control/CR-001-INTERNAL-SERVICE-VERTICAL-SLICE.md`.
+Increment 04 amendment: `docs/change-control/CR-001-AMENDMENT-01-ENTERPRISE-CONTEXT.md`.

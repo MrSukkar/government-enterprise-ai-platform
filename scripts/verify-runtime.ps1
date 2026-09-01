@@ -91,6 +91,10 @@ try {
     $intentRegistration = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/intents/register",
         $registrationContent).GetAwaiter().GetResult()
+    $contextContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $enterpriseContext = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/intents/00000000-0000-0000-0000-000000000001/enterprise-context",
+        $contextContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -112,12 +116,16 @@ try {
         $intentRegistration.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous governed intent registration did not fail closed with a bearer challenge.'
     }
+    if ([int]$enterpriseContext.StatusCode -ne 401 -or
+        $enterpriseContext.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous Enterprise Context discovery did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 18) {
-        throw 'Readiness response did not disclose the expected 18 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 22) {
+        throw 'Readiness response did not disclose the expected 22 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -130,7 +138,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 03 - Governed Intent Registration' -or
+        $internalServiceBody.increment -ne 'Operational Increment 04 - Authorized Enterprise Context Discovery' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -141,8 +149,9 @@ try {
         -not $openApiBody.paths.'/health/ready' -or
         -not $openApiBody.paths.'/api/v1/internal-services/foundation' -or
         -not $openApiBody.paths.'/api/v1/internal-services/intents' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/intents/register') {
-        throw 'Runtime OpenAPI response does not contain the approved readiness, foundation, validation, and registration endpoints.'
+        -not $openApiBody.paths.'/api/v1/internal-services/intents/register' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context') {
+        throw 'Runtime OpenAPI response does not contain the approved readiness, intent, registration, and Enterprise Context endpoints.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -152,7 +161,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 18 runtime dependencies fail-closed, and governed intent validation/registration boundaries available.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 22 runtime dependencies fail-closed, and authorized Enterprise Context discovery remains protected and unavailable without adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

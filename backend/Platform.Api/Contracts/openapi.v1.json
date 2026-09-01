@@ -148,6 +148,60 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context": {
+      "post": {
+        "operationId": "discoverInternalServiceEnterpriseContext",
+        "summary": "Discover authorized Enterprise Context for a registered governed intent.",
+        "description": "OPA establishes an explicit resource and modality scope before source access. Authorized retrieval re-checks every candidate before an evidence-bearing context snapshot is released. The result cannot advance to Existing Systems or invoke AI.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          {
+            "name": "registrationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EnterpriseContextDiscoveryInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized candidates were re-checked and released in a deterministic evidence-bearing snapshot that cannot advance.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedEnterpriseContextDiscoveryReceipt" } } }
+          },
+          "400": {
+            "description": "The request, registered intent, policy decision, retrieval result, or evidence receipt is structurally invalid.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "401": {
+            "description": "A governed authenticated identity is required.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "403": {
+            "description": "Authorization or OPA denied Enterprise Context discovery.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedEnterpriseContextDiscoveryReceipt" } },
+              "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } }
+            }
+          },
+          "404": {
+            "description": "The tenant-scoped governed intent registration was not found.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "503": {
+            "description": "A registered-intent reader, OPA gate, retrieval source, or evidence recorder is unavailable; no source access or mutation occurred.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -270,6 +324,81 @@
           "version": { "type": ["integer", "null"], "format": "int64" },
           "registrationEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string" } },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EnterpriseContextDiscoveryInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "expectedRegistrationVersion", "expectedIntentSha256Digest",
+          "purpose", "registrationClassification", "environment", "policyBundle"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "expectedRegistrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "expectedIntentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "purpose": { "type": "string", "minLength": 1 },
+          "registrationClassification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "AuthorizedEnterpriseContextItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resourceId", "classification", "content", "modality", "relevance", "source", "evidenceReferences"
+        ],
+        "properties": {
+          "resourceId": { "type": "string", "minLength": 1 },
+          "classification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "content": { "type": "string", "minLength": 1 },
+          "modality": { "type": "string", "enum": ["Graph", "Vector", "Lexical"] },
+          "relevance": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "evidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      },
+      "AuthorizedEnterpriseContextDiscoveryReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "registrationId", "registrationVersion", "tenantId", "intentSha256Digest",
+          "policyOutcome", "isContextReleased", "canAdvance", "items", "evidenceReferences",
+          "nextRequiredGate", "completedAt"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "registrationId": { "type": "string", "format": "uuid" },
+          "registrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "intentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isContextReleased": { "type": "boolean" },
+          "canAdvance": { "type": "boolean", "const": false },
+          "contextSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuthorizedEnterpriseContextItem" }
+          },
+          "discoveryEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
           "nextRequiredGate": { "type": "string" },
           "completedAt": { "type": "string", "format": "date-time" }
         }

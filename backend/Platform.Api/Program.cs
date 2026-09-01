@@ -92,6 +92,7 @@ app.MapApprovedOpenApiContract();
 app.MapInternalServiceFoundation();
 app.MapInternalServiceIntentSubmission();
 app.MapInternalServiceIntentRegistration();
+app.MapInternalServiceEnterpriseContextDiscovery();
 
 if (app.Environment.IsDevelopment())
 {
