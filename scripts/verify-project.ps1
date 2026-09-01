@@ -1117,6 +1117,108 @@ if (Test-Path -LiteralPath $increment05AcceptancePath) {
     }
 }
 
+$increment06AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_06_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment06AcceptancePath) {
+    $architectureEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AuthorizedExistingArchitectureDiscovery.cs'
+    $architectureContractPath = Join-Path $repositoryRoot 'backend\Platform.Integrations\ExistingArchitecture\ExistingArchitectureSource.cs'
+    $intentEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changeControlPath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-03-EXISTING-ARCHITECTURE.md'
+    @($architectureEnginePath, $architectureContractPath, $intentEndpointPath,
+      $readinessPath, $openApiPath, $changeControlPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Operational Increment 06 artifact is missing: $_" }
+    }
+
+    $changeControl = Get-Content -LiteralPath $changeControlPath -Raw
+    @('Status: **Approved for Operational Increment 06**',
+      'Decision: **Approved by the repository owner',
+      'Operational Increment 06 — Authorized Existing Architecture Discovery') | ForEach-Object {
+        if ($changeControl -notmatch [regex]::Escape($_)) {
+            throw "Increment 06 Change Control approval '$($_)' is missing."
+        }
+    }
+
+    $architectureContract = Get-Content -LiteralPath $architectureContractPath -Raw
+    @('IExistingArchitectureSource', 'ExistingArchitectureSourceScope',
+      'AllowedSystemIds', 'AllowedItemKinds', 'AllowedRelationshipTypes', 'AllowedSourceKinds',
+      'ExistingArchitectureApprovalState', 'CredentialsIncluded', 'LiveSessionIncluded',
+      'ExecutableCommandIncluded', 'GeneratedContentIncluded', 'ExternalEffectOccurred') | ForEach-Object {
+        if ($architectureContract -notmatch [regex]::Escape($_)) {
+            throw "Existing Architecture source contract '$($_)' is missing."
+        }
+    }
+    if ($architectureContract -match '(?i)SaveAsync|UpdateAsync|DeleteAsync|ExecuteAsync') {
+        throw 'Existing Architecture source contract must not expose mutation or execution operations.'
+    }
+
+    $architectureEngine = Get-Content -LiteralPath $architectureEnginePath -Raw
+    @('developer.internal-service.architecture.discover', 'IAuthorizedExistingSystemsSnapshotReader',
+      'IExistingArchitecturePolicyGate', 'PolicySignatureValid',
+      'PolicyVerificationEvidenceReference', 'AllowedSystemIds.IsEmpty',
+      'decision.RegistrationVersion != input.RegistrationVersion',
+      'decision.InventorySha256Digest, input.InventorySha256Digest',
+      'AllowedItemKinds.IsEmpty', 'AllowedRelationshipTypes.IsEmpty', 'AllowedSourceKinds.IsEmpty',
+      'IExistingArchitectureConformanceValidator', 'ValidateScopeAsync', 'ValidateItemAsync',
+      'docs/PROJECT_MASTER_SPECIFICATION_V2.md', 'IExistingArchitectureResultAuthorizer',
+      'existing-architecture.item.read', 'ExistingArchitectureApprovalState.Approved',
+      'CredentialsIncluded', 'LiveSessionIncluded', 'ExecutableCommandIncluded',
+      'GeneratedContentIncluded', 'ExternalEffectOccurred',
+      'IExistingArchitectureEvidenceRecorder', 'ArchitectureSha256Digest', 'CanAdvance: false',
+      'Separately approved Approved Packages selection',
+      'OPA returned a mismatched Existing Architecture decision') | ForEach-Object {
+        if ($architectureEngine -notmatch [regex]::Escape($_)) {
+            throw "Existing Architecture discovery guard '$($_)' is missing."
+        }
+    }
+    $decisionValidationIndex = $architectureEngine.IndexOf('ValidateDecision(policyInput', [StringComparison]::Ordinal)
+    $scopeConformanceIndex = $architectureEngine.IndexOf('var scopeConformance = await conformanceValidator.ValidateScopeAsync(', [StringComparison]::Ordinal)
+    $sourceAccessIndex = $architectureEngine.IndexOf('var sourceResults = await Task.WhenAll', [StringComparison]::Ordinal)
+    if ($decisionValidationIndex -lt 0 -or $scopeConformanceIndex -lt 0 -or $sourceAccessIndex -lt 0 -or
+        $decisionValidationIndex -ge $scopeConformanceIndex -or $scopeConformanceIndex -ge $sourceAccessIndex) {
+        throw 'Existing Architecture source access is not structurally ordered after OPA validation and scope conformance.'
+    }
+
+    $intentEndpoint = Get-Content -LiteralPath $intentEndpointPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture',
+      'developer.internal-service.architecture.discover', 'IAuthorizedExistingSystemsSnapshotReader',
+      'IExistingArchitecturePolicyGate', 'IExistingArchitectureConformanceValidator',
+      'IExistingArchitectureResultAuthorizer', 'IExistingArchitectureEvidenceRecorder',
+      'GetServices<IExistingArchitectureSource>', 'Status503ServiceUnavailable',
+      'RequireAuthorization') | ForEach-Object {
+        if ($intentEndpoint -notmatch [regex]::Escape($_)) {
+            throw "Existing Architecture endpoint guard '$($_)' is missing."
+        }
+    }
+
+    $readiness = Get-Content -LiteralPath $readinessPath -Raw
+    @('Authorized Existing Systems snapshot reader', 'Existing Architecture OPA policy gate',
+      'Existing Architecture source', 'Existing Architecture conformance validator',
+      'Existing Architecture result authorizer', 'Existing Architecture evidence recorder') | ForEach-Object {
+        if ($readiness -notmatch [regex]::Escape($_)) {
+            throw "Existing Architecture readiness dependency '$($_)' is missing."
+        }
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture',
+      'ExistingArchitectureDiscoveryInput', 'AuthorizedExistingArchitectureDiscoveryReceipt',
+      'expectedInventorySha256Digest', 'AuthorizedExistingArchitectureItem',
+      'conformanceEvidenceReferences', 'canAdvance', '503') | ForEach-Object {
+        if ($openApi -notmatch [regex]::Escape($_)) {
+            throw "Existing Architecture OpenAPI boundary '$($_)' is missing."
+        }
+    }
+
+    $acceptance = Get-Content -LiteralPath $increment06AcceptancePath -Raw
+    @('Status: **Satisfied**', 'CR-001-AMENDMENT-03-EXISTING-ARCHITECTURE.md',
+      'all 33 required runtime dependencies remain fail-closed') | ForEach-Object {
+        if ($acceptance -notmatch [regex]::Escape($_)) {
+            throw "Increment 06 acceptance evidence '$($_)' is missing."
+        }
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

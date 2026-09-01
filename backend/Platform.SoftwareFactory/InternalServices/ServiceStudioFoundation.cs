@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 05 - Authorized Existing Systems Discovery",
-        "OPA-scoped Existing Systems inventory contract available; all live adapters fail-closed",
+        "Operational Increment 06 - Authorized Existing Architecture Discovery",
+        "OPA-scoped Existing Architecture discovery contract available; all live adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -46,6 +46,9 @@ public static class InternalServiceFoundationCatalog
             "Existing Systems inventory is bound to an evidence-bearing Enterprise Context snapshot",
             "Every system and relationship is structurally validated and re-authorized",
             "Live connectors, credentials, network probes, and Enterprise Model mutation remain unavailable",
+            "Existing Architecture discovery is bound to an evidence-bearing Existing Systems snapshot",
+            "Only approved, constitutionally conformant architecture facts can be released",
+            "Missing architecture adapters return service unavailable without source access",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);
@@ -63,6 +66,8 @@ public static class InternalServiceFoundationCatalog
     {
         DeliveryStage.Intent => "Identity, purpose, tenant, and classification recorded",
         DeliveryStage.EnterpriseContext => "Authorized enterprise context loaded",
+        DeliveryStage.ExistingSystems => "Authorized existing systems loaded",
+        DeliveryStage.ExistingArchitecture => "Approved architecture facts authorized and evidenced",
         DeliveryStage.ApprovedPackages => "Only approved packages selected",
         DeliveryStage.AiPlanning => "AI proposes inside approved boundaries",
         DeliveryStage.SecurityValidation => "Security controls satisfied",

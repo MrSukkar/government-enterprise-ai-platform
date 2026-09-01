@@ -142,6 +142,8 @@ Operational Increment 04 is **Authorized Enterprise Context Discovery**. It defi
 
 Operational Increment 05 is **Authorized Existing Systems Discovery**. It defines a protected, OPA-scoped inventory request bound to a previously released, evidence-bearing Enterprise Context snapshot. Verified policy establishes explicit system-object, relationship, source, tenant, purpose, and classification scope before any inventory source access. Every returned system and relationship is structurally validated and re-authorized before release into a deterministic, evidence-bearing snapshot. Missing context-read, sovereign policy, inventory-source, authorization, or evidence adapters fail closed without source access or institutional mutation. The result cannot advance to Existing Architecture, AI planning, code generation, workflow execution, or material action.
 
+Operational Increment 06 is **Authorized Existing Architecture Discovery**. It defines a protected, OPA-scoped architecture request bound to a previously released, evidence-bearing Existing Systems snapshot. Verified policy establishes explicit system, architecture-source, component, dependency, interface, constraint, decision-reference, tenant, purpose, and classification scope before any architecture source access. Every released architecture item is bound to an authorized existing system, structurally validated, checked for constitutional conformance, and re-authorized before release into a deterministic, evidence-bearing snapshot. Missing Existing Systems read, sovereign policy, approved architecture source, result-authorization, conformance, or evidence adapters fail closed without source access or institutional mutation. The result cannot advance to Approved Packages, AI planning, code generation, workflow execution, or material action.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -151,3 +153,4 @@ This addendum introduces no new project, service boundary, database, policy auth
 Change-control record: `docs/change-control/CR-001-INTERNAL-SERVICE-VERTICAL-SLICE.md`.
 Increment 04 amendment: `docs/change-control/CR-001-AMENDMENT-01-ENTERPRISE-CONTEXT.md`.
 Increment 05 amendment: `docs/change-control/CR-001-AMENDMENT-02-EXISTING-SYSTEMS.md`.
+Increment 06 amendment: `docs/change-control/CR-001-AMENDMENT-03-EXISTING-ARCHITECTURE.md`.

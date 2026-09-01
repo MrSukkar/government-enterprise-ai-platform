@@ -3,6 +3,7 @@ using Platform.Identity.Access;
 using Platform.Identity.Authentication;
 using Platform.Knowledge.Retrieval;
 using Platform.Integrations.ExistingSystems;
+using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.InternalService;
 
 namespace Platform.Api.InternalService;
@@ -30,6 +31,17 @@ internal static class InternalServiceEndpoint
         long ExpectedRegistrationVersion,
         string ExpectedIntentSha256Digest,
         string ExpectedContextSha256Digest,
+        string Purpose,
+        DataClassification MaximumClassification,
+        string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record ExistingArchitectureDiscoveryInput(
+        Guid DiscoveryId,
+        long ExpectedRegistrationVersion,
+        string ExpectedIntentSha256Digest,
+        string ExpectedContextSha256Digest,
+        string ExpectedInventorySha256Digest,
         string Purpose,
         DataClassification MaximumClassification,
         string Environment,
@@ -416,6 +428,123 @@ internal static class InternalServiceEndpoint
             .Accepts<ExistingSystemsDiscoveryInput>("application/json")
             .Produces<AuthorizedExistingSystemsDiscoveryReceipt>(StatusCodes.Status200OK)
             .Produces<AuthorizedExistingSystemsDiscoveryReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceExistingArchitectureDiscovery(
+        this IEndpointRouteBuilder endpoints)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture",
+            async (
+                Guid registrationId,
+                Guid contextDiscoveryId,
+                Guid systemsDiscoveryId,
+                ExistingArchitectureDiscoveryInput input,
+                HttpContext httpContext,
+                IServiceProvider services,
+                GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator,
+                AuthorizedExistingArchitectureDiscoveryEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    ArgumentNullException.ThrowIfNull(input.PolicyBundle);
+                    var requestContext = contextFactory.Create(httpContext.User);
+                    var accessDecision = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        requestContext.Identity,
+                        input.Purpose,
+                        "internal-service.existing-architecture.discover",
+                        systemsDiscoveryId.ToString("D"),
+                        requestContext.Identity.TenantId,
+                        input.MaximumClassification,
+                        RequiredRoles: [],
+                        RequiredPermissions: ["developer.internal-service.architecture.discover"],
+                        InitiatorSubjectId: requestContext.Identity.SubjectId,
+                        RequiresDistinctApprover: false));
+                    if (!accessDecision.IsAllowed)
+                        throw new UnauthorizedAccessException(
+                            $"Existing Architecture discovery denied: {accessDecision.Code}.");
+
+                    var systemsReader = services.GetService<IAuthorizedExistingSystemsSnapshotReader>();
+                    var policyGate = services.GetService<IExistingArchitecturePolicyGate>();
+                    var conformanceValidator = services.GetService<IExistingArchitectureConformanceValidator>();
+                    var resultAuthorizer = services.GetService<IExistingArchitectureResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<IExistingArchitectureEvidenceRecorder>();
+                    var architectureSources = services.GetServices<IExistingArchitectureSource>().ToArray();
+                    if (systemsReader is null || policyGate is null || conformanceValidator is null ||
+                        resultAuthorizer is null || evidenceRecorder is null || architectureSources.Length == 0)
+                        return Results.Problem(
+                            statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Authorized Existing Architecture discovery is not operationally ready.");
+
+                    var request = new AuthorizedExistingArchitectureDiscoveryRequest(
+                        input.DiscoveryId,
+                        systemsDiscoveryId,
+                        contextDiscoveryId,
+                        registrationId,
+                        input.ExpectedRegistrationVersion,
+                        input.ExpectedIntentSha256Digest,
+                        input.ExpectedContextSha256Digest,
+                        input.ExpectedInventorySha256Digest,
+                        requestContext.Identity,
+                        input.Purpose,
+                        input.MaximumClassification,
+                        requestContext.AuthorizationEvidenceReference,
+                        input.Environment,
+                        input.PolicyBundle,
+                        DateTimeOffset.UtcNow);
+                    var receipt = await engine.DiscoverAsync(
+                        request,
+                        systemsReader,
+                        policyGate,
+                        conformanceValidator,
+                        resultAuthorizer,
+                        evidenceRecorder,
+                        cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status403Forbidden,
+                        title: "Authorized Existing Architecture discovery denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status404NotFound,
+                        title: "Authorized Existing Systems snapshot was not found.");
+                }
+                catch (ExistingArchitectureDependencyUnavailableException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "An authorized Existing Architecture dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "Existing Architecture discovery request or boundary result is invalid.");
+                }
+            })
+            .WithName("DiscoverInternalServiceExistingArchitecture")
+            .WithTags("Create Internal Service")
+            .WithSummary("Discover authorized existing architecture for an evidence-bearing Existing Systems snapshot.")
+            .WithDescription("OPA establishes explicit system, source, item, relationship, and classification scope before architecture access. Every approved architecture item is constitutionally checked, re-authorized, and evidenced. No architecture redesign or Approved Packages advancement is available.")
+            .Accepts<ExistingArchitectureDiscoveryInput>("application/json")
+            .Produces<AuthorizedExistingArchitectureDiscoveryReceipt>(StatusCodes.Status200OK)
+            .Produces<AuthorizedExistingArchitectureDiscoveryReceipt>(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)

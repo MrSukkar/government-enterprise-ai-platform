@@ -262,6 +262,72 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture": {
+      "post": {
+        "operationId": "discoverInternalServiceExistingArchitecture",
+        "summary": "Discover authorized existing architecture for an evidence-bearing Existing Systems snapshot.",
+        "description": "OPA establishes explicit system, source, item-kind, relationship, and classification scope before architecture access. Every approved item is constitutionally checked, re-authorized, and evidenced. No architecture redesign, institutional mutation, or Approved Packages advancement is available.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          {
+            "name": "registrationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "contextDiscoveryId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "systemsDiscoveryId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ExistingArchitectureDiscoveryInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized approved architecture items were released in a deterministic evidence-bearing snapshot that cannot advance.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedExistingArchitectureDiscoveryReceipt" } } }
+          },
+          "400": {
+            "description": "The request, prerequisite snapshot, policy decision, architecture result, conformance result, authorization result, or evidence receipt is structurally invalid.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "401": {
+            "description": "A governed authenticated identity is required.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "403": {
+            "description": "Authorization, OPA, result authorization, or constitutional conformance denied Existing Architecture discovery.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedExistingArchitectureDiscoveryReceipt" } },
+              "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } }
+            }
+          },
+          "404": {
+            "description": "The tenant-scoped authorized Existing Systems snapshot was not found.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "503": {
+            "description": "An Existing Systems reader, OPA gate, approved architecture source, conformance validator, result authorizer, or evidence recorder is unavailable; no architecture source access or mutation occurred.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -587,6 +653,114 @@
           "systems": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AuthorizedExistingSystem" }
+          },
+          "discoveryEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ExistingArchitectureDiscoveryInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "expectedRegistrationVersion", "expectedIntentSha256Digest",
+          "expectedContextSha256Digest", "expectedInventorySha256Digest", "purpose",
+          "maximumClassification", "environment", "policyBundle"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "expectedRegistrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "expectedIntentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedContextSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedInventorySha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "AuthorizedExistingArchitectureItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "architectureItemId", "systemId", "kind", "name", "description", "version",
+          "classification", "environment", "lifecycle", "sourceKind", "evidenceReferences",
+          "conformanceEvidenceReferences", "authorizationEvidenceReferences", "approvedAt", "updatedAt"
+        ],
+        "properties": {
+          "architectureItemId": { "type": "string", "format": "uuid" },
+          "systemId": { "type": "string", "format": "uuid" },
+          "relatedSystemId": { "type": ["string", "null"], "format": "uuid" },
+          "kind": {
+            "type": "string",
+            "enum": ["Boundary", "Component", "Module", "Dependency", "Interface", "Constraint", "DecisionReference", "TechnologyBaselineReference"]
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "relationshipType": { "type": ["string", "null"] },
+          "version": { "type": "string", "minLength": 1 },
+          "classification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "environment": { "type": "string", "minLength": 1 },
+          "lifecycle": {
+            "type": "string",
+            "enum": ["Proposed", "Active", "Deprecated", "Retired"]
+          },
+          "sourceKind": { "type": "string", "minLength": 1 },
+          "evidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "conformanceEvidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "authorizationEvidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "approvedAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthorizedExistingArchitectureDiscoveryReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "systemsDiscoveryId", "contextDiscoveryId", "registrationId",
+          "registrationVersion", "tenantId", "intentSha256Digest", "contextSha256Digest",
+          "inventorySha256Digest", "policyOutcome", "isArchitectureReleased", "canAdvance",
+          "items", "evidenceReferences", "nextRequiredGate", "completedAt"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "systemsDiscoveryId": { "type": "string", "format": "uuid" },
+          "contextDiscoveryId": { "type": "string", "format": "uuid" },
+          "registrationId": { "type": "string", "format": "uuid" },
+          "registrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "intentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "contextSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "inventorySha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isArchitectureReleased": { "type": "boolean" },
+          "canAdvance": { "type": "boolean", "const": false },
+          "architectureSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuthorizedExistingArchitectureItem" }
           },
           "discoveryEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": {

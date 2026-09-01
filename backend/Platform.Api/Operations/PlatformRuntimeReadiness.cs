@@ -17,6 +17,7 @@ using Platform.SoftwareFactory.VerticalSlice;
 using Platform.SoftwareFactory.InternalService;
 using Platform.Knowledge.Retrieval;
 using Platform.Integrations.ExistingSystems;
+using Platform.Integrations.ExistingArchitecture;
 
 namespace Platform.Api.Operations;
 
@@ -71,7 +72,13 @@ internal sealed class PlatformRuntimeReadiness
             ("Existing Systems OPA policy gate", typeof(IExistingSystemsPolicyGate)),
             ("Existing Systems inventory source", typeof(IExistingSystemInventorySource)),
             ("Existing Systems result authorizer", typeof(IExistingSystemResultAuthorizer)),
-            ("Existing Systems evidence recorder", typeof(IExistingSystemsEvidenceRecorder))
+            ("Existing Systems evidence recorder", typeof(IExistingSystemsEvidenceRecorder)),
+            ("Authorized Existing Systems snapshot reader", typeof(IAuthorizedExistingSystemsSnapshotReader)),
+            ("Existing Architecture OPA policy gate", typeof(IExistingArchitecturePolicyGate)),
+            ("Existing Architecture source", typeof(IExistingArchitectureSource)),
+            ("Existing Architecture conformance validator", typeof(IExistingArchitectureConformanceValidator)),
+            ("Existing Architecture result authorizer", typeof(IExistingArchitectureResultAuthorizer)),
+            ("Existing Architecture evidence recorder", typeof(IExistingArchitectureEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

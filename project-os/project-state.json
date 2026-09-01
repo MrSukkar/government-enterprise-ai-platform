@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 05 - Authorized Existing Systems Discovery",
+    "increment": "Operational Increment 06 - Authorized Existing Architecture Discovery",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-02-EXISTING-SYSTEMS.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_05_ACCEPTANCE.md",
-    "executionBoundary": "Authorized Existing Systems contract verified; context-read, policy, inventory-source, result-authorization, and evidence adapters unavailable; no live connectivity, institutional mutation, or advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-03-EXISTING-ARCHITECTURE.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_06_ACCEPTANCE.md",
+    "executionBoundary": "Authorized Existing Architecture contract verified; Existing Systems read, policy, approved architecture-source, constitutional-conformance, result-authorization, and evidence adapters unavailable; no live connectivity, institutional mutation, or advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-30/PHASE_30_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_06_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

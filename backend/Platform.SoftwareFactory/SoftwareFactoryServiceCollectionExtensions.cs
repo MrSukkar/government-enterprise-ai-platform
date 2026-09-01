@@ -30,6 +30,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton<GovernedIntentRegistrationEngine>();
         services.AddScoped<AuthorizedEnterpriseContextDiscoveryEngine>();
         services.AddScoped<AuthorizedExistingSystemsDiscoveryEngine>();
+        services.AddScoped<AuthorizedExistingArchitectureDiscoveryEngine>();
         return services;
     }
 }
