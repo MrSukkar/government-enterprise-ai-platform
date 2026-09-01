@@ -10,11 +10,11 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 04 - Authorized Enterprise Context Discovery",
+    "increment": "Operational Increment 05 - Authorized Existing Systems Discovery",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-01-ENTERPRISE-CONTEXT.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_04_ACCEPTANCE.md",
-    "executionBoundary": "Authorized Enterprise Context contract verified; registration-read, policy, retrieval-source, and evidence adapters unavailable; no source access, institutional mutation, or advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-02-EXISTING-SYSTEMS.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_05_ACCEPTANCE.md",
+    "executionBoundary": "Authorized Existing Systems contract verified; context-read, policy, inventory-source, result-authorization, and evidence adapters unavailable; no live connectivity, institutional mutation, or advancement"
   },
   "lastVerified": {
     "projects": 15,

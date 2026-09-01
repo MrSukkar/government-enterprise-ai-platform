@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 04 - Authorized Enterprise Context Discovery",
-        "OPA-scoped Enterprise Context contract available; source and evidence adapters fail-closed",
+        "Operational Increment 05 - Authorized Existing Systems Discovery",
+        "OPA-scoped Existing Systems inventory contract available; all live adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -43,6 +43,9 @@ public static class InternalServiceFoundationCatalog
             "Enterprise Context policy establishes explicit scope before source access",
             "Every context candidate is re-authorized before evidence-bearing release",
             "Missing discovery adapters return service unavailable without source access",
+            "Existing Systems inventory is bound to an evidence-bearing Enterprise Context snapshot",
+            "Every system and relationship is structurally validated and re-authorized",
+            "Live connectors, credentials, network probes, and Enterprise Model mutation remain unavailable",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

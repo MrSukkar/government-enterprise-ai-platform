@@ -202,6 +202,66 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems": {
+      "post": {
+        "operationId": "discoverInternalServiceExistingSystems",
+        "summary": "Discover authorized existing systems for an evidence-bearing Enterprise Context snapshot.",
+        "description": "OPA establishes explicit system-object, relationship-type, and source-kind scope before inventory access. Every system and relationship is structurally validated, re-authorized, and evidenced. No live connector, Enterprise Model mutation, or Existing Architecture advancement is available.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          {
+            "name": "registrationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "contextDiscoveryId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ExistingSystemsDiscoveryInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorized systems and relationships were released in a deterministic evidence-bearing snapshot that cannot advance.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedExistingSystemsDiscoveryReceipt" } } }
+          },
+          "400": {
+            "description": "The request, context, policy decision, inventory result, authorization result, or evidence receipt is structurally invalid.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "401": {
+            "description": "A governed authenticated identity is required.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "403": {
+            "description": "Authorization or OPA denied Existing Systems discovery.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthorizedExistingSystemsDiscoveryReceipt" } },
+              "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } }
+            }
+          },
+          "404": {
+            "description": "The tenant-scoped authorized Enterprise Context snapshot was not found.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          },
+          "503": {
+            "description": "A context reader, OPA gate, inventory source, result authorizer, or evidence recorder is unavailable; no inventory source access or mutation occurred.",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -393,6 +453,140 @@
           "items": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AuthorizedEnterpriseContextItem" }
+          },
+          "discoveryEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ExistingSystemsDiscoveryInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "expectedRegistrationVersion", "expectedIntentSha256Digest",
+          "expectedContextSha256Digest", "purpose", "maximumClassification",
+          "environment", "policyBundle"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "expectedRegistrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "expectedIntentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedContextSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "AuthorizedExistingSystemRelationship": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "targetSystemId", "relationshipType", "knowledgeState", "confidence", "source",
+          "evidenceReferences", "authorizationEvidenceReferences", "observedAt"
+        ],
+        "properties": {
+          "targetSystemId": { "type": "string", "format": "uuid" },
+          "relationshipType": { "type": "string", "minLength": 1 },
+          "knowledgeState": {
+            "type": "string",
+            "enum": ["Unknown", "Inferred", "Discovered", "Confirmed"]
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "evidenceReferences": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "authorizationEvidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthorizedExistingSystem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "systemId", "type", "state", "ownerId", "classification", "relationships",
+          "policyReferences", "permittedActions", "source", "sourceKind", "confidence",
+          "evidenceReferences", "authorizationEvidenceReferences", "lifecycle", "createdAt", "updatedAt"
+        ],
+        "properties": {
+          "systemId": { "type": "string", "format": "uuid" },
+          "type": { "type": "string", "minLength": 1 },
+          "state": { "type": "string", "minLength": 1 },
+          "ownerId": { "type": "string", "minLength": 1 },
+          "classification": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"]
+          },
+          "relationships": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuthorizedExistingSystemRelationship" }
+          },
+          "policyReferences": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "permittedActions": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "source": { "type": "string", "minLength": 1 },
+          "sourceKind": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "authorizationEvidenceReferences": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "lifecycle": {
+            "type": "string",
+            "enum": ["Proposed", "Active", "Deprecated", "Retired"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AuthorizedExistingSystemsDiscoveryReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "discoveryId", "contextDiscoveryId", "registrationId", "registrationVersion",
+          "tenantId", "intentSha256Digest", "contextSha256Digest", "policyOutcome",
+          "isInventoryReleased", "canAdvance", "systems", "evidenceReferences",
+          "nextRequiredGate", "completedAt"
+        ],
+        "properties": {
+          "discoveryId": { "type": "string", "format": "uuid" },
+          "contextDiscoveryId": { "type": "string", "format": "uuid" },
+          "registrationId": { "type": "string", "format": "uuid" },
+          "registrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "intentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "contextSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isInventoryReleased": { "type": "boolean" },
+          "canAdvance": { "type": "boolean", "const": false },
+          "inventorySha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "systems": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuthorizedExistingSystem" }
           },
           "discoveryEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": {

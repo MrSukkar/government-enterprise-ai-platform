@@ -29,6 +29,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton<GovernedIntentSubmissionValidator>();
         services.AddSingleton<GovernedIntentRegistrationEngine>();
         services.AddScoped<AuthorizedEnterpriseContextDiscoveryEngine>();
+        services.AddScoped<AuthorizedExistingSystemsDiscoveryEngine>();
         return services;
     }
 }

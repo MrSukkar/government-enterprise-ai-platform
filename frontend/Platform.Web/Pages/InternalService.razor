@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 04 / Build</p>
+        <p class="eyebrow">Operational increment 05 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">AUTHORIZED CONTEXT</span>
-        <strong>Enterprise Context contract ready; adapters fail-closed</strong>
-        <small>No source is accessed until registration, OPA scope, authorized retrieval, and evidence boundaries are connected.</small>
+        <span class="state-chip">EXISTING SYSTEMS</span>
+        <strong>Authorized inventory contract ready; adapters fail-closed</strong>
+        <small>No inventory source, live system, credential, or network endpoint is accessed by the current deployment.</small>
     </aside>
 </section>
 
@@ -41,15 +41,15 @@
         <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
         <ul class="context-list">
             <li><span>Identity and purpose</span><strong class="@(ExperienceContext.IsGovernedIdentityEstablished ? "available" : "waiting")">@(ExperienceContext.IsGovernedIdentityEstablished ? "Established" : "Waiting")</strong></li>
-            <li><span>Registered intent reader</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Enterprise Context OPA gate</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Authorized retrieval sources</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Context evidence recorder</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Existing systems</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Enterprise Context snapshot reader</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Existing Systems OPA gate</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Inventory source contracts</span><strong class="waiting">No live adapters</strong></li>
+            <li><span>System and relationship authorizer</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Inventory evidence recorder</span><strong class="waiting">Not connected</strong></li>
             <li><span>Approved architecture</span><strong class="available">Baseline ready</strong></li>
             <li><span>Approved packages</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds discovery to a persisted governed intent. OPA must establish explicit scope before retrieval, every candidate is re-authorized, and release requires evidence. Missing adapters return service unavailable without source access or mutation.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds inventory discovery to an evidence-bearing Enterprise Context snapshot. OPA must establish explicit systems, relationships, and source scope; every result is structurally validated and re-authorized. Missing adapters return service unavailable without inventory access or mutation.</p></div>
     </aside>
 </section>
 

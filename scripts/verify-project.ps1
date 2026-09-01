@@ -1015,6 +1015,108 @@ if (Test-Path -LiteralPath $increment04AcceptancePath) {
     }
 }
 
+$increment05AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_05_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment05AcceptancePath) {
+    $systemsEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AuthorizedExistingSystemsDiscovery.cs'
+    $inventoryContractPath = Join-Path $repositoryRoot 'backend\Platform.Integrations\ExistingSystems\ExistingSystemInventory.cs'
+    $intentEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $softwareFactoryProjectPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Platform.SoftwareFactory.csproj'
+    $integrationsProjectPath = Join-Path $repositoryRoot 'backend\Platform.Integrations\Platform.Integrations.csproj'
+    $changeControlPath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-02-EXISTING-SYSTEMS.md'
+    @($systemsEnginePath, $inventoryContractPath, $intentEndpointPath, $readinessPath,
+      $openApiPath, $softwareFactoryProjectPath, $integrationsProjectPath, $changeControlPath) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { throw "Operational Increment 05 artifact is missing: $_" }
+    }
+
+    $changeControl = Get-Content -LiteralPath $changeControlPath -Raw
+    @('Status: **Approved for Operational Increment 05**',
+      'Decision: **Approved by the repository owner',
+      'Operational Increment 05 — Authorized Existing Systems Discovery') | ForEach-Object {
+        if ($changeControl -notmatch [regex]::Escape($_)) {
+            throw "Increment 05 Change Control approval '$($_)' is missing."
+        }
+    }
+
+    $inventoryContract = Get-Content -LiteralPath $inventoryContractPath -Raw
+    @('IExistingSystemInventorySource', 'ExistingSystemInventoryScope',
+      'AllowedSystemIds', 'AllowedRelationshipTypes', 'AllowedSourceKinds',
+      'CredentialsIncluded', 'LiveSessionIncluded', 'ExecutableCommandIncluded',
+      'ExternalEffectOccurred') | ForEach-Object {
+        if ($inventoryContract -notmatch [regex]::Escape($_)) {
+            throw "Existing Systems inventory contract '$($_)' is missing."
+        }
+    }
+    if ($inventoryContract -match '(?i)SaveAsync|UpdateAsync|DeleteAsync|ExecuteAsync') {
+        throw 'Existing Systems inventory contract must not expose mutation or execution operations.'
+    }
+
+    $systemsEngine = Get-Content -LiteralPath $systemsEnginePath -Raw
+    @('developer.internal-service.systems.discover', 'IAuthorizedEnterpriseContextSnapshotReader',
+      'IExistingSystemsPolicyGate', 'PolicySignatureValid',
+      'PolicyVerificationEvidenceReference', 'AllowedSystemIds.IsEmpty',
+      'AllowedRelationshipTypes.IsEmpty', 'AllowedSourceKinds.IsEmpty',
+      'IExistingSystemResultAuthorizer', 'existing-system.read',
+      'existing-system.relationship.read', 'CredentialsIncluded', 'LiveSessionIncluded',
+      'ExecutableCommandIncluded', 'ExternalEffectOccurred',
+      'RelationshipKnowledgeState', 'IExistingSystemsEvidenceRecorder',
+      'InventorySha256Digest', 'CanAdvance: false',
+      'Separately approved Existing Architecture discovery',
+      'OPA returned a mismatched Existing Systems decision') | ForEach-Object {
+        if ($systemsEngine -notmatch [regex]::Escape($_)) {
+            throw "Existing Systems discovery guard '$($_)' is missing."
+        }
+    }
+    $decisionValidationIndex = $systemsEngine.IndexOf('ValidateDecision(policyInput', [StringComparison]::Ordinal)
+    $sourceAccessIndex = $systemsEngine.IndexOf('var sourceResults = await Task.WhenAll', [StringComparison]::Ordinal)
+    if ($decisionValidationIndex -lt 0 -or $sourceAccessIndex -lt 0 -or $decisionValidationIndex -ge $sourceAccessIndex) {
+        throw 'Existing Systems inventory access is not structurally ordered after OPA decision validation.'
+    }
+
+    $intentEndpoint = Get-Content -LiteralPath $intentEndpointPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems',
+      'developer.internal-service.systems.discover', 'IAuthorizedEnterpriseContextSnapshotReader',
+      'IExistingSystemsPolicyGate', 'IExistingSystemResultAuthorizer',
+      'IExistingSystemsEvidenceRecorder', 'GetServices<IExistingSystemInventorySource>',
+      'Status503ServiceUnavailable', 'RequireAuthorization') | ForEach-Object {
+        if ($intentEndpoint -notmatch [regex]::Escape($_)) {
+            throw "Existing Systems endpoint guard '$($_)' is missing."
+        }
+    }
+
+    $readiness = Get-Content -LiteralPath $readinessPath -Raw
+    @('Authorized Enterprise Context snapshot reader', 'Existing Systems OPA policy gate',
+      'Existing Systems inventory source', 'Existing Systems result authorizer',
+      'Existing Systems evidence recorder') | ForEach-Object {
+        if ($readiness -notmatch [regex]::Escape($_)) {
+            throw "Existing Systems readiness dependency '$($_)' is missing."
+        }
+    }
+
+    $openApi = Get-Content -LiteralPath $openApiPath -Raw
+    @('/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems',
+      'ExistingSystemsDiscoveryInput', 'AuthorizedExistingSystemsDiscoveryReceipt',
+      'expectedContextSha256Digest', 'AuthorizedExistingSystemRelationship',
+      'knowledgeState', 'canAdvance', '503') | ForEach-Object {
+        if ($openApi -notmatch [regex]::Escape($_)) {
+            throw "Existing Systems OpenAPI boundary '$($_)' is missing."
+        }
+    }
+
+    $softwareFactoryProject = Get-Content -LiteralPath $softwareFactoryProjectPath -Raw
+    @('Platform.EnterpriseModel\Platform.EnterpriseModel.csproj',
+      'Platform.Integrations\Platform.Integrations.csproj') | ForEach-Object {
+        if ($softwareFactoryProject -notmatch [regex]::Escape($_)) {
+            throw "Software Factory module dependency '$($_)' is missing."
+        }
+    }
+    $integrationsProject = Get-Content -LiteralPath $integrationsProjectPath -Raw
+    if ($integrationsProject -notmatch [regex]::Escape('Platform.EnterpriseModel\Platform.EnterpriseModel.csproj')) {
+        throw 'Integrations module is not bound to the approved Enterprise Model contract.'
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

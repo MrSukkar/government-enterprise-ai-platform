@@ -3,7 +3,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Platform.Application\Platform.Application.csproj" />
     <ProjectReference Include="..\Platform.Domain\Platform.Domain.csproj" />
+    <ProjectReference Include="..\Platform.EnterpriseModel\Platform.EnterpriseModel.csproj" />
     <ProjectReference Include="..\Platform.Identity\Platform.Identity.csproj" />
+    <ProjectReference Include="..\Platform.Integrations\Platform.Integrations.csproj" />
     <ProjectReference Include="..\Platform.Knowledge\Platform.Knowledge.csproj" />
   </ItemGroup>
 

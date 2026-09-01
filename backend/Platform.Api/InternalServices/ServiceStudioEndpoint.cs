@@ -2,6 +2,7 @@ using Platform.Domain.Security;
 using Platform.Identity.Access;
 using Platform.Identity.Authentication;
 using Platform.Knowledge.Retrieval;
+using Platform.Integrations.ExistingSystems;
 using Platform.SoftwareFactory.InternalService;
 
 namespace Platform.Api.InternalService;
@@ -21,6 +22,16 @@ internal static class InternalServiceEndpoint
         string ExpectedIntentSha256Digest,
         string Purpose,
         DataClassification RegistrationClassification,
+        string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record ExistingSystemsDiscoveryInput(
+        Guid DiscoveryId,
+        long ExpectedRegistrationVersion,
+        string ExpectedIntentSha256Digest,
+        string ExpectedContextSha256Digest,
+        string Purpose,
+        DataClassification MaximumClassification,
         string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
@@ -293,6 +304,118 @@ internal static class InternalServiceEndpoint
             .Accepts<EnterpriseContextDiscoveryInput>("application/json")
             .Produces<AuthorizedEnterpriseContextDiscoveryReceipt>(StatusCodes.Status200OK)
             .Produces<AuthorizedEnterpriseContextDiscoveryReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceExistingSystemsDiscovery(
+        this IEndpointRouteBuilder endpoints)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems",
+            async (
+                Guid registrationId,
+                Guid contextDiscoveryId,
+                ExistingSystemsDiscoveryInput input,
+                HttpContext httpContext,
+                IServiceProvider services,
+                GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator,
+                AuthorizedExistingSystemsDiscoveryEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    ArgumentNullException.ThrowIfNull(input.PolicyBundle);
+                    var requestContext = contextFactory.Create(httpContext.User);
+                    var accessDecision = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        requestContext.Identity,
+                        input.Purpose,
+                        "internal-service.existing-systems.discover",
+                        contextDiscoveryId.ToString("D"),
+                        requestContext.Identity.TenantId,
+                        input.MaximumClassification,
+                        RequiredRoles: [],
+                        RequiredPermissions: ["developer.internal-service.systems.discover"],
+                        InitiatorSubjectId: requestContext.Identity.SubjectId,
+                        RequiresDistinctApprover: false));
+                    if (!accessDecision.IsAllowed)
+                        throw new UnauthorizedAccessException(
+                            $"Existing Systems discovery denied: {accessDecision.Code}.");
+
+                    var contextReader = services.GetService<IAuthorizedEnterpriseContextSnapshotReader>();
+                    var policyGate = services.GetService<IExistingSystemsPolicyGate>();
+                    var resultAuthorizer = services.GetService<IExistingSystemResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<IExistingSystemsEvidenceRecorder>();
+                    var inventorySources = services.GetServices<IExistingSystemInventorySource>().ToArray();
+                    if (contextReader is null || policyGate is null || resultAuthorizer is null ||
+                        evidenceRecorder is null || inventorySources.Length == 0)
+                        return Results.Problem(
+                            statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Authorized Existing Systems discovery is not operationally ready.");
+
+                    var request = new AuthorizedExistingSystemsDiscoveryRequest(
+                        input.DiscoveryId,
+                        contextDiscoveryId,
+                        registrationId,
+                        input.ExpectedRegistrationVersion,
+                        input.ExpectedIntentSha256Digest,
+                        input.ExpectedContextSha256Digest,
+                        requestContext.Identity,
+                        input.Purpose,
+                        input.MaximumClassification,
+                        requestContext.AuthorizationEvidenceReference,
+                        input.Environment,
+                        input.PolicyBundle,
+                        DateTimeOffset.UtcNow);
+                    var receipt = await engine.DiscoverAsync(
+                        request,
+                        contextReader,
+                        policyGate,
+                        resultAuthorizer,
+                        evidenceRecorder,
+                        cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status403Forbidden,
+                        title: "Authorized Existing Systems discovery denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status404NotFound,
+                        title: "Authorized Enterprise Context snapshot was not found.");
+                }
+                catch (ExistingSystemsDependencyUnavailableException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "An authorized Existing Systems dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "Existing Systems discovery request or boundary result is invalid.");
+                }
+            })
+            .WithName("DiscoverInternalServiceExistingSystems")
+            .WithTags("Create Internal Service")
+            .WithSummary("Discover authorized existing systems for an evidence-bearing Enterprise Context snapshot.")
+            .WithDescription("OPA establishes explicit system, relationship, and source scope before inventory access. Every system and relationship is structurally validated, re-authorized, and evidenced. No live connector or Existing Architecture advancement is available.")
+            .Accepts<ExistingSystemsDiscoveryInput>("application/json")
+            .Produces<AuthorizedExistingSystemsDiscoveryReceipt>(StatusCodes.Status200OK)
+            .Produces<AuthorizedExistingSystemsDiscoveryReceipt>(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)

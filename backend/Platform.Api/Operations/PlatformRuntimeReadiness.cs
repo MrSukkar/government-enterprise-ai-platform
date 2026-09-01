@@ -16,6 +16,7 @@ using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.VerticalSlice;
 using Platform.SoftwareFactory.InternalService;
 using Platform.Knowledge.Retrieval;
+using Platform.Integrations.ExistingSystems;
 
 namespace Platform.Api.Operations;
 
@@ -65,7 +66,12 @@ internal sealed class PlatformRuntimeReadiness
             ("Governed intent registration reader", typeof(IGovernedIntentRegistrationReader)),
             ("Enterprise Context OPA policy gate", typeof(IEnterpriseContextPolicyGate)),
             ("Enterprise Context retrieval source", typeof(IKnowledgeRetrievalSource)),
-            ("Enterprise Context evidence recorder", typeof(IEnterpriseContextEvidenceRecorder))
+            ("Enterprise Context evidence recorder", typeof(IEnterpriseContextEvidenceRecorder)),
+            ("Authorized Enterprise Context snapshot reader", typeof(IAuthorizedEnterpriseContextSnapshotReader)),
+            ("Existing Systems OPA policy gate", typeof(IExistingSystemsPolicyGate)),
+            ("Existing Systems inventory source", typeof(IExistingSystemInventorySource)),
+            ("Existing Systems result authorizer", typeof(IExistingSystemResultAuthorizer)),
+            ("Existing Systems evidence recorder", typeof(IExistingSystemsEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies
