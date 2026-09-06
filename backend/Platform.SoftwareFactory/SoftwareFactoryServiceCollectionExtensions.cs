@@ -43,6 +43,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedCiCdExecutionEngine>();
         services.AddScoped<GovernedArtifactPublicationEngine>();
         services.AddScoped<GovernedSovereignDeploymentEngine>();
+        services.AddScoped<GovernedOpenTelemetryActivationEngine>();
         return services;
     }
 }

@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 18 - Governed Sovereign Deployment",
-        "Governed Deployment contract available; all Artifact, profile, preflight, runtime, authorization, and evidence adapters fail-closed",
+        "Operational Increment 19 - Governed OpenTelemetry Activation",
+        "Governed OpenTelemetry contract available; all Deployment, profile, redaction, collector, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -97,6 +97,11 @@ public static class InternalServiceFoundationCatalog
             "Air-gapped profiles require local dependencies, default-deny outbound networking, and no external control plane",
             "Deployment proves activation, idempotency, rollback, runtime identity, exact effects, and evidence",
             "Deployment cannot configure telemetry, register the service, mutate the Enterprise Model, or advance workflow",
+            "OpenTelemetry requires an accepted Deployment and a delivery run stopped at Deployment",
+            "OPA authorizes the exact runtime, resource identity, signals, collector, and redaction before reads",
+            "Sensitive attributes are dropped, unknown values redacted, strings bounded, and baggage cleared",
+            "Traces, metrics, and logs require unique accepted evidence through trusted collector routing",
+            "OpenTelemetry cannot register the service, mutate the Enterprise Model, or advance workflow",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

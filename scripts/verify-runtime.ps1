@@ -151,6 +151,10 @@ try {
     $deployment = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/artifacts/00000000-0000-0000-0000-00000000000f/deployment",
         $deploymentContent).GetAwaiter().GetResult()
+    $openTelemetryContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $openTelemetry = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/deployments/00000000-0000-0000-0000-000000000010/opentelemetry",
+        $openTelemetryContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -221,12 +225,15 @@ try {
     if ([int]$deployment.StatusCode -ne 401 -or $deployment.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous Deployment did not fail closed with a bearer challenge.'
     }
+    if ([int]$openTelemetry.StatusCode -ne 401 -or $openTelemetry.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous OpenTelemetry activation did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 116) {
-        throw 'Readiness response did not disclose the expected 116 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 124) {
+        throw 'Readiness response did not disclose the expected 124 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -239,7 +246,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 18 - Governed Sovereign Deployment' -or
+        $internalServiceBody.increment -ne 'Operational Increment 19 - Governed OpenTelemetry Activation' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -261,8 +268,9 @@ try {
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation/{securityValidationId}/sandbox/{sandboxExecutionId}/tests/{testsExecutionId}/human-review/{reviewId}/git' -or
         -not $openApiBody.paths.'/api/v1/internal-services/git/{gitOperationId}/cicd' -or
         -not $openApiBody.paths.'/api/v1/internal-services/cicd/{ciCdExecutionId}/artifact' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/artifacts/{artifactPublicationId}/deployment') {
-        throw 'Runtime OpenAPI response does not contain the approved path through Deployment.'
+        -not $openApiBody.paths.'/api/v1/internal-services/artifacts/{artifactPublicationId}/deployment' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/deployments/{deploymentId}/opentelemetry') {
+        throw 'Runtime OpenAPI response does not contain the approved path through OpenTelemetry.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -272,7 +280,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 116 runtime dependencies fail-closed, and Governed Deployment remains protected without Artifact, profile, preflight, runtime, authorization, or evidence adapters.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 124 runtime dependencies fail-closed, and Governed OpenTelemetry remains protected without Deployment, profile, redaction, collector, authorization, or evidence adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

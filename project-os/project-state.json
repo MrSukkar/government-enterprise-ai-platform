@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 18 - Governed Sovereign Deployment",
+    "increment": "Operational Increment 19 - Governed OpenTelemetry Activation",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-15-DEPLOYMENT.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_18_ACCEPTANCE.md",
-    "executionBoundary": "Governed Deployment contract verified; policy, Artifact receipt/artifact and run readers, signed sovereign profile, preflight, runtime gateway, result authorization, and evidence unavailable; no read, secrets access, invocation, telemetry, registration, Enterprise Model mutation, or workflow advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-16-OPENTELEMETRY.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_19_ACCEPTANCE.md",
+    "executionBoundary": "Governed OpenTelemetry contract verified; policy, Deployment receipt/run, signed telemetry profile, redaction verifier, institutional collector gateway, result authorization, and evidence unavailable; no read, activation, Automatic Registration, Enterprise Model mutation, or workflow advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_18_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_19_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

@@ -169,6 +169,17 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record OpenTelemetryActivationInput(
+        Guid ActivationId, Guid DeliveryRunId, string ExpectedRuntimeIdentity,
+        string ExpectedArtifactContentSha256Digest, string ExpectedDeploymentEvidenceReference,
+        bool ExpectedProductionEffectOccurred, Guid TelemetryProfileId,
+        string TelemetryProfileVersion, string ExpectedTelemetryProfileSha256Digest,
+        string ExpectedServiceName, string ExpectedServiceVersion,
+        System.Collections.Immutable.ImmutableHashSet<GovernedTelemetrySignal> RequiredSignals,
+        string ExpectedRedactionPolicyReference, string ExpectedRedactionPolicySha256Digest,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1462,6 +1473,65 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact Artifact, sovereign profile, target, production intent, and human approval before reads or invocation. No telemetry, registration, Enterprise Model mutation, or workflow advancement is available.")
             .Accepts<SovereignDeploymentInput>("application/json")
             .Produces<GovernedSovereignDeploymentReceipt>(200).Produces<GovernedSovereignDeploymentReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceOpenTelemetry(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/deployments/{deploymentId:guid}/opentelemetry",
+            async (Guid deploymentId, OpenTelemetryActivationInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedOpenTelemetryActivationEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.telemetry.activate",
+                        input.ExpectedRuntimeIdentity, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["operator.internal-service.telemetry.activate"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IOpenTelemetryPolicyGate>();
+                    var deploymentReader = services.GetService<IAuthorizedSovereignDeploymentReceiptReader>();
+                    var runReader = services.GetService<IOpenTelemetryDeliveryRunReader>();
+                    var profileReader = services.GetService<IGovernedOpenTelemetryProfileReader>();
+                    var redactionVerifier = services.GetService<IOpenTelemetryRedactionPolicyVerifier>();
+                    var gateway = services.GetService<IInstitutionalOpenTelemetryGateway>();
+                    var authorizer = services.GetService<IOpenTelemetryResultAuthorizer>();
+                    var evidence = services.GetService<IOpenTelemetryEvidenceRecorder>();
+                    if (policy is null || deploymentReader is null || runReader is null || profileReader is null ||
+                        redactionVerifier is null || gateway is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed OpenTelemetry is not operationally ready.");
+                    var request = new GovernedOpenTelemetryActivationRequest(
+                        input.ActivationId, deploymentId, input.DeliveryRunId,
+                        input.ExpectedRuntimeIdentity, input.ExpectedArtifactContentSha256Digest,
+                        input.ExpectedDeploymentEvidenceReference, input.ExpectedProductionEffectOccurred,
+                        input.TelemetryProfileId, input.TelemetryProfileVersion,
+                        input.ExpectedTelemetryProfileSha256Digest, input.ExpectedServiceName,
+                        input.ExpectedServiceVersion, input.RequiredSignals,
+                        input.ExpectedRedactionPolicyReference, input.ExpectedRedactionPolicySha256Digest,
+                        context.Identity, input.Purpose, input.MaximumClassification,
+                        context.AuthorizationEvidenceReference, input.Environment,
+                        input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ActivateAsync(
+                        request, policy, deploymentReader, runReader, profileReader,
+                        redactionVerifier, gateway, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed OpenTelemetry denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "OpenTelemetry prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "OpenTelemetry request or boundary result is invalid."); }
+            })
+            .WithName("ActivateGovernedOpenTelemetry").WithTags("Create Internal Service")
+            .WithSummary("Activate governed OpenTelemetry for one exact Deployment.")
+            .WithDescription("OPA authorizes the exact Deployment, profile, resource, signals, collectors, and redaction before reads or configuration. No automatic registration, Enterprise Model mutation, or workflow advancement is available.")
+            .Accepts<OpenTelemetryActivationInput>("application/json")
+            .Produces<GovernedOpenTelemetryActivationReceipt>(200).Produces<GovernedOpenTelemetryActivationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

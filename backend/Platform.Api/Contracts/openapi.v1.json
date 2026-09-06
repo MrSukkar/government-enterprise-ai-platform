@@ -640,6 +640,24 @@
         }
       }
     },
+    "/api/v1/internal-services/deployments/{deploymentId}/opentelemetry": {
+      "post": {
+        "operationId": "activateGovernedOpenTelemetry",
+        "summary": "Activate governed OpenTelemetry for one exact Deployment.",
+        "description": "OPA authorizes the exact Deployment, profile, resource, signals, collectors, and redaction before reads or configuration. No automatic registration, Enterprise Model mutation, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [ { "name": "deploymentId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OpenTelemetryActivationInput" } } } },
+        "responses": {
+          "200": { "description": "OpenTelemetry traces, metrics, and logs were configured with redaction and evidence.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedOpenTelemetryActivationReceipt" } } } },
+          "400": { "description": "Invalid OpenTelemetry boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Telemetry access, OPA, redaction, collector, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedOpenTelemetryActivationReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no telemetry configuration occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1614,6 +1632,44 @@
           "artifactContentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "deploymentProfileId": { "type": "string", "format": "uuid" },
           "targetEnvironment": { "type": "string" }, "runtimeIdentity": { "type": ["string", "null"] }, "rollbackReference": { "type": ["string", "null"] },
           "deploymentEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OpenTelemetryActivationInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["activationId", "deliveryRunId", "expectedRuntimeIdentity", "expectedArtifactContentSha256Digest", "expectedDeploymentEvidenceReference", "expectedProductionEffectOccurred", "telemetryProfileId", "telemetryProfileVersion", "expectedTelemetryProfileSha256Digest", "expectedServiceName", "expectedServiceVersion", "requiredSignals", "expectedRedactionPolicyReference", "expectedRedactionPolicySha256Digest", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "activationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedRuntimeIdentity": { "type": "string", "minLength": 1 }, "expectedArtifactContentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedDeploymentEvidenceReference": { "type": "string", "minLength": 1 }, "expectedProductionEffectOccurred": { "type": "boolean" },
+          "telemetryProfileId": { "type": "string", "format": "uuid" }, "telemetryProfileVersion": { "type": "string", "minLength": 1 },
+          "expectedTelemetryProfileSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedServiceName": { "type": "string", "minLength": 1 }, "expectedServiceVersion": { "type": "string", "minLength": 1 },
+          "requiredSignals": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "type": "string", "enum": ["Traces", "Metrics", "Logs"] } },
+          "expectedRedactionPolicyReference": { "type": "string", "minLength": 1 }, "expectedRedactionPolicySha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "purpose": { "type": "string", "minLength": 1 }, "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedTelemetrySignalResult": {
+        "type": "object", "additionalProperties": false, "required": ["signal", "configured", "accepted", "evidenceReference", "observedAt"],
+        "properties": {
+          "signal": { "type": "string", "enum": ["Traces", "Metrics", "Logs"] }, "configured": { "type": "boolean" }, "accepted": { "type": "boolean" },
+          "evidenceReference": { "type": "string" }, "observedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GovernedOpenTelemetryActivationReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["activationId", "deploymentId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "telemetryConfigured", "externalEffectOccurred", "productionEffectOccurred", "automaticRegistrationOccurred", "enterpriseModelMutated", "canAdvance", "runtimeIdentity", "artifactContentSha256Digest", "telemetryProfileSha256Digest", "serviceName", "serviceVersion", "signals", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "activationId": { "type": "string", "format": "uuid" }, "deploymentId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" }, "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "telemetryConfigured": { "type": "boolean" }, "externalEffectOccurred": { "type": "boolean" }, "productionEffectOccurred": { "type": "boolean" },
+          "automaticRegistrationOccurred": { "type": "boolean", "const": false }, "enterpriseModelMutated": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "runtimeIdentity": { "type": "string" }, "artifactContentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "telemetryProfileSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "serviceName": { "type": "string" }, "serviceVersion": { "type": "string" },
+          "signals": { "type": "array", "items": { "$ref": "#/components/schemas/GovernedTelemetrySignalResult" } },
+          "openTelemetryEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

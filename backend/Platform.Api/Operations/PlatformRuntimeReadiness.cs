@@ -164,7 +164,15 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional Deployment preflight validator", typeof(IInstitutionalDeploymentPreflightValidator)),
             ("Institutional sovereign Deployment gateway", typeof(IInstitutionalSovereignDeploymentGateway)),
             ("Deployment result authorizer", typeof(IDeploymentResultAuthorizer)),
-            ("Deployment evidence recorder", typeof(IDeploymentEvidenceRecorder))
+            ("Deployment evidence recorder", typeof(IDeploymentEvidenceRecorder)),
+            ("OpenTelemetry OPA policy gate", typeof(IOpenTelemetryPolicyGate)),
+            ("Authorized sovereign Deployment receipt reader", typeof(IAuthorizedSovereignDeploymentReceiptReader)),
+            ("OpenTelemetry delivery-run reader", typeof(IOpenTelemetryDeliveryRunReader)),
+            ("Governed OpenTelemetry profile reader", typeof(IGovernedOpenTelemetryProfileReader)),
+            ("OpenTelemetry redaction-policy verifier", typeof(IOpenTelemetryRedactionPolicyVerifier)),
+            ("Institutional OpenTelemetry gateway", typeof(IInstitutionalOpenTelemetryGateway)),
+            ("OpenTelemetry result authorizer", typeof(IOpenTelemetryResultAuthorizer)),
+            ("OpenTelemetry evidence recorder", typeof(IOpenTelemetryEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

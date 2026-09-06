@@ -1616,6 +1616,30 @@ if (Test-Path $increment18AcceptancePath) {
     @('Status: **Satisfied**','all 116 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 18 acceptance missing: $_"}}
 }
 
+$increment19AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_19_ACCEPTANCE.md'
+if (Test-Path $increment19AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedOpenTelemetryActivation.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-16-OPENTELEMETRY.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 19 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 19**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 19 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IOpenTelemetryPolicyGate','IAuthorizedSovereignDeploymentReceiptReader','IOpenTelemetryDeliveryRunReader','DeliveryStage.Deployment','IGovernedOpenTelemetryProfileReader','MandatoryExternalControlPlane','TraceAwareRoutingEnabled','public enum GovernedTelemetrySignal { Traces, Metrics, Logs }','IOpenTelemetryRedactionPolicyVerifier','SensitiveNamesDropped','UnknownAttributesRedacted','RetainedStringsBounded','BaggageClearedAtStart','BaggageClearedAtEnd','LowCardinalityAttributesOnly','IInstitutionalOpenTelemetryGateway','AutomaticRegistrationOccurred','EnterpriseModelMutated','IOpenTelemetryResultAuthorizer','IOpenTelemetryEvidenceRecorder','CanAdvance','Separately approved Automatic Registration')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "OpenTelemetry guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('deploymentReader.LoadAsync',[StringComparison]::Ordinal)){throw 'OpenTelemetry prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'OpenTelemetry must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/deployments/{deploymentId:guid}/opentelemetry','operator.internal-service.telemetry.activate','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "OpenTelemetry endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('OpenTelemetry OPA policy gate','Authorized sovereign Deployment receipt reader','OpenTelemetry delivery-run reader','Governed OpenTelemetry profile reader','OpenTelemetry redaction-policy verifier','Institutional OpenTelemetry gateway','OpenTelemetry result authorizer','OpenTelemetry evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "OpenTelemetry readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/deployments/{deploymentId}/opentelemetry','OpenTelemetryActivationInput','GovernedOpenTelemetryActivationReceipt','telemetryConfigured','automaticRegistrationOccurred','enterpriseModelMutated','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "OpenTelemetry OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment19AcceptancePath
+    @('Status: **Satisfied**','all 124 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 19 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
