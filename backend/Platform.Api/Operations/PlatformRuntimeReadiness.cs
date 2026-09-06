@@ -107,7 +107,12 @@ internal sealed class PlatformRuntimeReadiness
             ("Static Validation delivery-run reader", typeof(IStaticValidationDeliveryRunReader)),
             ("Institutionally approved Static Validation controls", typeof(ICodeValidationControl)),
             ("Static Validation result authorizer", typeof(IStaticValidationResultAuthorizer)),
-            ("Static Validation evidence recorder", typeof(IStaticValidationEvidenceRecorder))
+            ("Static Validation evidence recorder", typeof(IStaticValidationEvidenceRecorder)),
+            ("Security Validation OPA policy gate", typeof(ISecurityValidationPolicyGate)),
+            ("Authorized Static Validation receipt reader", typeof(IAuthorizedStaticValidationReceiptReader)),
+            ("Security Validation delivery-run reader", typeof(ISecurityValidationDeliveryRunReader)),
+            ("Security Validation result authorizer", typeof(ISecurityValidationResultAuthorizer)),
+            ("Security Validation evidence recorder", typeof(ISecurityValidationEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

@@ -435,6 +435,33 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation": {
+      "post": {
+        "operationId": "runGovernedSecurityValidation",
+        "summary": "Run governed Security Validation after accepted Static Validation.",
+        "description": "OPA authorizes exact prerequisites and Security controls before reads or control execution. No Sandbox, execution, mutation, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "planningId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "generationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "staticValidationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SecurityValidationInput" } } } },
+        "responses": {
+          "200": { "description": "Every exact Security control passed with evidence.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSecurityValidationReceipt" } } } },
+          "400": { "description": "Invalid Security Validation boundary.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Security Validation denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSecurityValidationReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A required dependency is unavailable; no disclosure or control execution occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1062,6 +1089,38 @@
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" },
           "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SecurityValidationInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["validationId", "deliveryRunId", "expectedCandidateSha256Digest", "expectedStaticReportSha256Digest", "expectedStaticEvidenceReference", "requiredControlIds", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "validationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedCandidateSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedStaticReportSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedStaticEvidenceReference": { "type": "string", "minLength": 1 },
+          "requiredControlIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedSecurityValidationReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["validationId", "staticValidationId", "generationId", "deliveryRunId", "tenantId", "policyOutcome", "gate", "isAccepted", "isExecutable", "canAdvance", "candidateSha256Digest", "staticReportSha256Digest", "controlReports", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "validationId": { "type": "string", "format": "uuid" }, "staticValidationId": { "type": "string", "format": "uuid" },
+          "generationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" }, "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "gate": { "type": "string", "const": "Security" }, "isAccepted": { "type": "boolean" },
+          "isExecutable": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "staticReportSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "securityReportSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "controlReports": { "type": "array", "items": { "type": "object" } },
+          "validationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string" } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },
       "ProblemDetails": {

@@ -99,6 +99,7 @@ app.MapInternalServiceApprovedPackagesSelection();
 app.MapInternalServiceAiPlanning();
 app.MapInternalServiceCodeGeneration();
 app.MapInternalServiceStaticValidation();
+app.MapInternalServiceSecurityValidation();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1419,6 +1419,29 @@ if (Test-Path -LiteralPath $increment10AcceptancePath) {
     }
 }
 
+$increment11AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_11_ACCEPTANCE.md'
+if (Test-Path $increment11AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedSecurityValidation.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-08-SECURITY-VALIDATION.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 11 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 11**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 11 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('ISecurityValidationPolicyGate','IAuthorizedStaticValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.StaticValidation','CodeValidationPipeline','ValidationGate.Security','report.IsAccepted','item.Passed','ISecurityValidationResultAuthorizer','ISecurityValidationEvidenceRecorder','IsExecutable: false','CanAdvance: false','Separately approved Sandbox')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Security Validation guard missing: $_"}}
+    if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('staticReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Security prerequisite read occurs before OPA validation.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/static-validation/{staticValidationId:guid}/security-validation','developer.internal-service.security-validation.create','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Security endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Security Validation OPA policy gate','Authorized Static Validation receipt reader','Security Validation delivery-run reader','Security Validation result authorizer','Security Validation evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Security readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/static-validation/{staticValidationId}/security-validation','SecurityValidationInput','GovernedSecurityValidationReceipt','isExecutable','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Security OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment11AcceptancePath
+    @('Status: **Satisfied**','all 65 dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 11 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

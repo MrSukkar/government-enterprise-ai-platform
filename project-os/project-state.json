@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 10 - Governed Static Validation",
+    "increment": "Operational Increment 11 - Governed Security Validation",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-07-STATIC-VALIDATION.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_10_ACCEPTANCE.md",
-    "executionBoundary": "Governed Static Validation contract verified; policy, authoritative code-candidate read, delivery-run read, institutionally approved Static controls, result authorization, and evidence adapters unavailable; no candidate disclosure, control execution, source mutation, code execution, workflow advancement, or Security Validation"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-08-SECURITY-VALIDATION.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_11_ACCEPTANCE.md",
+    "executionBoundary": "Governed Security Validation contract verified; policy, Static receipt, code-candidate and run readers, Security controls, result authorization, and evidence unavailable; no candidate/control execution, source mutation, Sandbox, workflow advancement, or material action"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_10_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_11_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

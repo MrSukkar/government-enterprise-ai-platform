@@ -89,6 +89,13 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record SecurityValidationInput(
+        Guid ValidationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest,
+        string ExpectedStaticReportSha256Digest, string ExpectedStaticEvidenceReference,
+        System.Collections.Immutable.ImmutableArray<string> RequiredControlIds,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -909,6 +916,60 @@ internal static class InternalServiceEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceSecurityValidation(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation/{staticValidationId:guid}/security-validation",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId, Guid architectureDiscoveryId,
+                Guid packageSelectionId, Guid planningId, Guid generationId, Guid staticValidationId,
+                SecurityValidationInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedSecurityValidationEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.security-validation.create",
+                        staticValidationId.ToString("D"), context.Identity.TenantId, input.MaximumClassification,
+                        [], ["developer.internal-service.security-validation.create"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<ISecurityValidationPolicyGate>();
+                    var staticReader = services.GetService<IAuthorizedStaticValidationReceiptReader>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<ISecurityValidationDeliveryRunReader>();
+                    var controls = services.GetServices<ICodeValidationControl>().ToArray();
+                    var authorizer = services.GetService<ISecurityValidationResultAuthorizer>();
+                    var evidence = services.GetService<ISecurityValidationEvidenceRecorder>();
+                    if (policy is null || staticReader is null || candidateReader is null || runReader is null ||
+                        controls.Length == 0 || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Security Validation is not operationally ready.");
+                    var request = new GovernedSecurityValidationRequest(
+                        input.ValidationId, staticValidationId, generationId, input.DeliveryRunId,
+                        input.ExpectedCandidateSha256Digest, input.ExpectedStaticReportSha256Digest,
+                        input.ExpectedStaticEvidenceReference, input.RequiredControlIds, context.Identity,
+                        input.Purpose, input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ValidateAsync(request, policy, staticReader, candidateReader,
+                        runReader, controls, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Security Validation denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Security Validation prerequisite was not found."); }
+                catch (SecurityValidationDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Security Validation dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Security Validation request or boundary result is invalid."); }
+            })
+            .WithName("RunGovernedSecurityValidation").WithTags("Create Internal Service")
+            .WithSummary("Run governed Security Validation after accepted Static Validation.")
+            .WithDescription("OPA authorizes exact prerequisites and Security controls before reads or control execution. No Sandbox, execution, mutation, or workflow advancement is available.")
+            .Accepts<SecurityValidationInput>("application/json")
+            .Produces<GovernedSecurityValidationReceipt>(200).Produces<GovernedSecurityValidationReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }
 }

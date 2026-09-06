@@ -35,6 +35,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedAiPlanningEngine>();
         services.AddScoped<GovernedCodeGenerationEngine>();
         services.AddScoped<GovernedStaticValidationEngine>();
+        services.AddScoped<GovernedSecurityValidationEngine>();
         return services;
     }
 }
