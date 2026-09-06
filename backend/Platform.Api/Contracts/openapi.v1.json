@@ -355,6 +355,30 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning": {
+      "post": {
+        "operationId": "createGovernedAiPlanningCandidate",
+        "summary": "Create a governed non-executable AI planning candidate.",
+        "description": "OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. No generated files, tools, workflow advancement, or Code Generation is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AiPlanningInput" } } } },
+        "responses": {
+          "200": { "description": "A non-executable independently evaluated planning candidate was released.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedAiPlanningReceipt" } } } },
+          "400": { "description": "Invalid planning boundary.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Planning denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedAiPlanningReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A planning dependency is unavailable; no AI invocation or context disclosure occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -868,6 +892,35 @@
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" },
           "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AiPlanningInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["planningId", "deliveryRunId", "expectedRegistrationVersion", "expectedArchitectureSha256Digest", "expectedSelectionSha256Digest", "promptTemplateId", "promptTemplateVersion", "runtimeProfile", "contextReferences", "constraints", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "planningId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedRegistrationVersion": { "type": "integer", "format": "int64", "minimum": 0 },
+          "expectedArchitectureSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedSelectionSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "promptTemplateId": { "type": "string", "minLength": 1 }, "promptTemplateVersion": { "type": "string", "minLength": 1 },
+          "runtimeProfile": { "type": "string", "minLength": 1 },
+          "contextReferences": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "constraints": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedAiPlanningReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["planningId", "packageSelectionId", "deliveryRunId", "tenantId", "policyOutcome", "isPlanningCandidateReleased", "isExecutable", "canAdvance", "evaluationFindings", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "planningId": { "type": "string", "format": "uuid" }, "packageSelectionId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" }, "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isPlanningCandidateReleased": { "type": "boolean" }, "isExecutable": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }, "content": { "type": ["string", "null"] },
+          "evaluationFindings": { "type": "array", "items": { "type": "object" } }, "planningEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string" } }, "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },
       "ProblemDetails": {

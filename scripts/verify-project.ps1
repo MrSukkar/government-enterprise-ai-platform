@@ -1294,6 +1294,32 @@ if (Test-Path -LiteralPath $increment07AcceptancePath) {
     }
 }
 
+$increment08AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_08_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment08AcceptancePath) {
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedAiPlanningCandidate.cs'
+    $endpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-05-AI-PLANNING.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath) | ForEach-Object { if(-not(Test-Path $_)){throw "Increment 08 artifact missing: $_"} }
+    $change = Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 08**','Decision: **Approved by the repository owner') | ForEach-Object { if($change -notmatch [regex]::Escape($_)){throw "Increment 08 approval missing: $_"} }
+    $engine = Get-Content -Raw $enginePath
+    @('DeliveryStage.ApprovedPackages','IAiPlanningPolicyGate','PolicySignatureValid','IGovernedPlanningPromptTemplateReader',
+      'IAiPlanningContextAuthorizer','AiDevelopmentTaskKind.Planning','GovernedAiDevelopmentService','IAiOutputEvaluator',
+      'IsExecutable: false','CanAdvance: false','Separately approved Code Generation','GeneratedFilePaths','IAiPlanningResultAuthorizer','IAiPlanningEvidenceRecorder') | ForEach-Object { if($engine -notmatch [regex]::Escape($_)){throw "AI Planning guard missing: $_"} }
+    $policyIndex=$engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal);$runtimeIndex=$engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal)
+    if($policyIndex -lt 0 -or $runtimeIndex -lt 0 -or $policyIndex -ge $runtimeIndex){throw 'AI invocation is not ordered after OPA validation.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/approved-packages/{packageSelectionId:guid}/ai-planning','developer.internal-service.ai-planning.create','RequireAuthorization','Status503ServiceUnavailable') | ForEach-Object { if($endpoint -notmatch [regex]::Escape($_)){throw "AI Planning endpoint guard missing: $_"} }
+    $readiness=Get-Content -Raw $readinessPath
+    @('Authorized Approved Packages snapshot reader','AI Planning delivery-run reader','AI Planning OPA policy gate','Governed planning prompt-template reader','AI Planning context authorizer','Independent AI output evaluator','AI Planning result authorizer','AI Planning evidence recorder') | ForEach-Object {if($readiness -notmatch [regex]::Escape($_)){throw "AI Planning readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/approved-packages/{packageSelectionId}/ai-planning','AiPlanningInput','GovernedAiPlanningReceipt','isExecutable','canAdvance','503') | ForEach-Object {if($openApi -notmatch [regex]::Escape($_)){throw "AI Planning OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment08AcceptancePath
+    @('Status: **Satisfied**','all 47 required runtime dependencies remain fail-closed') | ForEach-Object {if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 08 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

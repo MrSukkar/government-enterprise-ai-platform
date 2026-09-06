@@ -85,7 +85,15 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional package registry reader", typeof(IInstitutionalPackageRegistryReader)),
             ("Approved Package supply-chain verifier", typeof(IApprovedPackageSupplyChainVerifier)),
             ("Approved Package result authorizer", typeof(IApprovedPackageResultAuthorizer)),
-            ("Approved Packages evidence recorder", typeof(IApprovedPackagesEvidenceRecorder))
+            ("Approved Packages evidence recorder", typeof(IApprovedPackagesEvidenceRecorder)),
+            ("Authorized Approved Packages snapshot reader", typeof(IAuthorizedApprovedPackagesSnapshotReader)),
+            ("AI Planning delivery-run reader", typeof(IAiPlanningDeliveryRunReader)),
+            ("AI Planning OPA policy gate", typeof(IAiPlanningPolicyGate)),
+            ("Governed planning prompt-template reader", typeof(IGovernedPlanningPromptTemplateReader)),
+            ("AI Planning context authorizer", typeof(IAiPlanningContextAuthorizer)),
+            ("Independent AI output evaluator", typeof(IAiOutputEvaluator)),
+            ("AI Planning result authorizer", typeof(IAiPlanningResultAuthorizer)),
+            ("AI Planning evidence recorder", typeof(IAiPlanningEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

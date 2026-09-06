@@ -6,6 +6,7 @@ using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Packages;
+using Platform.SoftwareFactory.AiDevelopment;
 
 namespace Platform.Api.InternalService;
 
@@ -59,6 +60,15 @@ internal static class InternalServiceEndpoint
         string Purpose,
         DataClassification MaximumClassification,
         string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record AiPlanningInput(
+        Guid PlanningId, Guid DeliveryRunId, long ExpectedRegistrationVersion,
+        string ExpectedArchitectureSha256Digest, string ExpectedSelectionSha256Digest,
+        string PromptTemplateId, string PromptTemplateVersion, string RuntimeProfile,
+        System.Collections.Immutable.ImmutableArray<string> ContextReferences,
+        System.Collections.Immutable.ImmutableArray<string> Constraints,
+        string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
@@ -659,5 +669,62 @@ internal static class InternalServiceEndpoint
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
             .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceAiPlanning(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId,
+                Guid architectureDiscoveryId, Guid packageSelectionId, AiPlanningInput input,
+                HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedAiPlanningEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.ai-planning.create",
+                        packageSelectionId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.ai-planning.create"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var packagesReader = services.GetService<IAuthorizedApprovedPackagesSnapshotReader>();
+                    var runReader = services.GetService<IAiPlanningDeliveryRunReader>();
+                    var policyGate = services.GetService<IAiPlanningPolicyGate>();
+                    var promptReader = services.GetService<IGovernedPlanningPromptTemplateReader>();
+                    var contextAuthorizer = services.GetService<IAiPlanningContextAuthorizer>();
+                    var runtime = services.GetService<IAiDevelopmentRuntime>();
+                    var evaluator = services.GetService<IAiOutputEvaluator>();
+                    var resultAuthorizer = services.GetService<IAiPlanningResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<IAiPlanningEvidenceRecorder>();
+                    if (packagesReader is null || runReader is null || policyGate is null || promptReader is null ||
+                        contextAuthorizer is null || runtime is null || evaluator is null || resultAuthorizer is null || evidenceRecorder is null)
+                        return Results.Problem(statusCode: 503, title: "Governed AI Planning is not operationally ready.");
+                    var request = new GovernedAiPlanningRequest(
+                        input.PlanningId, packageSelectionId, architectureDiscoveryId, systemsDiscoveryId,
+                        contextDiscoveryId, registrationId, input.DeliveryRunId, input.ExpectedRegistrationVersion,
+                        input.ExpectedArchitectureSha256Digest, input.ExpectedSelectionSha256Digest,
+                        input.PromptTemplateId, input.PromptTemplateVersion, input.RuntimeProfile,
+                        input.ContextReferences, input.Constraints, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference, input.Environment,
+                        input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.PlanAsync(request, packagesReader, runReader, policyGate,
+                        promptReader, contextAuthorizer, runtime, evaluator, resultAuthorizer, evidenceRecorder, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed AI Planning denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "AI Planning prerequisite was not found."); }
+                catch (AiPlanningDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An AI Planning dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "AI Planning request or boundary result is invalid."); }
+            })
+            .WithName("CreateGovernedAiPlanningCandidate").WithTags("Create Internal Service")
+            .WithSummary("Create a governed non-executable AI planning candidate.")
+            .WithDescription("OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. No generated files, tools, workflow advancement, or Code Generation is available.")
+            .Accepts<AiPlanningInput>("application/json").Produces<GovernedAiPlanningReceipt>(200)
+            .Produces<GovernedAiPlanningReceipt>(403).ProducesProblem(400).ProducesProblem(401)
+            .ProducesProblem(404).ProducesProblem(503).RequireAuthorization();
     }
 }
