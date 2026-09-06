@@ -549,6 +549,37 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation/{securityValidationId}/sandbox/{sandboxExecutionId}/tests/{testsExecutionId}/human-review/{reviewId}/git": {
+      "post": {
+        "operationId": "createGovernedGitCommit",
+        "summary": "Create one governed signed source commit after approving Human Review.",
+        "description": "OPA authorizes the exact candidate, review, change set, repository, base commit, non-protected branch, and metadata before repository access or source mutation. No force update, PR, CI/CD, workflow advancement, or production effect is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "planningId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "generationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "staticValidationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "securityValidationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "sandboxExecutionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "testsExecutionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GitSourceCommitInput" } } } },
+        "responses": {
+          "200": { "description": "One exact signed commit was created and evidenced without CI/CD or production effect.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedGitSourceCommitReceipt" } } } },
+          "400": { "description": "Invalid Git boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Git access, OPA, change policy, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedGitSourceCommitReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no repository mutation occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1351,6 +1382,55 @@
           "testsResultSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
           "reviewPackageSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
           "version": { "type": ["integer", "null"], "format": "int64" }, "reviewEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GitSourceCommitInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operationId", "deliveryRunId", "expectedCandidateSha256Digest", "expectedReviewPackageSha256Digest", "expectedReviewEvidenceReference", "expectedTestsResultSha256Digest", "expectedChangeSetSha256Digest", "authorizedRelativePaths", "repositoryId", "expectedBaseCommitId", "changeBranch", "commitMessage", "signingPolicyReference", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "operationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedCandidateSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedReviewPackageSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedReviewEvidenceReference": { "type": "string", "minLength": 1 },
+          "expectedTestsResultSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedChangeSetSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "authorizedRelativePaths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "repositoryId": { "type": "string", "minLength": 1 }, "expectedBaseCommitId": { "type": "string", "pattern": "^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$" },
+          "changeBranch": { "type": "string", "minLength": 1 }, "commitMessage": { "type": "string", "minLength": 1 },
+          "signingPolicyReference": { "type": "string", "minLength": 1 }, "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedGitFileChange": {
+        "type": "object", "additionalProperties": false,
+        "required": ["relativePath", "operation"],
+        "properties": {
+          "relativePath": { "type": "string", "minLength": 1 }, "operation": { "type": "string", "enum": ["Create", "Update", "Delete"] },
+          "expectedPreviousSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "newContentSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+        }
+      },
+      "GovernedGitSourceCommitReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operationId", "reviewId", "testsExecutionId", "generationId", "deliveryRunId", "tenantId", "policyOutcome", "isCommitted", "sourceMutationOccurred", "productionEffectOccurred", "ciCdTriggered", "canAdvance", "candidateSha256Digest", "reviewPackageSha256Digest", "changeSetSha256Digest", "repositoryId", "changeBranch", "commitSigned", "appliedChanges", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "operationId": { "type": "string", "format": "uuid" }, "reviewId": { "type": "string", "format": "uuid" },
+          "testsExecutionId": { "type": "string", "format": "uuid" }, "generationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isCommitted": { "type": "boolean" },
+          "sourceMutationOccurred": { "type": "boolean" }, "productionEffectOccurred": { "type": "boolean", "const": false },
+          "ciCdTriggered": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "reviewPackageSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "changeSetSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "repositoryId": { "type": "string" }, "changeBranch": { "type": "string" },
+          "baseCommitId": { "type": ["string", "null"] }, "commitId": { "type": ["string", "null"] },
+          "treeSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }, "commitSigned": { "type": "boolean" },
+          "appliedChanges": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/components/schemas/GovernedGitFileChange" } },
+          "gitEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }

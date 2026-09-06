@@ -39,6 +39,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedSandboxExecutionEngine>();
         services.AddScoped<GovernedTestsExecutionEngine>();
         services.AddScoped<GovernedHumanReviewEngine>();
+        services.AddScoped<GovernedGitSourceCommitEngine>();
         return services;
     }
 }

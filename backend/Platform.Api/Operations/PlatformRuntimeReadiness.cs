@@ -129,7 +129,15 @@ internal sealed class PlatformRuntimeReadiness
             ("Authorized Tests receipt reader", typeof(IAuthorizedTestsExecutionReceiptReader)),
             ("Human Review delivery-run reader", typeof(IHumanReviewDeliveryRunReader)),
             ("Human Review attestation verifier", typeof(IHumanReviewAttestationVerifier)),
-            ("Atomic Human Review and evidence repository", typeof(IAtomicHumanReviewRepository))
+            ("Atomic Human Review and evidence repository", typeof(IAtomicHumanReviewRepository)),
+            ("Git OPA policy gate", typeof(IGitPolicyGate)),
+            ("Authorized Human Review receipt reader", typeof(IAuthorizedHumanReviewReceiptReader)),
+            ("Git delivery-run reader", typeof(IGitDeliveryRunReader)),
+            ("Governed Git change-set materializer", typeof(IGovernedGitChangeSetMaterializer)),
+            ("Institutional Git change-policy validator", typeof(IGitChangePolicyValidator)),
+            ("Institutional Git gateway", typeof(IInstitutionalGitGateway)),
+            ("Git result authorizer", typeof(IGitResultAuthorizer)),
+            ("Git evidence recorder", typeof(IGitEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

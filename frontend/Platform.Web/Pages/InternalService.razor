@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 14 / Build</p>
+        <p class="eyebrow">Operational increment 15 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">HUMAN REVIEW</span>
-        <strong>Governed Human Review boundary ready; adapters fail-closed</strong>
-        <small>No reviewer attestation, approval persistence, Git authority, production effect, or workflow advancement is available.</small>
+        <span class="state-chip">GIT</span>
+        <strong>Governed Git source-commit boundary ready; adapters fail-closed</strong>
+        <small>No repository gateway, source mutation, PR, CI/CD trigger, production effect, or workflow advancement is available.</small>
     </aside>
 </section>
 
@@ -83,9 +83,13 @@
             <li><span>Human identity and separation of duties</span><strong class="waiting">Not established</strong></li>
             <li><span>Non-repudiable reviewer attestation</span><strong class="waiting">Not connected</strong></li>
             <li><span>Atomic review and evidence repository</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Git</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Git OPA and approving Human Review reader</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Governed change-set materializer and validator</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Institutional Git gateway and commit signer</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Git result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
+            <li><span>CI/CD</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Human Review to accepted Tests, Sandbox and Security evidence, the authoritative candidate, and a run stopped at Tests. OPA authorizes the exact human reviewer and conflict scope before reads. An independent reviewer must explicitly decide with rationale and signed attestation; the atomic decision cannot affect production or advance to Git.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Git to an approving Human Review, accepted Tests, the authoritative candidate, and a run stopped at HumanReview. OPA authorizes the exact clean base, non-protected branch, normalized change set, and commit metadata before repository access. Only one signed commit is allowed; no force update, PR, CI/CD trigger, production effect, or workflow advancement is available.</p></div>
     </aside>
 </section>
 

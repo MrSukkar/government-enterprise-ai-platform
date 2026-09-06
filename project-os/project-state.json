@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 14 - Governed Human Review",
+    "increment": "Operational Increment 15 - Governed Git Source Commit",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-11-HUMAN-REVIEW.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_14_ACCEPTANCE.md",
-    "executionBoundary": "Governed Human Review contract verified; policy, Tests and prerequisite readers, independent human attestation, delivery-run reader, and atomic review-plus-evidence repository unavailable; no decision persistence, Git authority, production effect, or workflow advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-12-GIT.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_15_ACCEPTANCE.md",
+    "executionBoundary": "Governed Git contract verified; policy, approving Human Review and prerequisite readers, change-set materializer, institutional change validator, exact-base signed Git gateway, result authorization, and evidence unavailable; no repository mutation, PR, CI/CD, production effect, or workflow advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_14_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_15_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

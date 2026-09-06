@@ -1520,6 +1520,30 @@ if (Test-Path $increment14AcceptancePath) {
     @('Status: **Satisfied**','all 82 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 14 acceptance missing: $_"}}
 }
 
+$increment15AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_15_ACCEPTANCE.md'
+if (Test-Path $increment15AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedGitSourceCommit.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-12-GIT.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 15 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 15**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 15 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IGitPolicyGate','IAuthorizedHumanReviewReceiptReader','IAuthorizedTestsExecutionReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.HumanReview','IGovernedGitChangeSetMaterializer','IGitChangePolicyValidator','IInstitutionalGitGateway','CommitSigned','ProtectedBranchMutated','ForceUpdateOccurred','CiCdTriggered','IGitResultAuthorizer','IGitEvidenceRecorder','SourceMutationOccurred','ProductionEffectOccurred','CanAdvance','Separately approved CI/CD')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Git guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('reviewReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Git prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Git must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/human-review/{reviewId:guid}/git','developer.internal-service.git.commit','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Git endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Git OPA policy gate','Authorized Human Review receipt reader','Git delivery-run reader','Governed Git change-set materializer','Institutional Git change-policy validator','Institutional Git gateway','Git result authorizer','Git evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Git readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/human-review/{reviewId}/git','GitSourceCommitInput','GovernedGitSourceCommitReceipt','sourceMutationOccurred','productionEffectOccurred','ciCdTriggered','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Git OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment15AcceptancePath
+    @('Status: **Satisfied**','all 90 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 15 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

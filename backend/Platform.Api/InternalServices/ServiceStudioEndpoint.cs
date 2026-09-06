@@ -126,6 +126,16 @@ internal static class InternalServiceEndpoint
         long ExpectedVersion, string Purpose, DataClassification MaximumClassification,
         string Environment, IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record GitSourceCommitInput(
+        Guid OperationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest,
+        string ExpectedReviewPackageSha256Digest, string ExpectedReviewEvidenceReference,
+        string ExpectedTestsResultSha256Digest, string ExpectedChangeSetSha256Digest,
+        System.Collections.Immutable.ImmutableHashSet<string> AuthorizedRelativePaths,
+        string RepositoryId, string ExpectedBaseCommitId, string ChangeBranch,
+        string CommitMessage, string SigningPolicyReference, string Purpose,
+        DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1184,6 +1194,69 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact human reviewer, decision, evidence package, and conflict scope before reads. The signed human decision is recorded atomically with evidence and cannot advance to Git or production.")
             .Accepts<HumanReviewInput>("application/json")
             .Produces<GovernedHumanReviewReceipt>(200).Produces<GovernedHumanReviewReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceGit(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation/{staticValidationId:guid}/security-validation/{securityValidationId:guid}/sandbox/{sandboxExecutionId:guid}/tests/{testsExecutionId:guid}/human-review/{reviewId:guid}/git",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId, Guid architectureDiscoveryId,
+                Guid packageSelectionId, Guid planningId, Guid generationId, Guid staticValidationId,
+                Guid securityValidationId, Guid sandboxExecutionId, Guid testsExecutionId, Guid reviewId,
+                GitSourceCommitInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedGitSourceCommitEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.git.commit",
+                        input.RepositoryId, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["developer.internal-service.git.commit"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IGitPolicyGate>();
+                    var reviewReader = services.GetService<IAuthorizedHumanReviewReceiptReader>();
+                    var testsReader = services.GetService<IAuthorizedTestsExecutionReceiptReader>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<IGitDeliveryRunReader>();
+                    var materializer = services.GetService<IGovernedGitChangeSetMaterializer>();
+                    var changeValidator = services.GetService<IGitChangePolicyValidator>();
+                    var gitGateway = services.GetService<IInstitutionalGitGateway>();
+                    var authorizer = services.GetService<IGitResultAuthorizer>();
+                    var evidence = services.GetService<IGitEvidenceRecorder>();
+                    if (policy is null || reviewReader is null || testsReader is null || candidateReader is null ||
+                        runReader is null || materializer is null || changeValidator is null || gitGateway is null ||
+                        authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Git is not operationally ready.");
+                    var request = new GovernedGitSourceCommitRequest(
+                        input.OperationId, reviewId, testsExecutionId, generationId, input.DeliveryRunId,
+                        input.ExpectedCandidateSha256Digest, input.ExpectedReviewPackageSha256Digest,
+                        input.ExpectedReviewEvidenceReference, input.ExpectedTestsResultSha256Digest,
+                        input.ExpectedChangeSetSha256Digest, input.AuthorizedRelativePaths,
+                        input.RepositoryId, input.ExpectedBaseCommitId, input.ChangeBranch,
+                        input.CommitMessage, input.SigningPolicyReference, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.CommitAsync(request, policy, reviewReader, testsReader,
+                        candidateReader, runReader, materializer, changeValidator, gitGateway,
+                        authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsCommitted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Git denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Git prerequisite was not found."); }
+                catch (GitDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Git dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Git request or boundary result is invalid."); }
+            })
+            .WithName("CreateGovernedGitCommit").WithTags("Create Internal Service")
+            .WithSummary("Create one governed signed source commit after approving Human Review.")
+            .WithDescription("OPA authorizes the exact candidate, review, change set, repository, base commit, non-protected branch, and metadata before repository access or source mutation. No force update, PR, CI/CD, workflow advancement, or production effect is available.")
+            .Accepts<GitSourceCommitInput>("application/json")
+            .Produces<GovernedGitSourceCommitReceipt>(200).Produces<GovernedGitSourceCommitReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

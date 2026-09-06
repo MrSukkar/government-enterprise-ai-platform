@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 14 - Governed Human Review",
-        "Governed Human Review contract available; all policy, attestation, and persistence adapters fail-closed",
+        "Operational Increment 15 - Governed Git Source Commit",
+        "Governed Git contract available; all repository, signing, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -80,6 +80,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact human reviewer, decision package, and conflict scope before reads",
             "Reviewer identity, separation of duties, rationale, and non-repudiable attestation are mandatory",
             "Review decision and evidence are atomic and cannot advance to Git or production",
+            "Git requires an approving Human Review and a delivery run stopped at HumanReview",
+            "OPA authorizes the exact repository, clean base, non-protected branch, change set, and commit metadata",
+            "Only the exact validated change set may become one signed immutable commit",
+            "Git cannot force-update, create a PR, trigger CI/CD, affect production, or advance workflow",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);
