@@ -112,7 +112,12 @@ internal sealed class PlatformRuntimeReadiness
             ("Authorized Static Validation receipt reader", typeof(IAuthorizedStaticValidationReceiptReader)),
             ("Security Validation delivery-run reader", typeof(ISecurityValidationDeliveryRunReader)),
             ("Security Validation result authorizer", typeof(ISecurityValidationResultAuthorizer)),
-            ("Security Validation evidence recorder", typeof(ISecurityValidationEvidenceRecorder))
+            ("Security Validation evidence recorder", typeof(ISecurityValidationEvidenceRecorder)),
+            ("Sandbox OPA policy gate", typeof(ISandboxPolicyGate)),
+            ("Authorized Security Validation receipt reader", typeof(IAuthorizedSecurityValidationReceiptReader)),
+            ("Sandbox delivery-run reader", typeof(ISandboxDeliveryRunReader)),
+            ("Sandbox result authorizer", typeof(ISandboxResultAuthorizer)),
+            ("Sandbox evidence recorder", typeof(ISandboxEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

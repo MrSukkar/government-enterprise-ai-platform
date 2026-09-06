@@ -1442,6 +1442,33 @@ if (Test-Path $increment11AcceptancePath) {
     @('Status: **Satisfied**','all 65 dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 11 acceptance missing: $_"}}
 }
 
+$increment12AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_12_ACCEPTANCE.md'
+if (Test-Path $increment12AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedSandboxExecution.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $isolationPath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Sandbox\SandboxIsolationPolicy.cs'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-09-SANDBOX.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$isolationPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 12 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 12**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 12 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('ISandboxPolicyGate','IAuthorizedSecurityValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.SecurityValidation','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','GovernedSandboxService','ISecuritySandboxRuntime','ISandboxResultAuthorizer','ISandboxEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Tests')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Sandbox guard missing: $_"}}
+    $isolation=Get-Content -Raw $isolationPath
+    @('Firecracker-class','ProductionCredentialsAllowed','HostFilesystemAccessAllowed','NetworkDefaultDeny')|ForEach-Object{if($isolation -notmatch [regex]::Escape($_)){throw "Sandbox isolation guard missing: $_"}}
+    if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('securityReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Sandbox prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Sandbox must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/security-validation/{securityValidationId:guid}/sandbox','developer.internal-service.sandbox.execute','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Sandbox endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Sandbox OPA policy gate','Authorized Security Validation receipt reader','Sandbox delivery-run reader','Sandbox result authorizer','Sandbox evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Sandbox readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/security-validation/{securityValidationId}/sandbox','SandboxExecutionInput','GovernedSandboxExecutionReceipt','productionEffectOccurred','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Sandbox OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment12AcceptancePath
+    @('Status: **Satisfied**','all 70 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 12 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

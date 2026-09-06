@@ -462,6 +462,34 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation/{securityValidationId}/sandbox": {
+      "post": {
+        "operationId": "runGovernedSandbox",
+        "summary": "Execute an authoritative candidate in the governed security sandbox.",
+        "description": "OPA authorizes the exact candidate, Security receipt, institutional image, isolation, environment, and network scope before reads or execution. No production effect, Tests approval, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "planningId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "generationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "staticValidationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "securityValidationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SandboxExecutionInput" } } } },
+        "responses": {
+          "200": { "description": "Isolated execution accepted, authorized, and evidenced without production effect.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSandboxExecutionReceipt" } } } },
+          "400": { "description": "Invalid Sandbox boundary.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Sandbox execution or result disclosure denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSandboxExecutionReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A required governed dependency is unavailable; no image transfer or execution occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1120,6 +1148,57 @@
           "controlReports": { "type": "array", "items": { "type": "object" } },
           "validationEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string" } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SandboxIsolationPolicy": {
+        "type": "object", "additionalProperties": false,
+        "required": ["isolationClass", "ephemeral", "microVmIsolation", "productionCredentialsAllowed", "hostFilesystemAccessAllowed", "networkDefaultDeny", "allowedNetworkDestinations", "cpuLimit", "memoryLimitBytes", "executionTimeout"],
+        "properties": {
+          "isolationClass": { "type": "string", "const": "Firecracker-class" },
+          "ephemeral": { "type": "boolean", "const": true }, "microVmIsolation": { "type": "boolean", "const": true },
+          "productionCredentialsAllowed": { "type": "boolean", "const": false },
+          "hostFilesystemAccessAllowed": { "type": "boolean", "const": false },
+          "networkDefaultDeny": { "type": "boolean", "const": true },
+          "allowedNetworkDestinations": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "cpuLimit": { "type": "integer", "minimum": 1 }, "memoryLimitBytes": { "type": "integer", "format": "int64", "minimum": 1 },
+          "executionTimeout": { "type": "string", "format": "duration" }
+        }
+      },
+      "SandboxExecutionInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["executionId", "deliveryRunId", "expectedCandidateSha256Digest", "expectedSecurityReportSha256Digest", "expectedSecurityEvidenceReference", "sandboxImage", "isolationPolicy", "nonSecretEnvironmentReferences", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "executionId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedCandidateSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedSecurityReportSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedSecurityEvidenceReference": { "type": "string", "minLength": 1 },
+          "sandboxImage": { "$ref": "#/components/schemas/PackageCoordinate" },
+          "isolationPolicy": { "$ref": "#/components/schemas/SandboxIsolationPolicy" },
+          "nonSecretEnvironmentReferences": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedSandboxExecutionReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["executionId", "securityValidationId", "generationId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "productionEffectOccurred", "canAdvance", "candidateSha256Digest", "securityReportSha256Digest", "sandboxImage", "producedArtifactReferences", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "executionId": { "type": "string", "format": "uuid" }, "securityValidationId": { "type": "string", "format": "uuid" },
+          "generationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" }, "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isAccepted": { "type": "boolean" }, "productionEffectOccurred": { "type": "boolean", "const": false },
+          "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "securityReportSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "sandboxImage": { "$ref": "#/components/schemas/PackageCoordinate" },
+          "exitCode": { "type": ["integer", "null"] }, "timedOut": { "type": ["boolean", "null"] },
+          "isolationViolationDetected": { "type": ["boolean", "null"] },
+          "producedArtifactReferences": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "resultSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "executionEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

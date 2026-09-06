@@ -100,6 +100,7 @@ app.MapInternalServiceAiPlanning();
 app.MapInternalServiceCodeGeneration();
 app.MapInternalServiceStaticValidation();
 app.MapInternalServiceSecurityValidation();
+app.MapInternalServiceSandbox();
 
 if (app.Environment.IsDevelopment())
 {

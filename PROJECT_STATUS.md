@@ -8,9 +8,9 @@ Status: **Phase 30 complete — Evidence Engine**
 - Completed phases: **01 — Product Constitution** through **30 — Evidence Engine**
 - Phase 30 artifacts: `backend/Platform.Evidence/Chain`, `docs/phase-30/EVIDENCE_ENGINE.md`, `docs/phase-30/PHASE_30_ACCEPTANCE.md`
 - Next permitted phase: **None — the approved 30-phase roadmap is complete**
-- Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–11 authorized under CR-001 and Amendments 01–08**
-- Current product increment: **Governed Security Validation — contract complete and verified**
-- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_11_ACCEPTANCE.md`
-- Execution boundary: **Governed Security Validation requires deployment-controlled OPA, accepted Static receipt, code-candidate and run readers, institutionally approved Security controls, result authorization, and evidence; no candidate/control execution, source mutation, Sandbox, workflow advancement, or material execution is available**
+- Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–12 authorized under CR-001 and Amendments 01–09**
+- Current product increment: **Governed Security Sandbox Execution — contract complete and verified**
+- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_12_ACCEPTANCE.md`
+- Execution boundary: **Governed Sandbox requires deployment-controlled OPA, accepted Security receipt, candidate and run readers, an exact institutional image with supply-chain assurance, Firecracker-class runtime, result authorization, and evidence; no image transfer or execution occurs while dependencies are absent, and no production effect or workflow advancement is available**
 
 The approved platform foundation is complete through Phase 30. Evidence is append-only, tenant- and classification-scoped, tamper-evident, cryptographically signed and verifiable, strictly ordered, correlated, traceable, and suitable for sovereign or air-gapped key-management implementations.

@@ -8,6 +8,7 @@ using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.AiDevelopment;
 using Platform.SoftwareFactory.Validation;
+using Platform.SoftwareFactory.Sandbox;
 
 namespace Platform.Api.InternalService;
 
@@ -93,6 +94,14 @@ internal static class InternalServiceEndpoint
         Guid ValidationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest,
         string ExpectedStaticReportSha256Digest, string ExpectedStaticEvidenceReference,
         System.Collections.Immutable.ImmutableArray<string> RequiredControlIds,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record SandboxExecutionInput(
+        Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest,
+        string ExpectedSecurityReportSha256Digest, string ExpectedSecurityEvidenceReference,
+        PackageCoordinate SandboxImage, SandboxIsolationPolicy IsolationPolicy,
+        System.Collections.Immutable.ImmutableDictionary<string, string> NonSecretEnvironmentReferences,
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
@@ -969,6 +978,65 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes exact prerequisites and Security controls before reads or control execution. No Sandbox, execution, mutation, or workflow advancement is available.")
             .Accepts<SecurityValidationInput>("application/json")
             .Produces<GovernedSecurityValidationReceipt>(200).Produces<GovernedSecurityValidationReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceSandbox(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation/{staticValidationId:guid}/security-validation/{securityValidationId:guid}/sandbox",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId, Guid architectureDiscoveryId,
+                Guid packageSelectionId, Guid planningId, Guid generationId, Guid staticValidationId,
+                Guid securityValidationId, SandboxExecutionInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedSandboxExecutionEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.sandbox.execute",
+                        securityValidationId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.sandbox.execute"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<ISandboxPolicyGate>();
+                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<ISandboxDeliveryRunReader>();
+                    var registry = services.GetService<IInstitutionalPackageRegistryReader>();
+                    var assurance = services.GetService<IApprovedPackageSupplyChainVerifier>();
+                    var runtime = services.GetService<ISecuritySandboxRuntime>();
+                    var authorizer = services.GetService<ISandboxResultAuthorizer>();
+                    var evidence = services.GetService<ISandboxEvidenceRecorder>();
+                    if (policy is null || securityReader is null || candidateReader is null || runReader is null ||
+                        registry is null || assurance is null || runtime is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Sandbox is not operationally ready.");
+                    var request = new GovernedSandboxExecutionRequest(
+                        input.ExecutionId, securityValidationId, generationId, input.DeliveryRunId,
+                        input.ExpectedCandidateSha256Digest, input.ExpectedSecurityReportSha256Digest,
+                        input.ExpectedSecurityEvidenceReference, input.SandboxImage, input.IsolationPolicy,
+                        input.NonSecretEnvironmentReferences, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ExecuteAsync(request, policy, securityReader, candidateReader,
+                        runReader, registry, assurance, runtime, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Sandbox denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Sandbox prerequisite was not found."); }
+                catch (SandboxDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Sandbox dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Sandbox request or boundary result is invalid."); }
+            })
+            .WithName("RunGovernedSandbox").WithTags("Create Internal Service")
+            .WithSummary("Execute an authoritative code candidate in the governed security sandbox.")
+            .WithDescription("OPA authorizes the exact candidate, Security receipt, image, isolation, environment, and network scope before reads or execution. No production effect, Tests approval, or workflow advancement is available.")
+            .Accepts<SandboxExecutionInput>("application/json")
+            .Produces<GovernedSandboxExecutionReceipt>(200).Produces<GovernedSandboxExecutionReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

@@ -123,6 +123,10 @@ try {
     $securityValidation = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/intents/00000000-0000-0000-0000-000000000001/enterprise-context/00000000-0000-0000-0000-000000000002/existing-systems/00000000-0000-0000-0000-000000000003/existing-architecture/00000000-0000-0000-0000-000000000004/approved-packages/00000000-0000-0000-0000-000000000005/ai-planning/00000000-0000-0000-0000-000000000006/code-generation/00000000-0000-0000-0000-000000000007/static-validation/00000000-0000-0000-0000-000000000008/security-validation",
         $securityValidationContent).GetAwaiter().GetResult()
+    $sandboxContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $sandbox = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/intents/00000000-0000-0000-0000-000000000001/enterprise-context/00000000-0000-0000-0000-000000000002/existing-systems/00000000-0000-0000-0000-000000000003/existing-architecture/00000000-0000-0000-0000-000000000004/approved-packages/00000000-0000-0000-0000-000000000005/ai-planning/00000000-0000-0000-0000-000000000006/code-generation/00000000-0000-0000-0000-000000000007/static-validation/00000000-0000-0000-0000-000000000008/security-validation/00000000-0000-0000-0000-000000000009/sandbox",
+        $sandboxContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -172,12 +176,15 @@ try {
     if ([int]$securityValidation.StatusCode -ne 401 -or $securityValidation.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous Security Validation did not fail closed with a bearer challenge.'
     }
+    if ([int]$sandbox.StatusCode -ne 401 -or $sandbox.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous Sandbox execution did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 65) {
-        throw 'Readiness response did not disclose the expected 65 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 70) {
+        throw 'Readiness response did not disclose the expected 70 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -190,7 +197,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 11 - Governed Security Validation' -or
+        $internalServiceBody.increment -ne 'Operational Increment 12 - Governed Security Sandbox Execution' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -209,8 +216,8 @@ try {
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning' -or
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation' -or
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation') {
-        throw 'Runtime OpenAPI response does not contain the approved path through Security Validation.'
+        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation/{staticValidationId}/security-validation/{securityValidationId}/sandbox') {
+        throw 'Runtime OpenAPI response does not contain the approved path through Sandbox.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -220,7 +227,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 65 runtime dependencies fail-closed, and Governed Security Validation remains protected without prerequisite, policy, control, or evidence adapters.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 70 runtime dependencies fail-closed, and Governed Sandbox remains protected without prerequisite, policy, image, runtime, authorization, or evidence adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')
