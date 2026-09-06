@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 15 - Governed Git Source Commit",
-        "Governed Git contract available; all repository, signing, authorization, and evidence adapters fail-closed",
+        "Operational Increment 16 - Governed CI/CD Execution",
+        "Governed CI/CD contract available; all workflow, runner, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -84,6 +84,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact repository, clean base, non-protected branch, change set, and commit metadata",
             "Only the exact validated change set may become one signed immutable commit",
             "Git cannot force-update, create a PR, trigger CI/CD, affect production, or advance workflow",
+            "CI/CD requires a signed Git receipt and a delivery run stopped at Git",
+            "OPA authorizes the exact immutable workflow, isolated runner, stages, and controls before checkout",
+            "Locked dependencies, SBOM, provenance, attestations, signatures, and exact evidence are mandatory",
+            "CI/CD cannot mutate source, publish an Artifact, deploy, affect production, or advance workflow",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

@@ -137,7 +137,15 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional Git change-policy validator", typeof(IGitChangePolicyValidator)),
             ("Institutional Git gateway", typeof(IInstitutionalGitGateway)),
             ("Git result authorizer", typeof(IGitResultAuthorizer)),
-            ("Git evidence recorder", typeof(IGitEvidenceRecorder))
+            ("Git evidence recorder", typeof(IGitEvidenceRecorder)),
+            ("CI/CD OPA policy gate", typeof(ICiCdPolicyGate)),
+            ("Authorized Git source-commit receipt reader", typeof(IAuthorizedGitSourceCommitReceiptReader)),
+            ("CI/CD delivery-run reader", typeof(ICiCdDeliveryRunReader)),
+            ("Governed CI/CD workflow-definition reader", typeof(IGovernedCiCdWorkflowDefinitionReader)),
+            ("Institutional CI/CD workflow validator", typeof(ICiCdWorkflowValidator)),
+            ("Institutional CI/CD gateway", typeof(IInstitutionalCiCdGateway)),
+            ("CI/CD result authorizer", typeof(ICiCdResultAuthorizer)),
+            ("CI/CD evidence recorder", typeof(ICiCdEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 15 / Build</p>
+        <p class="eyebrow">Operational increment 16 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">GIT</span>
-        <strong>Governed Git source-commit boundary ready; adapters fail-closed</strong>
-        <small>No repository gateway, source mutation, PR, CI/CD trigger, production effect, or workflow advancement is available.</small>
+        <span class="state-chip">CI/CD</span>
+        <strong>Governed CI/CD execution boundary ready; adapters fail-closed</strong>
+        <small>No checkout, runner execution, Artifact publication, deployment, production effect, or workflow advancement is available.</small>
     </aside>
 </section>
 
@@ -87,9 +87,13 @@
             <li><span>Governed change-set materializer and validator</span><strong class="waiting">Not connected</strong></li>
             <li><span>Institutional Git gateway and commit signer</span><strong class="waiting">Not connected</strong></li>
             <li><span>Git result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
-            <li><span>CI/CD</span><strong class="waiting">Waiting</strong></li>
+            <li><span>CI/CD OPA and signed Git receipt</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Immutable workflow and validator</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Institutional isolated runner gateway</span><strong class="waiting">Not connected</strong></li>
+            <li><span>CI/CD result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Artifact</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Git to an approving Human Review, accepted Tests, the authoritative candidate, and a run stopped at HumanReview. OPA authorizes the exact clean base, non-protected branch, normalized change set, and commit metadata before repository access. Only one signed commit is allowed; no force update, PR, CI/CD trigger, production effect, or workflow advancement is available.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds CI/CD to the exact signed Git receipt and a run stopped at Git. OPA authorizes the immutable workflow, isolated runner, ordered stages, and controls before checkout. Locked dependencies, SBOM, provenance, attestations, signatures, result authorization, and evidence are mandatory; outputs remain non-released and cannot advance to Artifact or production.</p></div>
     </aside>
 </section>
 

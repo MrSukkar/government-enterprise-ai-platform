@@ -1544,6 +1544,30 @@ if (Test-Path $increment15AcceptancePath) {
     @('Status: **Satisfied**','all 90 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 15 acceptance missing: $_"}}
 }
 
+$increment16AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_16_ACCEPTANCE.md'
+if (Test-Path $increment16AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedCiCdExecution.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-13-CICD.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 16 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 16**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 16 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('ICiCdPolicyGate','IAuthorizedGitSourceCommitReceiptReader','ICiCdDeliveryRunReader','DeliveryStage.Git','IGovernedCiCdWorkflowDefinitionReader','ICiCdWorkflowValidator','ImmutableTaskReferences','LeastPrivilege','UsesLockedDependencies','IInstitutionalCiCdGateway','EphemeralIsolationVerified','NetworkDefaultDeny','ProductionCredentialsPresent','GovernedPipelineOutputManifest','SbomReference','ProvenanceReference','BuildAttestationReference','SignatureReference','ICiCdResultAuthorizer','ICiCdEvidenceRecorder','CiCdTriggered','SourceMutationOccurred','ArtifactPublished','DeploymentOccurred','ProductionEffectOccurred','CanAdvance','Separately approved Artifact')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "CI/CD guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('gitReader.LoadAsync',[StringComparison]::Ordinal)){throw 'CI/CD prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'CI/CD must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/git/{gitOperationId:guid}/cicd','developer.internal-service.cicd.execute','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "CI/CD endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('CI/CD OPA policy gate','Authorized Git source-commit receipt reader','CI/CD delivery-run reader','Governed CI/CD workflow-definition reader','Institutional CI/CD workflow validator','Institutional CI/CD gateway','CI/CD result authorizer','CI/CD evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "CI/CD readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/git/{gitOperationId}/cicd','CiCdExecutionInput','GovernedCiCdExecutionReceipt','ciCdTriggered','sourceMutationOccurred','artifactPublished','deploymentOccurred','productionEffectOccurred','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "CI/CD OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment16AcceptancePath
+    @('Status: **Satisfied**','all 98 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 16 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

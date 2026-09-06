@@ -136,6 +136,17 @@ internal static class InternalServiceEndpoint
         DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record CiCdExecutionInput(
+        Guid ExecutionId, Guid DeliveryRunId, string RepositoryId,
+        string ExpectedCommitId, string ExpectedTreeSha256Digest,
+        string ExpectedChangeSetSha256Digest, string WorkflowDefinitionId,
+        string WorkflowDefinitionVersion, string ExpectedWorkflowSha256Digest,
+        string WorkflowSignatureReference, string PipelineProfile, string RunnerPoolId,
+        System.Collections.Immutable.ImmutableArray<string> RequiredStageIds,
+        System.Collections.Immutable.ImmutableHashSet<string> RequiredControlIds,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1257,6 +1268,62 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact candidate, review, change set, repository, base commit, non-protected branch, and metadata before repository access or source mutation. No force update, PR, CI/CD, workflow advancement, or production effect is available.")
             .Accepts<GitSourceCommitInput>("application/json")
             .Produces<GovernedGitSourceCommitReceipt>(200).Produces<GovernedGitSourceCommitReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceCiCd(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/git/{gitOperationId:guid}/cicd",
+            async (Guid gitOperationId, CiCdExecutionInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedCiCdExecutionEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.cicd.execute",
+                        input.RepositoryId, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["developer.internal-service.cicd.execute"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<ICiCdPolicyGate>();
+                    var gitReader = services.GetService<IAuthorizedGitSourceCommitReceiptReader>();
+                    var runReader = services.GetService<ICiCdDeliveryRunReader>();
+                    var workflowReader = services.GetService<IGovernedCiCdWorkflowDefinitionReader>();
+                    var workflowValidator = services.GetService<ICiCdWorkflowValidator>();
+                    var gateway = services.GetService<IInstitutionalCiCdGateway>();
+                    var authorizer = services.GetService<ICiCdResultAuthorizer>();
+                    var evidence = services.GetService<ICiCdEvidenceRecorder>();
+                    if (policy is null || gitReader is null || runReader is null || workflowReader is null ||
+                        workflowValidator is null || gateway is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed CI/CD is not operationally ready.");
+                    var request = new GovernedCiCdExecutionRequest(
+                        input.ExecutionId, gitOperationId, input.DeliveryRunId, input.RepositoryId,
+                        input.ExpectedCommitId, input.ExpectedTreeSha256Digest,
+                        input.ExpectedChangeSetSha256Digest, input.WorkflowDefinitionId,
+                        input.WorkflowDefinitionVersion, input.ExpectedWorkflowSha256Digest,
+                        input.WorkflowSignatureReference, input.PipelineProfile, input.RunnerPoolId,
+                        input.RequiredStageIds, input.RequiredControlIds, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ExecuteAsync(
+                        request, policy, gitReader, runReader, workflowReader, workflowValidator,
+                        gateway, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed CI/CD denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "CI/CD prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "CI/CD request or boundary result is invalid."); }
+            })
+            .WithName("ExecuteGovernedCiCd").WithTags("Create Internal Service")
+            .WithSummary("Execute one governed CI/CD workflow for the exact signed Git commit.")
+            .WithDescription("OPA authorizes the exact Git receipt, immutable workflow, isolated runner, stages, and controls before checkout or invocation. No source mutation, artifact publication, deployment, production effect, or workflow advancement is available.")
+            .Accepts<CiCdExecutionInput>("application/json")
+            .Produces<GovernedCiCdExecutionReceipt>(200).Produces<GovernedCiCdExecutionReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

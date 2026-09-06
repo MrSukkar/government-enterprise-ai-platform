@@ -580,6 +580,26 @@
         }
       }
     },
+    "/api/v1/internal-services/git/{gitOperationId}/cicd": {
+      "post": {
+        "operationId": "executeGovernedCiCd",
+        "summary": "Execute one governed CI/CD workflow for the exact signed Git commit.",
+        "description": "OPA authorizes the exact Git receipt, immutable workflow, isolated runner, ordered stages, and controls before checkout or invocation. Outputs remain non-released; no source mutation, artifact publication, deployment, production effect, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "gitOperationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CiCdExecutionInput" } } } },
+        "responses": {
+          "200": { "description": "The exact governed pipeline completed and was evidenced without Artifact publication or deployment.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedCiCdExecutionReceipt" } } } },
+          "400": { "description": "Invalid CI/CD boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "CI/CD access, OPA, workflow validation, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedCiCdExecutionReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no checkout or pipeline invocation occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1431,6 +1451,52 @@
           "treeSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }, "commitSigned": { "type": "boolean" },
           "appliedChanges": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/components/schemas/GovernedGitFileChange" } },
           "gitEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CiCdExecutionInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["executionId", "deliveryRunId", "repositoryId", "expectedCommitId", "expectedTreeSha256Digest", "expectedChangeSetSha256Digest", "workflowDefinitionId", "workflowDefinitionVersion", "expectedWorkflowSha256Digest", "workflowSignatureReference", "pipelineProfile", "runnerPoolId", "requiredStageIds", "requiredControlIds", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "executionId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "repositoryId": { "type": "string", "minLength": 1 }, "expectedCommitId": { "type": "string", "pattern": "^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$" },
+          "expectedTreeSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" }, "expectedChangeSetSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "workflowDefinitionId": { "type": "string", "minLength": 1 }, "workflowDefinitionVersion": { "type": "string", "minLength": 1 },
+          "expectedWorkflowSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" }, "workflowSignatureReference": { "type": "string", "minLength": 1 },
+          "pipelineProfile": { "type": "string", "minLength": 1 }, "runnerPoolId": { "type": "string", "minLength": 1 },
+          "requiredStageIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "requiredControlIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 }, "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedCiCdStageResult": {
+        "type": "object", "additionalProperties": false,
+        "required": ["stageId", "completed", "succeeded", "skipped", "timedOut", "controlIds", "evidenceReferences", "completedAt"],
+        "properties": {
+          "stageId": { "type": "string" }, "completed": { "type": "boolean" }, "succeeded": { "type": "boolean" },
+          "skipped": { "type": "boolean" }, "timedOut": { "type": "boolean" },
+          "controlIds": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GovernedCiCdExecutionReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["executionId", "gitOperationId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "ciCdTriggered", "sourceMutationOccurred", "artifactPublished", "deploymentOccurred", "productionEffectOccurred", "canAdvance", "repositoryId", "commitId", "workflowSha256Digest", "stages", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "executionId": { "type": "string", "format": "uuid" }, "gitOperationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "ciCdTriggered": { "type": "boolean" }, "sourceMutationOccurred": { "type": "boolean", "const": false },
+          "artifactPublished": { "type": "boolean", "const": false }, "deploymentOccurred": { "type": "boolean", "const": false },
+          "productionEffectOccurred": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "repositoryId": { "type": "string" }, "commitId": { "type": "string" },
+          "workflowSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "pipelineOutputManifestSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "stages": { "type": "array", "items": { "$ref": "#/components/schemas/GovernedCiCdStageResult" } },
+          "ciCdEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }

@@ -40,6 +40,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedTestsExecutionEngine>();
         services.AddScoped<GovernedHumanReviewEngine>();
         services.AddScoped<GovernedGitSourceCommitEngine>();
+        services.AddScoped<GovernedCiCdExecutionEngine>();
         return services;
     }
 }
