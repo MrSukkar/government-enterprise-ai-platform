@@ -600,6 +600,26 @@
         }
       }
     },
+    "/api/v1/internal-services/cicd/{ciCdExecutionId}/artifact": {
+      "post": {
+        "operationId": "publishGovernedArtifact",
+        "summary": "Publish one exact immutable Artifact from an accepted CI/CD output.",
+        "description": "OPA authorizes the exact pipeline manifest, artifact coordinate and digest, institutional registry, signing policy, and supply-chain controls before reads or publication. No deployment, production effect, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "ciCdExecutionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ArtifactPublicationInput" } } } },
+        "responses": {
+          "200": { "description": "The exact immutable Artifact was published and supply-chain verified without deployment.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedArtifactPublicationReceipt" } } } },
+          "400": { "description": "Invalid Artifact boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Artifact access, OPA, package, supply-chain, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedArtifactPublicationReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no registry access or publication occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1498,6 +1518,50 @@
           "stages": { "type": "array", "items": { "$ref": "#/components/schemas/GovernedCiCdStageResult" } },
           "ciCdEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "GovernedArtifactCoordinate": {
+        "type": "object", "additionalProperties": false, "required": ["name", "version", "kind"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "version": { "type": "string", "minLength": 1 }, "kind": { "type": "string", "minLength": 1 } }
+      },
+      "ArtifactPublicationInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["publicationId", "deliveryRunId", "expectedPipelineManifestSha256Digest", "expectedSourceCommitId", "expectedWorkflowSha256Digest", "coordinate", "expectedContentSha256Digest", "registryId", "registryRepository", "signingPolicyReference", "requiredControls", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "publicationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedPipelineManifestSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedSourceCommitId": { "type": "string", "pattern": "^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$" },
+          "expectedWorkflowSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "coordinate": { "$ref": "#/components/schemas/GovernedArtifactCoordinate" },
+          "expectedContentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "registryId": { "type": "string", "minLength": 1 }, "registryRepository": { "type": "string", "minLength": 1 },
+          "signingPolicyReference": { "type": "string", "minLength": 1 },
+          "requiredControls": { "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": { "type": "string", "enum": ["SourceProvenance", "Sbom", "DependencyValidation", "BuildAttestation", "ArtifactSignature", "RegistryVerification"] } },
+          "purpose": { "type": "string", "minLength": 1 }, "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "SupplyChainVerification": {
+        "type": "object", "additionalProperties": false, "required": ["control", "passed", "verifierIdentity", "evidenceReference", "reason"],
+        "properties": {
+          "control": { "type": "string", "enum": ["SourceProvenance", "Sbom", "DependencyValidation", "BuildAttestation", "ArtifactSignature", "RegistryVerification"] },
+          "passed": { "type": "boolean" }, "verifierIdentity": { "type": "string" }, "evidenceReference": { "type": "string" }, "reason": { "type": "string" }
+        }
+      },
+      "GovernedArtifactPublicationReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["publicationId", "ciCdExecutionId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "artifactPublished", "registryMutated", "sourceMutationOccurred", "deploymentOccurred", "productionEffectOccurred", "canAdvance", "coordinate", "contentSha256Digest", "supplyChainVerified", "supplyChainVerifications", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "publicationId": { "type": "string", "format": "uuid" }, "ciCdExecutionId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string" }, "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "artifactPublished": { "type": "boolean" }, "registryMutated": { "type": "boolean" },
+          "sourceMutationOccurred": { "type": "boolean", "const": false }, "deploymentOccurred": { "type": "boolean", "const": false },
+          "productionEffectOccurred": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "coordinate": { "$ref": "#/components/schemas/GovernedArtifactCoordinate" }, "contentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "immutableRegistryReference": { "type": ["string", "null"] }, "supplyChainVerified": { "type": "boolean" },
+          "supplyChainVerifications": { "type": "array", "items": { "$ref": "#/components/schemas/SupplyChainVerification" } },
+          "artifactEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

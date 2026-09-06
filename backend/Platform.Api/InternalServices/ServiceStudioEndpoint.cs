@@ -9,6 +9,7 @@ using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.AiDevelopment;
 using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.Sandbox;
+using Platform.SoftwareFactory.SupplyChain;
 
 namespace Platform.Api.InternalService;
 
@@ -144,6 +145,16 @@ internal static class InternalServiceEndpoint
         string WorkflowSignatureReference, string PipelineProfile, string RunnerPoolId,
         System.Collections.Immutable.ImmutableArray<string> RequiredStageIds,
         System.Collections.Immutable.ImmutableHashSet<string> RequiredControlIds,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record ArtifactPublicationInput(
+        Guid PublicationId, Guid DeliveryRunId,
+        string ExpectedPipelineManifestSha256Digest, string ExpectedSourceCommitId,
+        string ExpectedWorkflowSha256Digest, GovernedArtifactCoordinate Coordinate,
+        string ExpectedContentSha256Digest, string RegistryId, string RegistryRepository,
+        string SigningPolicyReference,
+        System.Collections.Immutable.ImmutableHashSet<SupplyChainControl> RequiredControls,
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
@@ -1324,6 +1335,62 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact Git receipt, immutable workflow, isolated runner, stages, and controls before checkout or invocation. No source mutation, artifact publication, deployment, production effect, or workflow advancement is available.")
             .Accepts<CiCdExecutionInput>("application/json")
             .Produces<GovernedCiCdExecutionReceipt>(200).Produces<GovernedCiCdExecutionReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceArtifact(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/cicd/{ciCdExecutionId:guid}/artifact",
+            async (Guid ciCdExecutionId, ArtifactPublicationInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedArtifactPublicationEngine engine,
+                SupplyChainVerificationPipeline supplyChainPipeline, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.artifact.publish",
+                        input.RegistryRepository, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["developer.internal-service.artifact.publish"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IArtifactPolicyGate>();
+                    var ciCdReader = services.GetService<IAuthorizedCiCdExecutionReceiptReader>();
+                    var manifestReader = services.GetService<IAuthorizedPipelineOutputManifestReader>();
+                    var runReader = services.GetService<IArtifactDeliveryRunReader>();
+                    var packageValidator = services.GetService<IArtifactPackageValidator>();
+                    var registryGateway = services.GetService<IInstitutionalArtifactRegistryGateway>();
+                    var authorizer = services.GetService<IArtifactResultAuthorizer>();
+                    var evidence = services.GetService<IArtifactEvidenceRecorder>();
+                    if (policy is null || ciCdReader is null || manifestReader is null || runReader is null ||
+                        packageValidator is null || registryGateway is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Artifact publication is not operationally ready.");
+                    var request = new GovernedArtifactPublicationRequest(
+                        input.PublicationId, ciCdExecutionId, input.DeliveryRunId,
+                        input.ExpectedPipelineManifestSha256Digest, input.ExpectedSourceCommitId,
+                        input.ExpectedWorkflowSha256Digest, input.Coordinate,
+                        input.ExpectedContentSha256Digest, input.RegistryId, input.RegistryRepository,
+                        input.SigningPolicyReference, input.RequiredControls, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.PublishAsync(
+                        request, policy, ciCdReader, manifestReader, runReader, packageValidator,
+                        registryGateway, supplyChainPipeline, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Artifact publication denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Artifact prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Artifact request or boundary result is invalid."); }
+            })
+            .WithName("PublishGovernedArtifact").WithTags("Create Internal Service")
+            .WithSummary("Publish one exact immutable Artifact from an accepted CI/CD output.")
+            .WithDescription("OPA authorizes the exact pipeline output, coordinate, registry, signing policy, and supply-chain controls before reads or publication. No deployment, production effect, or workflow advancement is available.")
+            .Accepts<ArtifactPublicationInput>("application/json")
+            .Produces<GovernedArtifactPublicationReceipt>(200).Produces<GovernedArtifactPublicationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

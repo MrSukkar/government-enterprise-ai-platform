@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 16 - Governed CI/CD Execution",
-        "Governed CI/CD contract available; all workflow, runner, authorization, and evidence adapters fail-closed",
+        "Operational Increment 17 - Governed Artifact Publication",
+        "Governed Artifact contract available; all package, registry, supply-chain, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -88,6 +88,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact immutable workflow, isolated runner, stages, and controls before checkout",
             "Locked dependencies, SBOM, provenance, attestations, signatures, and exact evidence are mandatory",
             "CI/CD cannot mutate source, publish an Artifact, deploy, affect production, or advance workflow",
+            "Artifact requires an accepted CI/CD receipt and a delivery run stopped at CiCd",
+            "OPA authorizes the exact output digest, immutable coordinate, institutional registry, signer, and controls",
+            "Every provenance, SBOM, dependency, attestation, signature, and registry control must pass",
+            "Artifact publication cannot deploy, affect production, or advance workflow",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

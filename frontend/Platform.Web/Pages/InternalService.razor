@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 16 / Build</p>
+        <p class="eyebrow">Operational increment 17 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">CI/CD</span>
-        <strong>Governed CI/CD execution boundary ready; adapters fail-closed</strong>
-        <small>No checkout, runner execution, Artifact publication, deployment, production effect, or workflow advancement is available.</small>
+        <span class="state-chip">ARTIFACT</span>
+        <strong>Governed Artifact publication boundary ready; adapters fail-closed</strong>
+        <small>No pipeline-output disclosure, registry access, publication, deployment, production effect, or workflow advancement is available while adapters are absent.</small>
     </aside>
 </section>
 
@@ -91,9 +91,13 @@
             <li><span>Immutable workflow and validator</span><strong class="waiting">Not connected</strong></li>
             <li><span>Institutional isolated runner gateway</span><strong class="waiting">Not connected</strong></li>
             <li><span>CI/CD result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Artifact</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Artifact OPA and CI/CD receipt</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Pipeline-output package validator</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Institutional immutable registry and signer</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Supply-chain verifiers, authorization, and evidence</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Deployment</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds CI/CD to the exact signed Git receipt and a run stopped at Git. OPA authorizes the immutable workflow, isolated runner, ordered stages, and controls before checkout. Locked dependencies, SBOM, provenance, attestations, signatures, result authorization, and evidence are mandatory; outputs remain non-released and cannot advance to Artifact or production.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Artifact publication to the accepted CI/CD receipt and a run stopped at CiCd. OPA authorizes the exact output digest, immutable coordinate, registry, signer, and controls before reads. Provenance, SBOM, dependency validation, build attestation, signature, registry verification, result authorization, and evidence must all pass; Deployment remains separately governed.</p></div>
     </aside>
 </section>
 

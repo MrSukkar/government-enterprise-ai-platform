@@ -20,6 +20,7 @@ using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.Validation;
+using Platform.SoftwareFactory.SupplyChain;
 
 namespace Platform.Api.Operations;
 
@@ -145,7 +146,16 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional CI/CD workflow validator", typeof(ICiCdWorkflowValidator)),
             ("Institutional CI/CD gateway", typeof(IInstitutionalCiCdGateway)),
             ("CI/CD result authorizer", typeof(ICiCdResultAuthorizer)),
-            ("CI/CD evidence recorder", typeof(ICiCdEvidenceRecorder))
+            ("CI/CD evidence recorder", typeof(ICiCdEvidenceRecorder)),
+            ("Artifact OPA policy gate", typeof(IArtifactPolicyGate)),
+            ("Authorized CI/CD execution receipt reader", typeof(IAuthorizedCiCdExecutionReceiptReader)),
+            ("Authorized pipeline-output manifest reader", typeof(IAuthorizedPipelineOutputManifestReader)),
+            ("Artifact delivery-run reader", typeof(IArtifactDeliveryRunReader)),
+            ("Institutional Artifact package validator", typeof(IArtifactPackageValidator)),
+            ("Institutional Artifact registry gateway", typeof(IInstitutionalArtifactRegistryGateway)),
+            ("Artifact supply-chain control verifiers", typeof(ISupplyChainControlVerifier)),
+            ("Artifact result authorizer", typeof(IArtifactResultAuthorizer)),
+            ("Artifact evidence recorder", typeof(IArtifactEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

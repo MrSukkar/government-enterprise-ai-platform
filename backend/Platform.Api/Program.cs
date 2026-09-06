@@ -105,6 +105,7 @@ app.MapInternalServiceTests();
 app.MapInternalServiceHumanReview();
 app.MapInternalServiceGit();
 app.MapInternalServiceCiCd();
+app.MapInternalServiceArtifact();
 
 if (app.Environment.IsDevelopment())
 {

@@ -41,6 +41,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedHumanReviewEngine>();
         services.AddScoped<GovernedGitSourceCommitEngine>();
         services.AddScoped<GovernedCiCdExecutionEngine>();
+        services.AddScoped<GovernedArtifactPublicationEngine>();
         return services;
     }
 }

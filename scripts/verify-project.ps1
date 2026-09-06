@@ -1568,6 +1568,30 @@ if (Test-Path $increment16AcceptancePath) {
     @('Status: **Satisfied**','all 98 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 16 acceptance missing: $_"}}
 }
 
+$increment17AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_17_ACCEPTANCE.md'
+if (Test-Path $increment17AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedArtifactPublication.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-14-ARTIFACT.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 17 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 17**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 17 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IArtifactPolicyGate','IAuthorizedCiCdExecutionReceiptReader','IAuthorizedPipelineOutputManifestReader','IArtifactDeliveryRunReader','DeliveryStage.CiCd','IArtifactPackageValidator','IInstitutionalArtifactRegistryGateway','ImmutableCoordinate','ExistingCoordinateOverwritten','IdempotencyVerified','SupplyChainVerificationPipeline','SupplyChainControl','IArtifactResultAuthorizer','IArtifactEvidenceRecorder','ArtifactPublished','RegistryMutated','SourceMutationOccurred','DeploymentOccurred','ProductionEffectOccurred','CanAdvance','Separately approved Deployment')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Artifact guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('ciCdReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Artifact prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Artifact must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/cicd/{ciCdExecutionId:guid}/artifact','developer.internal-service.artifact.publish','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Artifact endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Artifact OPA policy gate','Authorized CI/CD execution receipt reader','Authorized pipeline-output manifest reader','Artifact delivery-run reader','Institutional Artifact package validator','Institutional Artifact registry gateway','Artifact supply-chain control verifiers','Artifact result authorizer','Artifact evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Artifact readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/cicd/{ciCdExecutionId}/artifact','ArtifactPublicationInput','GovernedArtifactPublicationReceipt','artifactPublished','registryMutated','sourceMutationOccurred','deploymentOccurred','productionEffectOccurred','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Artifact OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment17AcceptancePath
+    @('Status: **Satisfied**','all 107 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 17 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
