@@ -7,6 +7,7 @@ using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.AiDevelopment;
+using Platform.SoftwareFactory.Validation;
 
 namespace Platform.Api.InternalService;
 
@@ -78,6 +79,13 @@ internal static class InternalServiceEndpoint
         System.Collections.Immutable.ImmutableArray<string> ContextReferences,
         System.Collections.Immutable.ImmutableArray<string> Constraints,
         System.Collections.Immutable.ImmutableArray<string> RequestedOutputPaths,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record StaticValidationInput(
+        Guid ValidationId, Guid DeliveryRunId,
+        string ExpectedCandidateSha256Digest, string ExpectedGenerationEvidenceReference,
+        System.Collections.Immutable.ImmutableArray<string> RequiredControlIds,
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
@@ -818,6 +826,85 @@ internal static class InternalServiceEndpoint
             .Accepts<CodeGenerationInput>("application/json")
             .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status200OK)
             .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceStaticValidation(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId,
+                Guid architectureDiscoveryId, Guid packageSelectionId, Guid planningId, Guid generationId,
+                StaticValidationInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedStaticValidationEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.static-validation.create",
+                        generationId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.static-validation.create"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+
+                    var policyGate = services.GetService<IStaticValidationPolicyGate>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<IStaticValidationDeliveryRunReader>();
+                    var controls = services.GetServices<ICodeValidationControl>().ToArray();
+                    var resultAuthorizer = services.GetService<IStaticValidationResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<IStaticValidationEvidenceRecorder>();
+                    if (policyGate is null || candidateReader is null || runReader is null || controls.Length == 0 ||
+                        resultAuthorizer is null || evidenceRecorder is null)
+                        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Governed Static Validation is not operationally ready.");
+
+                    var request = new GovernedStaticValidationRequest(
+                        input.ValidationId, generationId, input.DeliveryRunId,
+                        input.ExpectedCandidateSha256Digest, input.ExpectedGenerationEvidenceReference,
+                        input.RequiredControlIds, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ValidateAsync(
+                        request, policyGate, candidateReader, runReader, controls,
+                        resultAuthorizer, evidenceRecorder, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status403Forbidden,
+                        title: "Governed Static Validation denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status404NotFound,
+                        title: "Static Validation prerequisite was not found.");
+                }
+                catch (StaticValidationDependencyUnavailableException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "A Static Validation dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
+                        title: "Static Validation request or boundary result is invalid.");
+                }
+            })
+            .WithName("RunGovernedStaticValidation")
+            .WithTags("Create Internal Service")
+            .WithSummary("Run governed Static Validation against an authoritative inert code candidate.")
+            .WithDescription("Verified OPA authorizes the exact candidate and Static controls before candidate read or control execution. All required controls must pass with evidence. No source mutation, Security Validation, execution, or workflow advancement is available.")
+            .Accepts<StaticValidationInput>("application/json")
+            .Produces<GovernedStaticValidationReceipt>(StatusCodes.Status200OK)
+            .Produces<GovernedStaticValidationReceipt>(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound)

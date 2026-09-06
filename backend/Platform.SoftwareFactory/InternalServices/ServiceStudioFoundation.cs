@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 09 - Governed Code Generation Candidate",
-        "Governed non-executable and unapplied Code Generation contract available; all runtime adapters fail-closed",
+        "Operational Increment 10 - Governed Static Validation",
+        "Governed Static Validation contract available; all runtime adapters and controls fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -59,7 +59,11 @@ public static class InternalServiceFoundationCatalog
             "OPA, governed prompt, re-authorized context, exact packages, and safe relative paths precede generation",
             "Generated content and paths remain inert data with no filesystem, tool, command, or Git access",
             "Independent evaluation and result authorization precede non-executable and unapplied release",
-            "Workflow advancement and Static Validation remain unavailable",
+            "Code Generation candidates remain inert without filesystem, tool, command, or Git access",
+            "Static Validation requires a code candidate and delivery run stopped at CodeGeneration",
+            "OPA authorizes the exact candidate and Static controls before candidate read or validation",
+            "Missing, incomplete, unevidenced, Error, or Critical control results fail closed",
+            "No source mutation, code execution, workflow advancement, or Security Validation is available",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

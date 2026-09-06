@@ -408,6 +408,33 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation": {
+      "post": {
+        "operationId": "runGovernedStaticValidation",
+        "summary": "Run governed Static Validation against an authoritative inert code candidate.",
+        "description": "Verified OPA authorizes the exact candidate and required Static controls before candidate read or control execution. Every exact control must complete with evidence and no Error or Critical finding. No source mutation, Security Validation, execution, or workflow advancement is available.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "planningId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "generationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StaticValidationInput" } } } },
+        "responses": {
+          "200": { "description": "Every exact Static control passed with evidence; the non-advancing report was released.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedStaticValidationReceipt" } } } },
+          "400": { "description": "The request or a governed validation boundary result is invalid.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "A governed authenticated identity is required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Access, OPA, a control result, or result authorization denied release.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedStaticValidationReceipt" } }, "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "404": { "description": "The tenant-scoped generation candidate or delivery run was not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "Policy, candidate reader, run reader, required Static controls, authorization, or evidence is unavailable; no candidate disclosure or control execution occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -993,6 +1020,45 @@
           "generatedFilePaths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "evaluationFindings": { "type": "array", "items": { "type": "object" } },
           "generationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "StaticValidationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["validationId", "deliveryRunId", "expectedCandidateSha256Digest", "expectedGenerationEvidenceReference", "requiredControlIds", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "validationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedCandidateSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedGenerationEvidenceReference": { "type": "string", "minLength": 1 },
+          "requiredControlIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedStaticValidationReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["validationId", "generationId", "deliveryRunId", "tenantId", "policyOutcome", "gate", "isAccepted", "isExecutable", "canAdvance", "candidateSha256Digest", "controlReports", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "validationId": { "type": "string", "format": "uuid" },
+          "generationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "gate": { "type": "string", "const": "Static" },
+          "isAccepted": { "type": "boolean" },
+          "isExecutable": { "type": "boolean", "const": false },
+          "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "reportSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "controlReports": { "type": "array", "items": { "type": "object" } },
+          "validationEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" },
           "completedAt": { "type": "string", "format": "date-time" }

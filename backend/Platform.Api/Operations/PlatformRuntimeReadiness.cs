@@ -19,6 +19,7 @@ using Platform.Knowledge.Retrieval;
 using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
 using Platform.SoftwareFactory.Packages;
+using Platform.SoftwareFactory.Validation;
 
 namespace Platform.Api.Operations;
 
@@ -100,7 +101,13 @@ internal sealed class PlatformRuntimeReadiness
             ("Governed Code Generation prompt-template reader", typeof(IGovernedCodeGenerationPromptTemplateReader)),
             ("Code Generation context authorizer", typeof(ICodeGenerationContextAuthorizer)),
             ("Code Generation result and path authorizer", typeof(ICodeGenerationResultAuthorizer)),
-            ("Code Generation evidence recorder", typeof(ICodeGenerationEvidenceRecorder))
+            ("Code Generation evidence recorder", typeof(ICodeGenerationEvidenceRecorder)),
+            ("Static Validation OPA policy gate", typeof(IStaticValidationPolicyGate)),
+            ("Authorized Code Generation candidate reader", typeof(IAuthorizedCodeGenerationCandidateReader)),
+            ("Static Validation delivery-run reader", typeof(IStaticValidationDeliveryRunReader)),
+            ("Institutionally approved Static Validation controls", typeof(ICodeValidationControl)),
+            ("Static Validation result authorizer", typeof(IStaticValidationResultAuthorizer)),
+            ("Static Validation evidence recorder", typeof(IStaticValidationEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

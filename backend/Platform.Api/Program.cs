@@ -98,6 +98,7 @@ app.MapInternalServiceExistingArchitectureDiscovery();
 app.MapInternalServiceApprovedPackagesSelection();
 app.MapInternalServiceAiPlanning();
 app.MapInternalServiceCodeGeneration();
+app.MapInternalServiceStaticValidation();
 
 if (app.Environment.IsDevelopment())
 {

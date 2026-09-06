@@ -1370,6 +1370,55 @@ if (Test-Path -LiteralPath $increment09AcceptancePath) {
     }
 }
 
+$increment10AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_10_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment10AcceptancePath) {
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedStaticValidation.cs'
+    $endpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-07-STATIC-VALIDATION.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath) | ForEach-Object {
+        if(-not(Test-Path $_)){throw "Increment 10 artifact missing: $_"}
+    }
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 10**','Decision: **Approved by the repository owner') | ForEach-Object {
+        if($change -notmatch [regex]::Escape($_)){throw "Increment 10 approval missing: $_"}
+    }
+    $engine=Get-Content -Raw $enginePath
+    @('IStaticValidationPolicyGate','IAuthorizedCodeGenerationCandidateReader','IStaticValidationDeliveryRunReader',
+      'DeliveryStage.CodeGeneration','ICodeValidationControl','CodeValidationPipeline','ValidationGate.Static',
+      'report.IsAccepted','item.Passed','IStaticValidationResultAuthorizer',
+      'IStaticValidationEvidenceRecorder','IsExecutable: false','CanAdvance: false',
+      'Separately approved Security Validation') | ForEach-Object {
+        if($engine -notmatch [regex]::Escape($_)){throw "Static Validation guard missing: $_"}
+    }
+    $policyIndex=$engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal)
+    $candidateIndex=$engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal)
+    if($policyIndex -lt 0 -or $candidateIndex -lt 0 -or $policyIndex -ge $candidateIndex){
+        throw 'Static Validation candidate read is not ordered after verified OPA permit.'
+    }
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/code-generation/{generationId:guid}/static-validation','developer.internal-service.static-validation.create',
+      'RequireAuthorization','Status503ServiceUnavailable') | ForEach-Object {
+        if($endpoint -notmatch [regex]::Escape($_)){throw "Static Validation endpoint guard missing: $_"}
+    }
+    $readiness=Get-Content -Raw $readinessPath
+    @('Static Validation OPA policy gate','Authorized Code Generation candidate reader',
+      'Static Validation delivery-run reader','Institutionally approved Static Validation controls',
+      'Static Validation result authorizer','Static Validation evidence recorder') | ForEach-Object {
+        if($readiness -notmatch [regex]::Escape($_)){throw "Static Validation readiness missing: $_"}
+    }
+    $openApi=Get-Content -Raw $openApiPath
+    @('/code-generation/{generationId}/static-validation','StaticValidationInput',
+      'GovernedStaticValidationReceipt','requiredControlIds','isExecutable','canAdvance','503') | ForEach-Object {
+        if($openApi -notmatch [regex]::Escape($_)){throw "Static Validation OpenAPI missing: $_"}
+    }
+    $acceptance=Get-Content -Raw $increment10AcceptancePath
+    @('Status: **Satisfied**','all 60 required runtime dependencies remain fail closed') | ForEach-Object {
+        if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 10 acceptance missing: $_"}
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

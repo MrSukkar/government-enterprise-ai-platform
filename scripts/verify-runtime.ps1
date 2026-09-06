@@ -115,6 +115,10 @@ try {
     $codeGeneration = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/intents/00000000-0000-0000-0000-000000000001/enterprise-context/00000000-0000-0000-0000-000000000002/existing-systems/00000000-0000-0000-0000-000000000003/existing-architecture/00000000-0000-0000-0000-000000000004/approved-packages/00000000-0000-0000-0000-000000000005/ai-planning/00000000-0000-0000-0000-000000000006/code-generation",
         $generationContent).GetAwaiter().GetResult()
+    $staticValidationContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $staticValidation = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/intents/00000000-0000-0000-0000-000000000001/enterprise-context/00000000-0000-0000-0000-000000000002/existing-systems/00000000-0000-0000-0000-000000000003/existing-architecture/00000000-0000-0000-0000-000000000004/approved-packages/00000000-0000-0000-0000-000000000005/ai-planning/00000000-0000-0000-0000-000000000006/code-generation/00000000-0000-0000-0000-000000000007/static-validation",
+        $staticValidationContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -158,12 +162,15 @@ try {
     if ([int]$codeGeneration.StatusCode -ne 401 -or $codeGeneration.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous Code Generation did not fail closed with a bearer challenge.'
     }
+    if ([int]$staticValidation.StatusCode -ne 401 -or $staticValidation.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous Static Validation did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 54) {
-        throw 'Readiness response did not disclose the expected 54 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 60) {
+        throw 'Readiness response did not disclose the expected 60 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -176,7 +183,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 09 - Governed Code Generation Candidate' -or
+        $internalServiceBody.increment -ne 'Operational Increment 10 - Governed Static Validation' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -193,8 +200,9 @@ try {
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture' -or
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages' -or
         -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation') {
-        throw 'Runtime OpenAPI response does not contain the approved path through Code Generation.'
+        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation/{generationId}/static-validation') {
+        throw 'Runtime OpenAPI response does not contain the approved path through Static Validation.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -204,7 +212,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 54 runtime dependencies fail-closed, and Governed Code Generation remains protected without model, source-write, or context adapters.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 60 runtime dependencies fail-closed, and Governed Static Validation remains protected without candidate, policy, control, or evidence adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')
