@@ -117,6 +117,15 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record HumanReviewInput(
+        Guid ReviewId, Guid DeliveryRunId, string InitiatorSubjectId, string ExpectedCandidateSha256Digest,
+        string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest,
+        string ExpectedTestsResultSha256Digest, string ExpectedTestsEvidenceReference,
+        HumanReviewDecision Decision, string Rationale, string HumanAttestationReference,
+        System.Collections.Immutable.ImmutableHashSet<string> DeclaredConflictingSubjectIds,
+        long ExpectedVersion, string Purpose, DataClassification MaximumClassification,
+        string Environment, IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1115,6 +1124,66 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes exact prerequisites, manifest, image, isolation, environment, and network scope before reads or test invocation. No production effect, Human Review approval, or workflow advancement is available.")
             .Accepts<TestsExecutionInput>("application/json")
             .Produces<GovernedTestsExecutionReceipt>(200).Produces<GovernedTestsExecutionReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceHumanReview(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation/{staticValidationId:guid}/security-validation/{securityValidationId:guid}/sandbox/{sandboxExecutionId:guid}/tests/{testsExecutionId:guid}/human-review",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId, Guid architectureDiscoveryId,
+                Guid packageSelectionId, Guid planningId, Guid generationId, Guid staticValidationId,
+                Guid securityValidationId, Guid sandboxExecutionId, Guid testsExecutionId,
+                HumanReviewInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedHumanReviewEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.human-review.decide",
+                        testsExecutionId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.human-review.decide"],
+                        input.InitiatorSubjectId, true));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IHumanReviewPolicyGate>();
+                    var testsReader = services.GetService<IAuthorizedTestsExecutionReceiptReader>();
+                    var sandboxReader = services.GetService<IAuthorizedSandboxExecutionReceiptReader>();
+                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<IHumanReviewDeliveryRunReader>();
+                    var attestation = services.GetService<IHumanReviewAttestationVerifier>();
+                    var repository = services.GetService<IAtomicHumanReviewRepository>();
+                    if (policy is null || testsReader is null || sandboxReader is null || securityReader is null ||
+                        candidateReader is null || runReader is null || attestation is null || repository is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Human Review is not operationally ready.");
+                    var request = new GovernedHumanReviewRequest(
+                        input.ReviewId, testsExecutionId, sandboxExecutionId, securityValidationId,
+                        generationId, input.DeliveryRunId, input.InitiatorSubjectId, input.ExpectedCandidateSha256Digest,
+                        input.ExpectedSecurityReportSha256Digest, input.ExpectedSandboxResultSha256Digest,
+                        input.ExpectedTestsResultSha256Digest, input.ExpectedTestsEvidenceReference,
+                        input.Decision, input.Rationale, input.HumanAttestationReference,
+                        input.DeclaredConflictingSubjectIds, input.ExpectedVersion, context.Identity,
+                        input.Purpose, input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ReviewAsync(request, policy, testsReader, sandboxReader,
+                        securityReader, candidateReader, runReader, attestation, repository, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsRecorded
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Human Review denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Human Review prerequisite was not found."); }
+                catch (HumanReviewDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Human Review dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Human Review request or boundary result is invalid."); }
+            })
+            .WithName("RecordGovernedHumanReview").WithTags("Create Internal Service")
+            .WithSummary("Record an attested separation-of-duties Human Review decision after accepted Tests.")
+            .WithDescription("OPA authorizes the exact human reviewer, decision, evidence package, and conflict scope before reads. The signed human decision is recorded atomically with evidence and cannot advance to Git or production.")
+            .Accepts<HumanReviewInput>("application/json")
+            .Produces<GovernedHumanReviewReceipt>(200).Produces<GovernedHumanReviewReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

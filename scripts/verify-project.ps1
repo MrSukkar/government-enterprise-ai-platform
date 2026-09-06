@@ -1496,6 +1496,30 @@ if (Test-Path $increment13AcceptancePath) {
     @('Status: **Satisfied**','all 77 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 13 acceptance missing: $_"}}
 }
 
+$increment14AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_14_ACCEPTANCE.md'
+if (Test-Path $increment14AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedHumanReview.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-11-HUMAN-REVIEW.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 14 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 14**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 14 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IHumanReviewPolicyGate','IAuthorizedTestsExecutionReceiptReader','IAuthorizedSandboxExecutionReceiptReader','IAuthorizedSecurityValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.Tests','DeclaredConflictingSubjectIds','ReviewerIsHuman','IHumanReviewAttestationVerifier','IsNonRepudiable','IAtomicHumanReviewRepository','ExpectedVersion','ProductionEffectOccurred','CanAdvance','Separately approved Git boundary')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Human Review guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('testsReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Human Review prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Human Review must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/tests/{testsExecutionId:guid}/human-review','developer.internal-service.human-review.decide','input.InitiatorSubjectId, true','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Human Review endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Human Review OPA policy gate','Authorized Tests receipt reader','Human Review delivery-run reader','Human Review attestation verifier','Atomic Human Review and evidence repository')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Human Review readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/tests/{testsExecutionId}/human-review','HumanReviewInput','GovernedHumanReviewReceipt','declaredConflictingSubjectIds','isApproved','productionEffectOccurred','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Human Review OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment14AcceptancePath
+    @('Status: **Satisfied**','all 82 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 14 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

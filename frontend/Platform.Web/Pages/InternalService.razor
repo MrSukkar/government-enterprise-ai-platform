@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 13 / Build</p>
+        <p class="eyebrow">Operational increment 14 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">TESTS</span>
-        <strong>Governed Tests boundary ready; adapters fail-closed</strong>
-        <small>No test manifest/runtime, image transfer, production effect, Human Review approval, or workflow advancement is available.</small>
+        <span class="state-chip">HUMAN REVIEW</span>
+        <strong>Governed Human Review boundary ready; adapters fail-closed</strong>
+        <small>No reviewer attestation, approval persistence, Git authority, production effect, or workflow advancement is available.</small>
     </aside>
 </section>
 
@@ -79,9 +79,13 @@
             <li><span>Governed test manifest and institutional image</span><strong class="waiting">Not connected</strong></li>
             <li><span>Isolated governed test runtime</span><strong class="waiting">Not connected</strong></li>
             <li><span>Tests result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Human Review</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Human Review OPA and Tests receipt reader</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Human identity and separation of duties</span><strong class="waiting">Not established</strong></li>
+            <li><span>Non-repudiable reviewer attestation</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Atomic review and evidence repository</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Git</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Tests to accepted Sandbox and Security evidence, the authoritative candidate, an exact governed manifest and institutional image, and a run stopped at Sandbox. OPA authorizes isolation, environment, and network scope before reads or invocation. Every required test must pass with evidence; the result cannot affect production or advance to Human Review.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Human Review to accepted Tests, Sandbox and Security evidence, the authoritative candidate, and a run stopped at Tests. OPA authorizes the exact human reviewer and conflict scope before reads. An independent reviewer must explicitly decide with rationale and signed attestation; the atomic decision cannot affect production or advance to Git.</p></div>
     </aside>
 </section>
 

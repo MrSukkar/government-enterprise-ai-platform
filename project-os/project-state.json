@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 13 - Governed Tests Execution",
+    "increment": "Operational Increment 14 - Governed Human Review",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-10-TESTS.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_13_ACCEPTANCE.md",
-    "executionBoundary": "Governed Tests contract verified; policy, Sandbox and Security receipt readers, candidate and run readers, governed manifest, institutional image assurance, isolated test runtime, result authorization, and evidence unavailable; no invocation, production effect, or workflow advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-11-HUMAN-REVIEW.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_14_ACCEPTANCE.md",
+    "executionBoundary": "Governed Human Review contract verified; policy, Tests and prerequisite readers, independent human attestation, delivery-run reader, and atomic review-plus-evidence repository unavailable; no decision persistence, Git authority, production effect, or workflow advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_13_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_14_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

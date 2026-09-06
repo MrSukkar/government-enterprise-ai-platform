@@ -38,6 +38,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedSecurityValidationEngine>();
         services.AddScoped<GovernedSandboxExecutionEngine>();
         services.AddScoped<GovernedTestsExecutionEngine>();
+        services.AddScoped<GovernedHumanReviewEngine>();
         return services;
     }
 }

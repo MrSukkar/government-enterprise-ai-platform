@@ -124,7 +124,12 @@ internal sealed class PlatformRuntimeReadiness
             ("Governed test-manifest reader", typeof(IGovernedTestManifestReader)),
             ("Governed test runtime", typeof(IGovernedTestRuntime)),
             ("Tests result authorizer", typeof(ITestsResultAuthorizer)),
-            ("Tests evidence recorder", typeof(ITestsEvidenceRecorder))
+            ("Tests evidence recorder", typeof(ITestsEvidenceRecorder)),
+            ("Human Review OPA policy gate", typeof(IHumanReviewPolicyGate)),
+            ("Authorized Tests receipt reader", typeof(IAuthorizedTestsExecutionReceiptReader)),
+            ("Human Review delivery-run reader", typeof(IHumanReviewDeliveryRunReader)),
+            ("Human Review attestation verifier", typeof(IHumanReviewAttestationVerifier)),
+            ("Atomic Human Review and evidence repository", typeof(IAtomicHumanReviewRepository))
         };
 
         var dependencies = requiredDependencies

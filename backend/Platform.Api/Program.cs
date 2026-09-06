@@ -102,6 +102,7 @@ app.MapInternalServiceStaticValidation();
 app.MapInternalServiceSecurityValidation();
 app.MapInternalServiceSandbox();
 app.MapInternalServiceTests();
+app.MapInternalServiceHumanReview();
 
 if (app.Environment.IsDevelopment())
 {

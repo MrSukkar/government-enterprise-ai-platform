@@ -158,6 +158,8 @@ Operational Increment 12 is **Governed Security Sandbox Execution**. It defines 
 
 Operational Increment 13 is **Governed Tests Execution**. It defines protected deterministic tests bound to an accepted Sandbox receipt, the complete Security Validation evidence chain, an authoritative inert code candidate, and a deterministic delivery run stopped exactly at `Sandbox`. Verified OPA policy authorizes the exact prerequisite digests, governed test manifest, institutional image, isolation policy, non-secret environment references, network destinations, tenant, purpose, environment, classification, and evidence scope before reads, image access, or invocation. A vendor-neutral governed test runtime executes only the exact authorized manifest inside Firecracker-class ephemeral microVM isolation. Every required test must be uniquely discovered, completed, passed, and evidence-bearing; missing, duplicate, skipped, failed, timed-out, or isolation-violating results fail closed. Result authorization and cryptographic evidence are mandatory. No production effect or workflow advancement is available. The result cannot advance to Human Review or perform production action.
 
+Operational Increment 14 is **Governed Human Review**. It defines a protected human approve/reject decision bound to accepted governed Tests, the complete Sandbox and validation evidence chain, an authoritative inert code candidate, and a deterministic delivery run stopped exactly at `Tests`. Verified OPA policy authorizes the exact human reviewer, review action, prerequisite digests, tenant, purpose, environment, classification, evidence scope, and separation-of-duties constraints before prerequisite read or candidate disclosure. The reviewer must differ from conflicting actors and provide explicit rationale plus a deployment-verifiable non-repudiable attestation bound to the complete review package. AI, policy, runtime, and API cannot supply or alter the human decision. The decision and cryptographic evidence are recorded atomically with deterministic idempotency and optimistic concurrency. No production effect or workflow advancement is available. The result cannot advance to Git or perform production action.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -177,3 +179,5 @@ Increment 11 amendment: `docs/change-control/CR-001-AMENDMENT-08-SECURITY-VALIDA
 Increment 12 amendment: `docs/change-control/CR-001-AMENDMENT-09-SANDBOX.md`.
 
 Increment 13 amendment: `docs/change-control/CR-001-AMENDMENT-10-TESTS.md`.
+
+Increment 14 amendment: `docs/change-control/CR-001-AMENDMENT-11-HUMAN-REVIEW.md`.

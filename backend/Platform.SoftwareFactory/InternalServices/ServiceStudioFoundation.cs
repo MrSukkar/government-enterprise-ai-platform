@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 13 - Governed Tests Execution",
-        "Governed Tests contract available; all runtime adapters and controls fail-closed",
+        "Operational Increment 14 - Governed Human Review",
+        "Governed Human Review contract available; all policy, attestation, and persistence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -76,6 +76,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact manifest, image, isolation, environment, and network scope before tests",
             "Every required test must be discovered, completed, passed, unique, and evidence-bearing",
             "Tests results require authorization and evidence and cannot advance to Human Review or production",
+            "Human Review requires accepted Tests evidence and a delivery run stopped at Tests",
+            "OPA authorizes the exact human reviewer, decision package, and conflict scope before reads",
+            "Reviewer identity, separation of duties, rationale, and non-repudiable attestation are mandatory",
+            "Review decision and evidence are atomic and cannot advance to Git or production",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);
