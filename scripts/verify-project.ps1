@@ -1320,6 +1320,56 @@ if (Test-Path -LiteralPath $increment08AcceptancePath) {
     @('Status: **Satisfied**','all 47 required runtime dependencies remain fail-closed') | ForEach-Object {if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 08 acceptance missing: $_"}}
 }
 
+$increment09AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_09_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $increment09AcceptancePath) {
+    $enginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedCodeGenerationCandidate.cs'
+    $endpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-06-CODE-GENERATION.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath) | ForEach-Object {
+        if(-not(Test-Path $_)){throw "Increment 09 artifact missing: $_"}
+    }
+    $change = Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 09**','Decision: **Approved by the repository owner') | ForEach-Object {
+        if($change -notmatch [regex]::Escape($_)){throw "Increment 09 approval missing: $_"}
+    }
+    $engine = Get-Content -Raw $enginePath
+    @('IAuthorizedAiPlanningCandidateReader','DeliveryStage.AiPlanning','ICodeGenerationPolicyGate',
+      'PolicySignatureValid','IGovernedCodeGenerationPromptTemplateReader','ICodeGenerationContextAuthorizer',
+      'AiDevelopmentTaskKind.CodeGeneration','GovernedAiDevelopmentService','IAiOutputEvaluator',
+      'GovernedGeneratedPath.Validate','Path.IsPathFullyQualified','ProhibitedSegments',
+      'IsExecutable: false','IsApplied: false','CanAdvance: false','Separately approved Static Validation',
+      'ICodeGenerationResultAuthorizer','ICodeGenerationEvidenceRecorder') | ForEach-Object {
+        if($engine -notmatch [regex]::Escape($_)){throw "Code Generation guard missing: $_"}
+    }
+    $policyIndex=$engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal)
+    $runtimeIndex=$engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal)
+    if($policyIndex -lt 0 -or $runtimeIndex -lt 0 -or $policyIndex -ge $runtimeIndex){
+        throw 'Code Generation AI invocation is not ordered after OPA validation.'
+    }
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/ai-planning/{planningId:guid}/code-generation','developer.internal-service.code-generation.create',
+      'RequireAuthorization','Status503ServiceUnavailable') | ForEach-Object {
+        if($endpoint -notmatch [regex]::Escape($_)){throw "Code Generation endpoint guard missing: $_"}
+    }
+    $readiness=Get-Content -Raw $readinessPath
+    @('Authorized AI Planning candidate reader','Code Generation delivery-run reader','Code Generation OPA policy gate',
+      'Governed Code Generation prompt-template reader','Code Generation context authorizer',
+      'Code Generation result and path authorizer','Code Generation evidence recorder') | ForEach-Object {
+        if($readiness -notmatch [regex]::Escape($_)){throw "Code Generation readiness missing: $_"}
+    }
+    $openApi=Get-Content -Raw $openApiPath
+    @('/ai-planning/{planningId}/code-generation','CodeGenerationInput','GovernedCodeGenerationReceipt',
+      'requestedOutputPaths','isExecutable','isApplied','canAdvance','503') | ForEach-Object {
+        if($openApi -notmatch [regex]::Escape($_)){throw "Code Generation OpenAPI missing: $_"}
+    }
+    $acceptance=Get-Content -Raw $increment09AcceptancePath
+    @('Status: **Satisfied**','all 54 required runtime dependencies remain fail closed') | ForEach-Object {
+        if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 09 acceptance missing: $_"}
+    }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

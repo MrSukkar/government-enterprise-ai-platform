@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 08 - Governed AI Planning Candidate",
-        "Governed non-executable AI Planning contract available; all runtime adapters fail-closed",
+        "Operational Increment 09 - Governed Code Generation Candidate",
+        "Governed non-executable and unapplied Code Generation contract available; all runtime adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -55,7 +55,11 @@ public static class InternalServiceFoundationCatalog
             "AI Planning requires a delivery run stopped at ApprovedPackages",
             "OPA, governed prompt, re-authorized context, and exact packages precede AI invocation",
             "Independent evaluation and result authorization precede non-executable release",
-            "Generated files, tools, workflow advancement, and Code Generation remain unavailable",
+            "Code Generation requires an evidence-bearing AI Planning candidate and a run stopped at AiPlanning",
+            "OPA, governed prompt, re-authorized context, exact packages, and safe relative paths precede generation",
+            "Generated content and paths remain inert data with no filesystem, tool, command, or Git access",
+            "Independent evaluation and result authorization precede non-executable and unapplied release",
+            "Workflow advancement and Static Validation remain unavailable",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

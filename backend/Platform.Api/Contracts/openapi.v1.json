@@ -379,6 +379,35 @@
         }
       }
     },
+    "/api/v1/internal-services/intents/{registrationId}/enterprise-context/{contextDiscoveryId}/existing-systems/{systemsDiscoveryId}/existing-architecture/{architectureDiscoveryId}/approved-packages/{packageSelectionId}/ai-planning/{planningId}/code-generation": {
+      "post": {
+        "operationId": "createGovernedCodeGenerationCandidate",
+        "summary": "Create a governed non-executable and unapplied code candidate.",
+        "description": "OPA, exact AI Planning evidence, a verified prompt, re-authorized context, exact approved packages, safe repository-relative output paths, independent evaluation, result authorization, and cryptographic evidence are mandatory. No filesystem access, execution, validation, workflow advancement, or external effect is available.",
+        "tags": ["Create Internal Service"],
+        "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "contextDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "systemsDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "architectureDiscoveryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "packageSelectionId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "planningId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeGenerationInput" } } }
+        },
+        "responses": {
+          "200": { "description": "A non-executable, unapplied, independently evaluated code candidate was released as evidence-bearing data.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedCodeGenerationReceipt" } } } },
+          "400": { "description": "The request, prerequisite, policy result, generated path, candidate, evaluation, authorization, or evidence result is invalid.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "A governed authenticated identity is required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Authorization, OPA, context authorization, evaluation, path scope, or result authorization denied generation.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedCodeGenerationReceipt" } }, "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "404": { "description": "A tenant-scoped AI Planning, Approved Packages, or delivery-run prerequisite was not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A required dependency is unavailable; no AI invocation, context disclosure, filesystem access, workflow advancement, or mutation occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -921,6 +950,52 @@
           "candidateSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }, "content": { "type": ["string", "null"] },
           "evaluationFindings": { "type": "array", "items": { "type": "object" } }, "planningEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string" } }, "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CodeGenerationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["generationId", "deliveryRunId", "expectedSelectionSha256Digest", "expectedPlanningSha256Digest", "promptTemplateId", "promptTemplateVersion", "runtimeProfile", "contextReferences", "constraints", "requestedOutputPaths", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "generationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedSelectionSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedPlanningSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "promptTemplateId": { "type": "string", "minLength": 1 },
+          "promptTemplateVersion": { "type": "string", "minLength": 1 },
+          "runtimeProfile": { "type": "string", "minLength": 1 },
+          "contextReferences": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "constraints": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "requestedOutputPaths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))[^:]+$" } },
+          "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 },
+          "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedCodeGenerationReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["generationId", "planningId", "packageSelectionId", "deliveryRunId", "tenantId", "policyOutcome", "isCodeCandidateReleased", "isExecutable", "isApplied", "canAdvance", "generatedFilePaths", "evaluationFindings", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "generationId": { "type": "string", "format": "uuid" },
+          "planningId": { "type": "string", "format": "uuid" },
+          "packageSelectionId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "minLength": 1 },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] },
+          "isCodeCandidateReleased": { "type": "boolean" },
+          "isExecutable": { "type": "boolean", "const": false },
+          "isApplied": { "type": "boolean", "const": false },
+          "canAdvance": { "type": "boolean", "const": false },
+          "candidateSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "content": { "type": ["string", "null"] },
+          "generatedFilePaths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "evaluationFindings": { "type": "array", "items": { "type": "object" } },
+          "generationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
         }
       },
       "ProblemDetails": {

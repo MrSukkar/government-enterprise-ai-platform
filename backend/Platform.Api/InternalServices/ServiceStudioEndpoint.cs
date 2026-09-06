@@ -71,6 +71,16 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record CodeGenerationInput(
+        Guid GenerationId, Guid DeliveryRunId,
+        string ExpectedSelectionSha256Digest, string ExpectedPlanningSha256Digest,
+        string PromptTemplateId, string PromptTemplateVersion, string RuntimeProfile,
+        System.Collections.Immutable.ImmutableArray<string> ContextReferences,
+        System.Collections.Immutable.ImmutableArray<string> Constraints,
+        System.Collections.Immutable.ImmutableArray<string> RequestedOutputPaths,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -726,5 +736,92 @@ internal static class InternalServiceEndpoint
             .Accepts<AiPlanningInput>("application/json").Produces<GovernedAiPlanningReceipt>(200)
             .Produces<GovernedAiPlanningReceipt>(403).ProducesProblem(400).ProducesProblem(401)
             .ProducesProblem(404).ProducesProblem(503).RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceCodeGeneration(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId,
+                Guid architectureDiscoveryId, Guid packageSelectionId, Guid planningId,
+                CodeGenerationInput input, HttpContext httpContext, IServiceProvider services,
+                GovernedRequestContextFactory contextFactory, IAccessPolicyEvaluator accessPolicyEvaluator,
+                GovernedCodeGenerationEngine engine, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.code-generation.create",
+                        planningId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.code-generation.create"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+
+                    var planningReader = services.GetService<IAuthorizedAiPlanningCandidateReader>();
+                    var packagesReader = services.GetService<IAuthorizedApprovedPackagesSnapshotReader>();
+                    var runReader = services.GetService<ICodeGenerationDeliveryRunReader>();
+                    var policyGate = services.GetService<ICodeGenerationPolicyGate>();
+                    var promptReader = services.GetService<IGovernedCodeGenerationPromptTemplateReader>();
+                    var contextAuthorizer = services.GetService<ICodeGenerationContextAuthorizer>();
+                    var runtime = services.GetService<IAiDevelopmentRuntime>();
+                    var evaluator = services.GetService<IAiOutputEvaluator>();
+                    var resultAuthorizer = services.GetService<ICodeGenerationResultAuthorizer>();
+                    var evidenceRecorder = services.GetService<ICodeGenerationEvidenceRecorder>();
+                    if (planningReader is null || packagesReader is null || runReader is null || policyGate is null ||
+                        promptReader is null || contextAuthorizer is null || runtime is null || evaluator is null ||
+                        resultAuthorizer is null || evidenceRecorder is null)
+                        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                            title: "Governed Code Generation is not operationally ready.");
+
+                    var request = new GovernedCodeGenerationRequest(
+                        input.GenerationId, planningId, packageSelectionId, input.DeliveryRunId,
+                        input.ExpectedSelectionSha256Digest, input.ExpectedPlanningSha256Digest,
+                        input.PromptTemplateId, input.PromptTemplateVersion, input.RuntimeProfile,
+                        input.ContextReferences, input.Constraints, input.RequestedOutputPaths,
+                        context.Identity, input.Purpose, input.MaximumClassification,
+                        context.AuthorizationEvidenceReference, input.Environment, input.PolicyBundle,
+                        DateTimeOffset.UtcNow);
+                    var receipt = await engine.GenerateAsync(
+                        request, planningReader, packagesReader, runReader, policyGate, promptReader,
+                        contextAuthorizer, runtime, evaluator, resultAuthorizer, evidenceRecorder,
+                        cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit
+                        ? Results.Ok(receipt)
+                        : Results.Json(receipt, statusCode: StatusCodes.Status403Forbidden);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status403Forbidden,
+                        title: "Governed Code Generation denied.");
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status404NotFound,
+                        title: "Code Generation prerequisite was not found.");
+                }
+                catch (CodeGenerationDependencyUnavailableException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "A Code Generation dependency is unavailable.");
+                }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
+                        title: "Code Generation request or boundary result is invalid.");
+                }
+            })
+            .WithName("CreateGovernedCodeGenerationCandidate")
+            .WithTags("Create Internal Service")
+            .WithSummary("Create a governed non-executable and unapplied code candidate.")
+            .WithDescription("OPA, exact AI Planning evidence, verified prompt, re-authorized context, safe relative paths, independent evaluation, result authorization, and evidence are mandatory. No filesystem access, execution, workflow advancement, or Static Validation is available.")
+            .Accepts<CodeGenerationInput>("application/json")
+            .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status200OK)
+            .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireAuthorization();
     }
 }

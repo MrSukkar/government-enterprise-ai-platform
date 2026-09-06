@@ -93,7 +93,14 @@ internal sealed class PlatformRuntimeReadiness
             ("AI Planning context authorizer", typeof(IAiPlanningContextAuthorizer)),
             ("Independent AI output evaluator", typeof(IAiOutputEvaluator)),
             ("AI Planning result authorizer", typeof(IAiPlanningResultAuthorizer)),
-            ("AI Planning evidence recorder", typeof(IAiPlanningEvidenceRecorder))
+            ("AI Planning evidence recorder", typeof(IAiPlanningEvidenceRecorder)),
+            ("Authorized AI Planning candidate reader", typeof(IAuthorizedAiPlanningCandidateReader)),
+            ("Code Generation delivery-run reader", typeof(ICodeGenerationDeliveryRunReader)),
+            ("Code Generation OPA policy gate", typeof(ICodeGenerationPolicyGate)),
+            ("Governed Code Generation prompt-template reader", typeof(IGovernedCodeGenerationPromptTemplateReader)),
+            ("Code Generation context authorizer", typeof(ICodeGenerationContextAuthorizer)),
+            ("Code Generation result and path authorizer", typeof(ICodeGenerationResultAuthorizer)),
+            ("Code Generation evidence recorder", typeof(ICodeGenerationEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

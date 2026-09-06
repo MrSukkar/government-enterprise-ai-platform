@@ -33,6 +33,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<AuthorizedExistingArchitectureDiscoveryEngine>();
         services.AddScoped<GovernedApprovedPackagesSelectionEngine>();
         services.AddScoped<GovernedAiPlanningEngine>();
+        services.AddScoped<GovernedCodeGenerationEngine>();
         return services;
     }
 }

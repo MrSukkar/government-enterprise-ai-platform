@@ -97,6 +97,7 @@ app.MapInternalServiceExistingSystemsDiscovery();
 app.MapInternalServiceExistingArchitectureDiscovery();
 app.MapInternalServiceApprovedPackagesSelection();
 app.MapInternalServiceAiPlanning();
+app.MapInternalServiceCodeGeneration();
 
 if (app.Environment.IsDevelopment())
 {

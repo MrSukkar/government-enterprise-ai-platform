@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 08 - Governed AI Planning Candidate",
+    "increment": "Operational Increment 09 - Governed Code Generation Candidate",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-05-AI-PLANNING.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_08_ACCEPTANCE.md",
-    "executionBoundary": "Governed AI Planning contract verified; package snapshot, delivery-run, policy, prompt, context-authorization, AI runtime, independent evaluator, result-authorization, and evidence adapters unavailable; no live invocation, context disclosure, workflow advancement, or Code Generation"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-06-CODE-GENERATION.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_09_ACCEPTANCE.md",
+    "executionBoundary": "Governed Code Generation contract verified; AI Planning, package snapshot, delivery-run, policy, prompt, context-authorization, AI runtime, independent evaluator, result/path-authorization, and evidence adapters unavailable; no live invocation, context disclosure, filesystem access, mutation, workflow advancement, or Static Validation"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_08_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_09_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
