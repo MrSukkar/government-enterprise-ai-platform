@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 12 - Governed Security Sandbox Execution",
+    "increment": "Operational Increment 13 - Governed Tests Execution",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-09-SANDBOX.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_12_ACCEPTANCE.md",
-    "executionBoundary": "Governed Sandbox contract verified; policy, Security receipt, candidate and run readers, institutional image assurance, runtime, result authorization, and evidence unavailable; no image transfer, execution, production effect, or workflow advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-10-TESTS.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_13_ACCEPTANCE.md",
+    "executionBoundary": "Governed Tests contract verified; policy, Sandbox and Security receipt readers, candidate and run readers, governed manifest, institutional image assurance, isolated test runtime, result authorization, and evidence unavailable; no invocation, production effect, or workflow advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_12_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_13_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

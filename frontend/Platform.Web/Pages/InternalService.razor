@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operational increment 12 / Build</p>
+        <p class="eyebrow">Operational increment 13 / Build</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">SANDBOX</span>
-        <strong>Governed Security Sandbox boundary ready; adapters fail-closed</strong>
-        <small>No sandbox runtime, image transfer, production effect, Tests approval, or workflow advancement is available.</small>
+        <span class="state-chip">TESTS</span>
+        <strong>Governed Tests boundary ready; adapters fail-closed</strong>
+        <small>No test manifest/runtime, image transfer, production effect, Human Review approval, or workflow advancement is available.</small>
     </aside>
 </section>
 
@@ -75,9 +75,13 @@
             <li><span>Institutional sandbox image and supply-chain assurance</span><strong class="waiting">Not connected</strong></li>
             <li><span>Firecracker-class sandbox runtime</span><strong class="waiting">Not connected</strong></li>
             <li><span>Sandbox result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
-            <li><span>Tests</span><strong class="waiting">Waiting</strong></li>
+            <li><span>Tests OPA and Sandbox receipt reader</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Governed test manifest and institutional image</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Isolated governed test runtime</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Tests result authorization and evidence</span><strong class="waiting">Not connected</strong></li>
+            <li><span>Human Review</span><strong class="waiting">Waiting</strong></li>
         </ul>
-        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Sandbox execution to accepted Security evidence, the authoritative inert candidate, an exact institutional image, and a run stopped at SecurityValidation. OPA authorizes isolation, environment, and network scope before reads or execution. The evidenced result cannot affect production or advance to Tests.</p></div>
+        <div class="policy-note"><strong>Current boundary</strong><p>The protected API binds Tests to accepted Sandbox and Security evidence, the authoritative candidate, an exact governed manifest and institutional image, and a run stopped at Sandbox. OPA authorizes isolation, environment, and network scope before reads or invocation. Every required test must pass with evidence; the result cannot affect production or advance to Human Review.</p></div>
     </aside>
 </section>
 

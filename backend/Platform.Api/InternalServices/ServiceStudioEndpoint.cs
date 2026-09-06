@@ -105,6 +105,18 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record TestsExecutionInput(
+        Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest,
+        string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest,
+        string ExpectedSandboxEvidenceReference, string TestManifestReference,
+        string ExpectedTestManifestSha256Digest,
+        System.Collections.Immutable.ImmutableHashSet<string> RequiredTestIds,
+        System.Collections.Immutable.ImmutableHashSet<string> AllowedTestCategories,
+        PackageCoordinate TestImage, SandboxIsolationPolicy IsolationPolicy,
+        System.Collections.Immutable.ImmutableDictionary<string, string> NonSecretEnvironmentReferences,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1037,6 +1049,72 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact candidate, Security receipt, image, isolation, environment, and network scope before reads or execution. No production effect, Tests approval, or workflow advancement is available.")
             .Accepts<SandboxExecutionInput>("application/json")
             .Produces<GovernedSandboxExecutionReceipt>(200).Produces<GovernedSandboxExecutionReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceTests(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/intents/{registrationId:guid}/enterprise-context/{contextDiscoveryId:guid}/existing-systems/{systemsDiscoveryId:guid}/existing-architecture/{architectureDiscoveryId:guid}/approved-packages/{packageSelectionId:guid}/ai-planning/{planningId:guid}/code-generation/{generationId:guid}/static-validation/{staticValidationId:guid}/security-validation/{securityValidationId:guid}/sandbox/{sandboxExecutionId:guid}/tests",
+            async (Guid registrationId, Guid contextDiscoveryId, Guid systemsDiscoveryId, Guid architectureDiscoveryId,
+                Guid packageSelectionId, Guid planningId, Guid generationId, Guid staticValidationId,
+                Guid securityValidationId, Guid sandboxExecutionId, TestsExecutionInput input,
+                HttpContext httpContext, IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedTestsExecutionEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.tests.execute",
+                        sandboxExecutionId.ToString("D"), context.Identity.TenantId,
+                        input.MaximumClassification, [], ["developer.internal-service.tests.execute"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<ITestsPolicyGate>();
+                    var sandboxReader = services.GetService<IAuthorizedSandboxExecutionReceiptReader>();
+                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
+                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var runReader = services.GetService<ITestsDeliveryRunReader>();
+                    var manifestReader = services.GetService<IGovernedTestManifestReader>();
+                    var registry = services.GetService<IInstitutionalPackageRegistryReader>();
+                    var assurance = services.GetService<IApprovedPackageSupplyChainVerifier>();
+                    var runtime = services.GetService<IGovernedTestRuntime>();
+                    var authorizer = services.GetService<ITestsResultAuthorizer>();
+                    var evidence = services.GetService<ITestsEvidenceRecorder>();
+                    if (policy is null || sandboxReader is null || securityReader is null || candidateReader is null ||
+                        runReader is null || manifestReader is null || registry is null || assurance is null ||
+                        runtime is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Tests are not operationally ready.");
+                    var request = new GovernedTestsExecutionRequest(
+                        input.ExecutionId, sandboxExecutionId, securityValidationId, generationId,
+                        input.DeliveryRunId, input.ExpectedCandidateSha256Digest,
+                        input.ExpectedSecurityReportSha256Digest, input.ExpectedSandboxResultSha256Digest,
+                        input.ExpectedSandboxEvidenceReference, input.TestManifestReference,
+                        input.ExpectedTestManifestSha256Digest, input.RequiredTestIds,
+                        input.AllowedTestCategories, input.TestImage, input.IsolationPolicy,
+                        input.NonSecretEnvironmentReferences, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ExecuteAsync(request, policy, sandboxReader, securityReader,
+                        candidateReader, runReader, manifestReader, registry, assurance, runtime,
+                        authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Tests denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Tests prerequisite was not found."); }
+                catch (TestsDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Tests dependency is unavailable."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Tests request or boundary result is invalid."); }
+            })
+            .WithName("RunGovernedTests").WithTags("Create Internal Service")
+            .WithSummary("Run deterministic governed tests after accepted Sandbox execution.")
+            .WithDescription("OPA authorizes exact prerequisites, manifest, image, isolation, environment, and network scope before reads or test invocation. No production effect, Human Review approval, or workflow advancement is available.")
+            .Accepts<TestsExecutionInput>("application/json")
+            .Produces<GovernedTestsExecutionReceipt>(200).Produces<GovernedTestsExecutionReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

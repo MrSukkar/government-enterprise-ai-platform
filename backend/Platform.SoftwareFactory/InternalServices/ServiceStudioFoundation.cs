@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 12 - Governed Security Sandbox Execution",
-        "Governed Sandbox contract available; all runtime adapters and controls fail-closed",
+        "Operational Increment 13 - Governed Tests Execution",
+        "Governed Tests contract available; all runtime adapters and controls fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -72,6 +72,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact image, isolation, environment, and network scope before reads or execution",
             "Only a supply-chain-assured institutional image may run in Firecracker-class ephemeral isolation",
             "Sandbox results require authorization and evidence and cannot advance to Tests or production",
+            "Tests require accepted Sandbox evidence and a delivery run stopped at Sandbox",
+            "OPA authorizes the exact manifest, image, isolation, environment, and network scope before tests",
+            "Every required test must be discovered, completed, passed, unique, and evidence-bearing",
+            "Tests results require authorization and evidence and cannot advance to Human Review or production",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

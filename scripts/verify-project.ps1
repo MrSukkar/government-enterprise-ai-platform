@@ -1469,6 +1469,33 @@ if (Test-Path $increment12AcceptancePath) {
     @('Status: **Satisfied**','all 70 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 12 acceptance missing: $_"}}
 }
 
+$increment13AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_13_ACCEPTANCE.md'
+if (Test-Path $increment13AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedTestsExecution.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $isolationPath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Sandbox\SandboxIsolationPolicy.cs'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-10-TESTS.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$isolationPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 13 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 13**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 13 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('ITestsPolicyGate','IAuthorizedSandboxExecutionReceiptReader','IAuthorizedSecurityValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.Sandbox','IGovernedTestManifestReader','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','IGovernedTestRuntime','RequiredTestIds','ManifestDigest','ITestsResultAuthorizer','ITestsEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Human Review')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Tests guard missing: $_"}}
+    if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('sandboxReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Tests prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Tests must not create a workflow stage completion.'}
+    $isolation=Get-Content -Raw $isolationPath
+    @('Firecracker-class','ProductionCredentialsAllowed','HostFilesystemAccessAllowed','NetworkDefaultDeny')|ForEach-Object{if($isolation -notmatch [regex]::Escape($_)){throw "Tests isolation guard missing: $_"}}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/sandbox/{sandboxExecutionId:guid}/tests','developer.internal-service.tests.execute','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Tests endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Tests OPA policy gate','Authorized Sandbox receipt reader','Tests delivery-run reader','Governed test-manifest reader','Governed test runtime','Tests result authorizer','Tests evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Tests readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/sandbox/{sandboxExecutionId}/tests','TestsExecutionInput','GovernedTestsExecutionReceipt','requiredTestIds','productionEffectOccurred','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Tests OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment13AcceptancePath
+    @('Status: **Satisfied**','all 77 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 13 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

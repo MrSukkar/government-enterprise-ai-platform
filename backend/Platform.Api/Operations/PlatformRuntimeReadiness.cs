@@ -117,7 +117,14 @@ internal sealed class PlatformRuntimeReadiness
             ("Authorized Security Validation receipt reader", typeof(IAuthorizedSecurityValidationReceiptReader)),
             ("Sandbox delivery-run reader", typeof(ISandboxDeliveryRunReader)),
             ("Sandbox result authorizer", typeof(ISandboxResultAuthorizer)),
-            ("Sandbox evidence recorder", typeof(ISandboxEvidenceRecorder))
+            ("Sandbox evidence recorder", typeof(ISandboxEvidenceRecorder)),
+            ("Tests OPA policy gate", typeof(ITestsPolicyGate)),
+            ("Authorized Sandbox receipt reader", typeof(IAuthorizedSandboxExecutionReceiptReader)),
+            ("Tests delivery-run reader", typeof(ITestsDeliveryRunReader)),
+            ("Governed test-manifest reader", typeof(IGovernedTestManifestReader)),
+            ("Governed test runtime", typeof(IGovernedTestRuntime)),
+            ("Tests result authorizer", typeof(ITestsResultAuthorizer)),
+            ("Tests evidence recorder", typeof(ITestsEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

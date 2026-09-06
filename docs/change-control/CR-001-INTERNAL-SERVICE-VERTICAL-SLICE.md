@@ -1,6 +1,6 @@
 # CR-001 — Create Internal Service Workspace
 
-Status: **Approved through Operational Increment 12**
+Status: **Approved through Operational Increment 13**
 Authority: Repository owner authorization in the active delivery record
 Foundation authority: `PROJECT MASTER SPECIFICATION v2 — APPROVED`
 
@@ -112,6 +112,8 @@ Operational Increment 11 is governed by the approved amendment `docs/change-cont
 
 Operational Increment 12 is governed by the approved amendment `docs/change-control/CR-001-AMENDMENT-09-SANDBOX.md` and remains limited to Governed Security Sandbox Execution.
 
+Operational Increment 13 is governed by the approved amendment `docs/change-control/CR-001-AMENDMENT-10-TESTS.md` and remains limited to Governed Tests Execution.
+
 ## 5. Master Specification Update
 
 `docs/PROJECT_MASTER_SPECIFICATION_V2.md` includes the CR-001 business implementation addendum. The constitutional architecture and the fixed 30-phase roadmap are unchanged.
@@ -133,6 +135,7 @@ Approved scope:
 - Increment: 10 — Governed Static Validation, as bounded by Amendment 07.
 - Increment: 11 — Governed Security Validation, as bounded by Amendment 08.
 - Increment: 12 — Governed Security Sandbox Execution, as bounded by Amendment 09.
+- Increment: 13 — Governed Tests Execution, as bounded by Amendment 10.
 - Authorization: implementation, verification, source control, and governed CI.
 - Release authority: remains subject to successful CI and acceptance evidence.
 
