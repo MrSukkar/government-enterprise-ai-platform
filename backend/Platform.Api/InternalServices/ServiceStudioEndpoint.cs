@@ -158,6 +158,17 @@ internal static class InternalServiceEndpoint
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
+    private sealed record SovereignDeploymentInput(
+        Guid DeploymentId, Guid DeliveryRunId,
+        string ExpectedArtifactContentSha256Digest, string ExpectedImmutableRegistryReference,
+        string ExpectedArtifactEvidenceReference, Guid DeploymentProfileId,
+        string DeploymentProfileVersion, string ExpectedDeploymentProfileSha256Digest,
+        string TargetEnvironment, bool ProductionDeploymentRequested,
+        string HumanApprovalReference, string WorkloadIdentityReference,
+        string SecretsPolicyReference, string RollbackPolicyReference,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
@@ -1391,6 +1402,66 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact pipeline output, coordinate, registry, signing policy, and supply-chain controls before reads or publication. No deployment, production effect, or workflow advancement is available.")
             .Accepts<ArtifactPublicationInput>("application/json")
             .Produces<GovernedArtifactPublicationReceipt>(200).Produces<GovernedArtifactPublicationReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceDeployment(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/artifacts/{artifactPublicationId:guid}/deployment",
+            async (Guid artifactPublicationId, SovereignDeploymentInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedSovereignDeploymentEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.deployment.execute",
+                        input.TargetEnvironment, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["operator.internal-service.deployment.execute"], context.Identity.SubjectId, true));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IDeploymentPolicyGate>();
+                    var artifactReceiptReader = services.GetService<IAuthorizedArtifactPublicationReceiptReader>();
+                    var artifactReader = services.GetService<IAuthorizedDeploymentArtifactReader>();
+                    var runReader = services.GetService<IDeploymentDeliveryRunReader>();
+                    var profileReader = services.GetService<IGovernedSovereignDeploymentProfileReader>();
+                    var preflight = services.GetService<IInstitutionalDeploymentPreflightValidator>();
+                    var gateway = services.GetService<IInstitutionalSovereignDeploymentGateway>();
+                    var authorizer = services.GetService<IDeploymentResultAuthorizer>();
+                    var evidence = services.GetService<IDeploymentEvidenceRecorder>();
+                    if (policy is null || artifactReceiptReader is null || artifactReader is null || runReader is null ||
+                        profileReader is null || preflight is null || gateway is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Deployment is not operationally ready.");
+                    var request = new GovernedSovereignDeploymentRequest(
+                        input.DeploymentId, artifactPublicationId, input.DeliveryRunId,
+                        input.ExpectedArtifactContentSha256Digest, input.ExpectedImmutableRegistryReference,
+                        input.ExpectedArtifactEvidenceReference, input.DeploymentProfileId,
+                        input.DeploymentProfileVersion, input.ExpectedDeploymentProfileSha256Digest,
+                        input.TargetEnvironment, input.ProductionDeploymentRequested,
+                        input.HumanApprovalReference, input.WorkloadIdentityReference,
+                        input.SecretsPolicyReference, input.RollbackPolicyReference,
+                        context.Identity, input.Purpose, input.MaximumClassification,
+                        context.AuthorizationEvidenceReference, input.Environment,
+                        input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.DeployAsync(
+                        request, policy, artifactReceiptReader, artifactReader, runReader,
+                        profileReader, preflight, gateway, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Deployment denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Deployment prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Deployment request or boundary result is invalid."); }
+            })
+            .WithName("ExecuteGovernedSovereignDeployment").WithTags("Create Internal Service")
+            .WithSummary("Deploy one exact verified Artifact to one approved sovereign environment.")
+            .WithDescription("OPA authorizes the exact Artifact, sovereign profile, target, production intent, and human approval before reads or invocation. No telemetry, registration, Enterprise Model mutation, or workflow advancement is available.")
+            .Accepts<SovereignDeploymentInput>("application/json")
+            .Produces<GovernedSovereignDeploymentReceipt>(200).Produces<GovernedSovereignDeploymentReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

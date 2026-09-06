@@ -620,6 +620,26 @@
         }
       }
     },
+    "/api/v1/internal-services/artifacts/{artifactPublicationId}/deployment": {
+      "post": {
+        "operationId": "executeGovernedSovereignDeployment",
+        "summary": "Deploy one exact verified Artifact to one approved sovereign environment.",
+        "description": "OPA authorizes the exact Artifact, sovereign profile, target, production intent, and human approval before reads or invocation. No telemetry, registration, Enterprise Model mutation, or workflow advancement is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [
+          { "name": "artifactPublicationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SovereignDeploymentInput" } } } },
+        "responses": {
+          "200": { "description": "The exact Artifact was deployed with activation, rollback, and evidence proof.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSovereignDeploymentReceipt" } } } },
+          "400": { "description": "Invalid Deployment boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Deployment access, OPA, human approval, preflight, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSovereignDeploymentReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no runtime invocation or external effect occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1562,6 +1582,38 @@
           "immutableRegistryReference": { "type": ["string", "null"] }, "supplyChainVerified": { "type": "boolean" },
           "supplyChainVerifications": { "type": "array", "items": { "$ref": "#/components/schemas/SupplyChainVerification" } },
           "artifactEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SovereignDeploymentInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["deploymentId", "deliveryRunId", "expectedArtifactContentSha256Digest", "expectedImmutableRegistryReference", "expectedArtifactEvidenceReference", "deploymentProfileId", "deploymentProfileVersion", "expectedDeploymentProfileSha256Digest", "targetEnvironment", "productionDeploymentRequested", "humanApprovalReference", "workloadIdentityReference", "secretsPolicyReference", "rollbackPolicyReference", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "deploymentId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedArtifactContentSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedImmutableRegistryReference": { "type": "string", "minLength": 1 }, "expectedArtifactEvidenceReference": { "type": "string", "minLength": 1 },
+          "deploymentProfileId": { "type": "string", "format": "uuid" }, "deploymentProfileVersion": { "type": "string", "minLength": 1 },
+          "expectedDeploymentProfileSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "targetEnvironment": { "type": "string", "minLength": 1 }, "productionDeploymentRequested": { "type": "boolean" },
+          "humanApprovalReference": { "type": "string", "minLength": 1 }, "workloadIdentityReference": { "type": "string", "minLength": 1 },
+          "secretsPolicyReference": { "type": "string", "minLength": 1 }, "rollbackPolicyReference": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 }, "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedSovereignDeploymentReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["deploymentId", "artifactPublicationId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "deploymentOccurred", "externalEffectOccurred", "productionEffectOccurred", "telemetryConfigured", "automaticRegistrationOccurred", "enterpriseModelMutated", "canAdvance", "artifactContentSha256Digest", "deploymentProfileId", "targetEnvironment", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "deploymentId": { "type": "string", "format": "uuid" }, "artifactPublicationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "deploymentOccurred": { "type": "boolean" }, "externalEffectOccurred": { "type": "boolean" }, "productionEffectOccurred": { "type": "boolean" },
+          "telemetryConfigured": { "type": "boolean", "const": false }, "automaticRegistrationOccurred": { "type": "boolean", "const": false },
+          "enterpriseModelMutated": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "artifactContentSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "deploymentProfileId": { "type": "string", "format": "uuid" },
+          "targetEnvironment": { "type": "string" }, "runtimeIdentity": { "type": ["string", "null"] }, "rollbackReference": { "type": ["string", "null"] },
+          "deploymentEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

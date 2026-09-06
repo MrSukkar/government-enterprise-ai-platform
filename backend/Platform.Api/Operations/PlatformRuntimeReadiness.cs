@@ -155,7 +155,16 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional Artifact registry gateway", typeof(IInstitutionalArtifactRegistryGateway)),
             ("Artifact supply-chain control verifiers", typeof(ISupplyChainControlVerifier)),
             ("Artifact result authorizer", typeof(IArtifactResultAuthorizer)),
-            ("Artifact evidence recorder", typeof(IArtifactEvidenceRecorder))
+            ("Artifact evidence recorder", typeof(IArtifactEvidenceRecorder)),
+            ("Deployment OPA policy gate", typeof(IDeploymentPolicyGate)),
+            ("Authorized Artifact publication receipt reader", typeof(IAuthorizedArtifactPublicationReceiptReader)),
+            ("Authorized verified Deployment Artifact reader", typeof(IAuthorizedDeploymentArtifactReader)),
+            ("Deployment delivery-run reader", typeof(IDeploymentDeliveryRunReader)),
+            ("Governed sovereign Deployment profile reader", typeof(IGovernedSovereignDeploymentProfileReader)),
+            ("Institutional Deployment preflight validator", typeof(IInstitutionalDeploymentPreflightValidator)),
+            ("Institutional sovereign Deployment gateway", typeof(IInstitutionalSovereignDeploymentGateway)),
+            ("Deployment result authorizer", typeof(IDeploymentResultAuthorizer)),
+            ("Deployment evidence recorder", typeof(IDeploymentEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

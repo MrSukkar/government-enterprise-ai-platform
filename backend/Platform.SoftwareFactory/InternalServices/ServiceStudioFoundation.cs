@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 17 - Governed Artifact Publication",
-        "Governed Artifact contract available; all package, registry, supply-chain, authorization, and evidence adapters fail-closed",
+        "Operational Increment 18 - Governed Sovereign Deployment",
+        "Governed Deployment contract available; all Artifact, profile, preflight, runtime, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -92,6 +92,11 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact output digest, immutable coordinate, institutional registry, signer, and controls",
             "Every provenance, SBOM, dependency, attestation, signature, and registry control must pass",
             "Artifact publication cannot deploy, affect production, or advance workflow",
+            "Deployment requires an immutable verified Artifact and a delivery run stopped at Artifact",
+            "OPA authorizes the exact sovereign profile, target, production intent, and human approval before reads",
+            "Air-gapped profiles require local dependencies, default-deny outbound networking, and no external control plane",
+            "Deployment proves activation, idempotency, rollback, runtime identity, exact effects, and evidence",
+            "Deployment cannot configure telemetry, register the service, mutate the Enterprise Model, or advance workflow",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 17 - Governed Artifact Publication",
+    "increment": "Operational Increment 18 - Governed Sovereign Deployment",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-14-ARTIFACT.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_17_ACCEPTANCE.md",
-    "executionBoundary": "Governed Artifact contract verified; policy, CI/CD receipt, pipeline-output and run readers, package validator, immutable registry gateway, supply-chain verifiers, result authorization, and evidence unavailable; no disclosure, registry access, publication, Deployment, production effect, or workflow advancement"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-15-DEPLOYMENT.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_18_ACCEPTANCE.md",
+    "executionBoundary": "Governed Deployment contract verified; policy, Artifact receipt/artifact and run readers, signed sovereign profile, preflight, runtime gateway, result authorization, and evidence unavailable; no read, secrets access, invocation, telemetry, registration, Enterprise Model mutation, or workflow advancement"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_17_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_18_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
