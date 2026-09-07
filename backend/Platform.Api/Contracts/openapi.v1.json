@@ -32,17 +32,17 @@
       "get": {
         "operationId": "getPlatformReadiness",
         "summary": "Read fail-closed runtime readiness.",
-        "description": "Returns 503 until every required runtime boundary is connected. Contract visibility does not make an unavailable capability executable.",
+        "description": "Returns 503 until every required runtime boundary is connected. It also reports identity and policy control-plane configuration as unconfigured, invalid, or configured without exposing configuration values.",
         "tags": ["Platform"],
         "security": [],
         "responses": {
           "200": {
             "description": "All required runtime boundaries are connected.",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlatformReadiness" } } }
           },
           "503": {
             "description": "One or more runtime boundaries are not connected; the platform remains fail-closed.",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlatformReadiness" } } }
           }
         }
       }
@@ -738,6 +738,24 @@
       }
     },
     "schemas": {
+      "PlatformReadiness": {
+        "type": "object",
+        "required": ["status", "failClosed", "controlPlanes", "missingDependencyCount", "dependencies"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ready", "not-ready"] },
+          "failClosed": { "type": "boolean", "const": true },
+          "controlPlanes": {
+            "type": "object",
+            "required": ["identity", "policy"],
+            "properties": {
+              "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+            }
+          },
+          "missingDependencyCount": { "type": "integer", "minimum": 0 },
+          "dependencies": { "type": "array", "items": { "type": "object" } }
+        }
+      },
       "GovernedIntentSubmission": {
         "type": "object",
         "additionalProperties": false,

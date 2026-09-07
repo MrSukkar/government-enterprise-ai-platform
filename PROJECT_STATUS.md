@@ -1,6 +1,6 @@
 # Project Status
 
-Status: **Phase 30 complete — Evidence Engine**
+Status: **Operationalization Wave 01 complete — Sovereign Identity and Policy Control Plane**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
@@ -11,6 +11,8 @@ Status: **Phase 30 complete — Evidence Engine**
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
 - Current product increment: **Governed Evidence Completion — contract complete and verified**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
-- Execution boundary: **The approved Create Internal Service vertical-slice contract is complete from Intent through Evidence; final proof requires deployment-controlled OPA, accepted Enterprise Model contextualization and run, the Phase 30 append-only store, access authorizer, sovereign signer, signature verifier, and result authorizer; all real operations remain fail closed while adapters are absent**
+- Operationalization: **Wave 01 — Sovereign Identity and Policy Control Plane — contract complete and verified under CR-002**
+- Operationalization acceptance: `docs/operationalization/WAVE_01_ACCEPTANCE.md`
+- Execution boundary: **Configuration-gated bearer authentication and shared signed-policy-bundle/OPA adapters are implemented. The repository profile contains no provider, credential, trust material, or endpoint configuration and remains fail closed; 142 institutional runtime dependencies remain disconnected. Live provider, OPA, PKI, claim-profile, and deployment acceptance require separately approved deployment configuration.**
 
-The approved platform foundation is complete through Phase 30. Evidence is append-only, tenant- and classification-scoped, tamper-evident, cryptographically signed and verifiable, strictly ordered, correlated, traceable, and suitable for sovereign or air-gapped key-management implementations.
+The approved platform foundation is complete through Phase 30 and the approved Create Internal Service contract is complete through Evidence. Operationalization Wave 01 now establishes the sovereign identity and policy adapter boundary while preserving every constitutional invariant and the safe default posture.

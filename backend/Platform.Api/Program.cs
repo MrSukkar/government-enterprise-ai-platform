@@ -35,7 +35,7 @@ builder.Services.AddPlatformInfrastructureFoundation();
 builder.Services.AddPlatformObservabilityFoundation(builder.Configuration);
 builder.Services.AddPlatformEnterpriseModelFoundation();
 builder.Services.AddPlatformAgenticWorkFoundation();
-builder.Services.AddPlatformGovernanceFoundation();
+builder.Services.AddPlatformGovernanceFoundation(builder.Configuration);
 builder.Services.AddPlatformModelingFoundation();
 builder.Services.AddPlatformEvidenceFoundation();
 builder.Services.AddPlatformModules(

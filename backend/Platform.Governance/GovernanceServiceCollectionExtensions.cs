@@ -1,13 +1,21 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Platform.Governance.Policies;
 
 namespace Platform.Governance;
 
 public static class GovernanceServiceCollectionExtensions
 {
-    public static IServiceCollection AddPlatformGovernanceFoundation(this IServiceCollection services)
+    public static IServiceCollection AddPlatformGovernanceFoundation(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton<GovernedActions.GovernedActionGateway>();
+        ArgumentNullException.ThrowIfNull(configuration);
+        var policyOptions = configuration.GetSection(PolicyControlPlaneOptions.SectionName).Get<PolicyControlPlaneOptions>() ?? new();
+        services.Configure<PolicyControlPlaneOptions>(configuration.GetSection(PolicyControlPlaneOptions.SectionName));
+        services.AddSingleton(new PolicyControlPlaneReadiness(policyOptions.ConfigurationState));
+        services.AddHttpClient<IPolicyBundleVerifier, SovereignPolicyBundleVerifier>();
+        services.AddHttpClient<IOpaPolicyDecisionPoint, SovereignOpaPolicyDecisionPoint>();
+        services.AddScoped<GovernedActions.GovernedActionGateway>();
         return services;
     }
 }

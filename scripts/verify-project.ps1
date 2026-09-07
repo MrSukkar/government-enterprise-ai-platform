@@ -1715,6 +1715,52 @@ if (Test-Path $increment22AcceptancePath) {
     @('Status: **Satisfied**','all 143 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 22 acceptance missing: $_"}}
 }
 
+$wave01AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_01_ACCEPTANCE.md'
+if (Test-Path $wave01AcceptancePath) {
+    $identityOptionsPath = Join-Path $repositoryRoot 'backend\Platform.Identity\IdentityProviderOptions.cs'
+    $identityServicesPath = Join-Path $repositoryRoot 'backend\Platform.Identity\IdentityServiceCollectionExtensions.cs'
+    $identityProjectPath = Join-Path $repositoryRoot 'backend\Platform.Identity\Platform.Identity.csproj'
+    $identityLockPath = Join-Path $repositoryRoot 'backend\Platform.Identity\packages.lock.json'
+    $policyOptionsPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\PolicyControlPlaneOptions.cs'
+    $policyAdapterPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\SovereignPolicyControlPlane.cs'
+    $governedGatewayPath = Join-Path $repositoryRoot 'backend\Platform.Governance\GovernedActions\GovernedActionGateway.cs'
+    $readinessPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $operationalEndpointsPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-002-OPERATIONALIZATION-WAVE-01.md'
+    $guidePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_01_IDENTITY_POLICY.md'
+    @($identityOptionsPath,$identityServicesPath,$identityProjectPath,$identityLockPath,$policyOptionsPath,$policyAdapterPath,$governedGatewayPath,$readinessPath,$operationalEndpointsPath,$openApiPath,$changePath,$guidePath) | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 01 artifact missing: $_" } }
+
+    $change = Get-Content -Raw $changePath
+    @('Status: **Approved for Operationalization Wave 01**','Decision: **Approved by the repository owner','10.0.11') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 01 approval missing: $_" } }
+    $identityProject = Get-Content -Raw $identityProjectPath
+    $identityLock = Get-Content -Raw $identityLockPath
+    if ($identityProject -notmatch 'Microsoft.AspNetCore.Authentication.JwtBearer" Version="10\.0\.11"') { throw 'JWT bearer package is not pinned at the approved version.' }
+    @('"requested": "[10.0.11, )"','"resolved": "10.0.11"') | ForEach-Object { if ($identityLock -notmatch [regex]::Escape($_)) { throw "JWT bearer lock evidence missing: $_" } }
+
+    $identityOptions = Get-Content -Raw $identityOptionsPath
+    @('ControlPlaneConfigurationState.Unconfigured','ControlPlaneConfigurationState.Invalid','Uri.UriSchemeHttps','authority.UserInfo','authority.Query','authority.Fragment','Audience.Any(char.IsWhiteSpace)') | ForEach-Object { if ($identityOptions -notmatch [regex]::Escape($_)) { throw "Identity configuration guard missing: $_" } }
+    $identityServices = Get-Content -Raw $identityServicesPath
+    @('AddJwtBearer','JwtBearerDefaults.AuthenticationScheme','FailClosedAuthenticationDefaults.Scheme','ValidateIssuer = true','ValidateAudience = true','ValidateLifetime = true','ValidateIssuerSigningKey = true','RequireSignedTokens = true','RequireExpirationTime = true','ClockSkew = TimeSpan.Zero','MapInboundClaims = false','GovernedRequestContextFactory') | ForEach-Object { if ($identityServices -notmatch [regex]::Escape($_)) { throw "Identity adapter guard missing: $_" } }
+    if ($identityServices -match 'JwtSecurityTokenHandler|ReadJwtToken') { throw 'An unapproved custom JWT parsing path was introduced.' }
+
+    $policyOptions = Get-Content -Raw $policyOptionsPath
+    @('OpaEndpoint','BundleVerificationEndpoint','TrustAnchorReference','Environment','RequestTimeoutSeconds','MaximumResponseBytes','Uri.UriSchemeHttps','endpoint.UserInfo','endpoint.Query','endpoint.Fragment') | ForEach-Object { if ($policyOptions -notmatch [regex]::Escape($_)) { throw "Policy configuration guard missing: $_" } }
+    $policyAdapter = Get-Content -Raw $policyAdapterPath
+    @('IPolicyBundleVerifier','IOpaPolicyDecisionPoint','SignatureValid','TrustAnchorReference','HttpCompletionOption.ResponseHeadersRead','MaximumResponseBytes','RequestTimeoutSeconds','ContentType','HttpRequestException','OperationCanceledException','UnauthorizedAccessException') | ForEach-Object { if ($policyAdapter -notmatch [regex]::Escape($_)) { throw "Sovereign policy adapter guard missing: $_" } }
+    $governedGateway = Get-Content -Raw $governedGatewayPath
+    if ($governedGateway.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $governedGateway.IndexOf('policyDecisionPoint.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'OPA evaluation does not follow signed policy-bundle verification.' }
+
+    $readiness = Get-Content -Raw $readinessPath
+    @('OPA policy bundle verifier','OPA policy decision point') | ForEach-Object { if ($readiness -notmatch [regex]::Escape($_)) { throw "Control-plane readiness dependency missing: $_" } }
+    $operationalEndpoints = Get-Content -Raw $operationalEndpointsPath
+    @('IdentityControlPlaneReadiness','PolicyControlPlaneReadiness','controlPlanes') | ForEach-Object { if ($operationalEndpoints -notmatch [regex]::Escape($_)) { throw "Control-plane readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $openApiPath
+    @('PlatformReadiness','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Control-plane OpenAPI contract missing: $_" } }
+    $acceptance = Get-Content -Raw $wave01AcceptancePath
+    @('Status: **Satisfied**','remaining 142 institutional runtime dependencies remain disconnected and fail closed','15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 01 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

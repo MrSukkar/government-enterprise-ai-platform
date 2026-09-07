@@ -253,8 +253,12 @@ try {
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 143) {
-        throw 'Readiness response did not disclose the expected 143 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 142) {
+        throw 'Readiness response did not disclose the expected 142 fail-closed runtime dependencies.'
+    }
+    if ($readinessBody.controlPlanes.identity -ne 'unconfigured' -or
+        $readinessBody.controlPlanes.policy -ne 'unconfigured') {
+        throw 'Repository-default identity and policy control planes did not remain explicitly unconfigured.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -304,7 +308,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 143 runtime dependencies fail-closed, and the approved Create Internal Service contract is complete through cryptographically verified Evidence.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, sovereign identity and policy control planes remain safely unconfigured, 142 runtime dependencies fail-closed, and the approved Create Internal Service contract is complete through cryptographically verified Evidence.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

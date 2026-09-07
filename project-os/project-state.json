@@ -16,11 +16,18 @@
     "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md",
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
+  "operationalization": {
+    "wave": "Wave 01 - Sovereign Identity and Policy Control Plane",
+    "status": "complete",
+    "changeControl": "docs/change-control/CR-002-OPERATIONALIZATION-WAVE-01.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_01_ACCEPTANCE.md",
+    "executionBoundary": "Configuration-gated identity and shared policy control-plane adapters are implemented; repository defaults remain unconfigured and fail closed with 142 institutional runtime dependencies disconnected; live provider, OPA, PKI, claim profile, credentials, and deployment remain separately controlled"
+  },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_01_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

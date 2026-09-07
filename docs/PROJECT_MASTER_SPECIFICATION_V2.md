@@ -213,3 +213,9 @@ Increment 20 amendment: `docs/change-control/CR-001-AMENDMENT-17-AUTOMATIC-REGIS
 Increment 21 amendment: `docs/change-control/CR-001-AMENDMENT-18-ENTERPRISE-MODEL.md`.
 
 Increment 22 amendment: `docs/change-control/CR-001-AMENDMENT-19-EVIDENCE-COMPLETION.md`.
+
+## Approved operationalization addendum — CR-002
+
+Operationalization Wave 01 introduces configuration-gated, standards-based bearer authentication and sovereign, vendor-neutral signed-policy-bundle and OPA adapters inside the existing Identity, Governance, and API module boundaries. Missing, incomplete, or unsafe deployment configuration preserves the fail-closed authentication and runtime posture. This addendum selects no provider, credential, trust anchor, deployment, organization-specific claim mapping, persistence technology, or new workflow authority.
+
+Change-control record: `docs/change-control/CR-002-OPERATIONALIZATION-WAVE-01.md`.

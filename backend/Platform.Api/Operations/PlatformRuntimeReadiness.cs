@@ -62,6 +62,7 @@ internal sealed class PlatformRuntimeReadiness
             ("Proactive intelligence context provider", typeof(IProactiveIntelligenceContextProvider)),
             ("Durable agentic-work store", typeof(IDurableAgenticWorkStore)),
             ("OPA policy bundle verifier", typeof(IPolicyBundleVerifier)),
+            ("OPA policy decision point", typeof(IOpaPolicyDecisionPoint)),
             ("Enterprise Model snapshot provider", typeof(IEnterpriseModelSnapshotProvider)),
             ("Digital-twin snapshot provider", typeof(IDigitalTwinSnapshotProvider)),
             ("Cryptographic evidence-chain store", typeof(IEvidenceChainStore)),
