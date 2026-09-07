@@ -6,6 +6,7 @@ using Platform.Domain.Security;
 using Platform.EnterpriseModel.Model;
 using Platform.Identity.Access;
 using Platform.Integrations.ExistingArchitecture;
+using Platform.Knowledge.Retrieval;
 
 namespace Platform.SoftwareFactory.InternalService;
 
@@ -68,6 +69,7 @@ public interface IAuthorizedExistingSystemsSnapshotReader
     Task<AuthorizedExistingSystemsDiscoveryReceipt?> LoadAsync(
         Guid systemsDiscoveryId,
         string tenantId,
+        string purpose,
         CancellationToken cancellationToken);
 }
 
@@ -114,6 +116,7 @@ public sealed record ExistingArchitecturePolicyDecision(
     ImmutableHashSet<ExistingArchitectureItemKind> AllowedItemKinds,
     ImmutableHashSet<string> AllowedRelationshipTypes,
     ImmutableHashSet<string> AllowedSourceKinds,
+    ImmutableHashSet<string> RequiredRoles,
     int MaximumResults,
     ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences,
@@ -169,6 +172,7 @@ public sealed record ExistingArchitectureResultAuthorizationRequest(
     Guid DiscoveryId,
     string TenantId,
     string SubjectId,
+    GovernedIdentity Identity,
     string Purpose,
     string Action,
     Guid ArchitectureItemId,
@@ -178,6 +182,11 @@ public sealed record ExistingArchitectureResultAuthorizationRequest(
     string? RelationshipType,
     DataClassification Classification,
     string SourceKind,
+    ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<EnterpriseObjectId> AllowedSystemIds,
+    ImmutableHashSet<ExistingArchitectureItemKind> AllowedItemKinds,
+    ImmutableHashSet<string> AllowedRelationshipTypes,
+    ImmutableHashSet<string> AllowedSourceKinds,
     ImmutableArray<string> EvidenceReferences,
     DateTimeOffset RequestedAt);
 
@@ -303,6 +312,7 @@ public sealed class AuthorizedExistingArchitectureDiscoveryEngine(
         var systems = await systemsReader.LoadAsync(
             request.SystemsDiscoveryId,
             request.Identity.TenantId,
+            request.Purpose,
             cancellationToken) ?? throw new KeyNotFoundException("Authorized Existing Systems snapshot was not found.");
         ValidateSystemsSnapshot(request, systems);
 
@@ -354,7 +364,7 @@ public sealed class AuthorizedExistingArchitectureDiscoveryEngine(
         var sourceResults = await Task.WhenAll(selectedSources.Select(async source =>
             new ArchitectureSourceResult(
                 source.SourceKind,
-                await source.DiscoverAsync(scope, cancellationToken)
+                await DiscoverFromSourceAsync(source, scope, cancellationToken)
                     ?? throw new InvalidOperationException("Existing Architecture source returned no result collection."))));
         var candidates = sourceResults
             .SelectMany(result => result.Candidates.Select(candidate => (result.SourceKind, Candidate: candidate)))
@@ -439,6 +449,22 @@ public sealed class AuthorizedExistingArchitectureDiscoveryEngine(
         return _architectureSources.Where(source => decision.AllowedSourceKinds.Contains(source.SourceKind)).ToArray();
     }
 
+    private static async Task<IReadOnlyCollection<ExistingArchitectureCandidate>> DiscoverFromSourceAsync(
+        IExistingArchitectureSource source,
+        ExistingArchitectureSourceScope scope,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await source.DiscoverAsync(scope, cancellationToken);
+        }
+        catch (KnowledgeRetrievalSourceUnavailableException)
+        {
+            throw new ExistingArchitectureDependencyUnavailableException(
+                "The authorized Existing Architecture source is unavailable.");
+        }
+    }
+
     private static void ValidateSystemsSnapshot(
         AuthorizedExistingArchitectureDiscoveryRequest request,
         AuthorizedExistingSystemsDiscoveryReceipt systems)
@@ -495,12 +521,14 @@ public sealed class AuthorizedExistingArchitectureDiscoveryEngine(
         if (decision.Outcome == GovernedIntentPolicyOutcome.Permit &&
             (decision.AllowedSystemIds.IsEmpty || decision.AllowedItemKinds.IsEmpty ||
              decision.AllowedRelationshipTypes.IsEmpty || decision.AllowedSourceKinds.IsEmpty ||
+             decision.RequiredRoles.IsEmpty ||
              decision.MaximumResults <= 0))
             throw new UnauthorizedAccessException("OPA permit did not establish an explicit Existing Architecture scope.");
         if (decision.AllowedSystemIds.Any(id => id.Value == Guid.Empty) ||
             decision.AllowedItemKinds.Any(kind => !Enum.IsDefined(kind)) ||
             decision.AllowedRelationshipTypes.Any(string.IsNullOrWhiteSpace) ||
-            decision.AllowedSourceKinds.Any(string.IsNullOrWhiteSpace))
+            decision.AllowedSourceKinds.Any(string.IsNullOrWhiteSpace) ||
+            decision.RequiredRoles.Any(string.IsNullOrWhiteSpace))
             throw new UnauthorizedAccessException("OPA returned an invalid Existing Architecture scope.");
     }
 
@@ -556,10 +584,13 @@ public sealed class AuthorizedExistingArchitectureDiscoveryEngine(
             .Order(StringComparer.Ordinal).ToImmutableArray();
         var authorizationRequest = new ExistingArchitectureResultAuthorizationRequest(
             Guid.NewGuid(), request.DiscoveryId, request.Identity.TenantId,
-            request.Identity.SubjectId, request.Purpose, "existing-architecture.item.read",
+            request.Identity.SubjectId, request.Identity, request.Purpose,
+            "existing-architecture.item.read",
             candidate.ArchitectureItemId, candidate.SystemId, candidate.RelatedSystemId,
             candidate.Kind, candidate.RelationshipType, candidate.Classification,
-            candidate.SourceKind, evidence, decision.DecidedAt);
+            candidate.SourceKind, decision.RequiredRoles, decision.AllowedSystemIds,
+            decision.AllowedItemKinds, decision.AllowedRelationshipTypes,
+            decision.AllowedSourceKinds, evidence, decision.DecidedAt);
         var authorization = await resultAuthorizer.AuthorizeAsync(authorizationRequest, cancellationToken);
         if (authorization.AuthorizationRequestId != authorizationRequest.AuthorizationRequestId ||
             authorization.DiscoveryId != request.DiscoveryId ||

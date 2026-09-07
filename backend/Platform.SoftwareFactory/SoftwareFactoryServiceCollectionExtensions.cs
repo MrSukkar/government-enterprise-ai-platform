@@ -15,6 +15,7 @@ using Platform.SoftwareFactory.VerticalSlice;
 using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Persistence;
 using Platform.Integrations.ExistingSystems;
+using Platform.Integrations.ExistingArchitecture;
 
 namespace Platform.SoftwareFactory;
 
@@ -59,6 +60,16 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? ExistingSystemsRuntimeConfigurationState.Configured
                     : ExistingSystemsRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new ExistingSystemsRuntimeReadiness(existingSystemsState));
+        var existingArchitectureState =
+            persistenceOptions.ConfigurationState == PostgreSqlIntentRegistrationConfigurationState.Invalid ||
+            policyOptions.ConfigurationState == PolicyControlPlaneConfigurationState.Invalid ||
+            graphOptions.ConfigurationState == Neo4jEnterpriseGraphConfigurationState.Invalid
+                ? ExistingArchitectureRuntimeConfigurationState.Invalid
+                : persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured &&
+                  graphOptions.IsOperationallyConfigured
+                    ? ExistingArchitectureRuntimeConfigurationState.Configured
+                    : ExistingArchitectureRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new ExistingArchitectureRuntimeReadiness(existingArchitectureState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -83,6 +94,17 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     DeterministicExistingSystemResultAuthorizer>();
                 services.AddScoped<IExistingSystemsEvidenceRecorder,
                     PostgreSqlExistingSystemsEvidenceRecorder>();
+                services.AddScoped<IAuthorizedExistingSystemsSnapshotReader,
+                    PostgreSqlAuthorizedExistingSystemsSnapshotReader>();
+                services.AddScoped<IExistingArchitecturePolicyGate,
+                    SovereignExistingArchitecturePolicyGate>();
+                services.AddScoped<IExistingArchitectureConformanceValidator,
+                    DeterministicExistingArchitectureConformanceValidator>();
+                services.AddScoped<IExistingArchitectureSource, Neo4jExistingArchitectureSource>();
+                services.AddScoped<IExistingArchitectureResultAuthorizer,
+                    DeterministicExistingArchitectureResultAuthorizer>();
+                services.AddScoped<IExistingArchitectureEvidenceRecorder,
+                    PostgreSqlExistingArchitectureEvidenceRecorder>();
             }
         }
         services.AddSingleton<IPackageEligibilityEvaluator, PackageEligibilityEvaluator>();

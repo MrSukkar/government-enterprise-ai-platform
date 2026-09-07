@@ -237,3 +237,9 @@ Change-control record: `docs/change-control/CR-004-OPERATIONALIZATION-WAVE-03.md
 Operationalization Wave 04 connects Authorized Existing Systems Discovery to the exact evidence-bearing Enterprise Context snapshot, signed-bundle-bound OPA scope, the Neo4j Enterprise Graph baseline, deterministic RBAC/ABAC re-authorization for every system and relationship, and immutable PostgreSQL inventory evidence. Graph access is fixed, parameterized, read-only, tenant scoped, exact-system scoped, relationship scoped, classification bounded, source scoped, and result bounded before retrieval. Repository defaults remain fail closed. Live connectors, Graph mutation, network probing, Existing Architecture and later stations, external provisioning, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-005-OPERATIONALIZATION-WAVE-04.md`.
+
+## Approved operationalization addendum — CR-006
+
+Operationalization Wave 05 connects Authorized Existing Architecture Discovery to the exact evidence-bearing Existing Systems snapshot, signed-bundle-bound OPA scope, the Neo4j Enterprise Graph baseline, deterministic conformance to the Master Specification, per-item RBAC/ABAC re-authorization, and immutable PostgreSQL architecture evidence. Only fixed, parameterized, scope-first reads of already approved and versioned architecture facts are enabled under complete deployment configuration. Architecture creation, approval, redesign, source crawling, Graph mutation, Approved Packages and later stations, external provisioning, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-006-OPERATIONALIZATION-WAVE-05.md`.

@@ -1950,6 +1950,65 @@ if (Test-Path $wave04AcceptancePath) {
     @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 04 acceptance missing: $_" } }
 }
 
+$wave05AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_05_ACCEPTANCE.md'
+if (Test-Path $wave05AcceptancePath) {
+    $paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-006-OPERATIONALIZATION-WAVE-05.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AuthorizedExistingArchitectureDiscovery.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignExistingArchitecturePolicyGate.cs'
+        Reader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedExistingSystemsSnapshotReader.cs'
+        Conformance = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicExistingArchitectureConformanceValidator.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicExistingArchitectureResultAuthorizer.cs'
+        Graph = Join-Path $repositoryRoot 'backend\Platform.Knowledge\Retrieval\Neo4jExistingArchitectureSource.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlExistingArchitectureEvidenceRecorder.cs'
+        Migration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\004_existing_architecture_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Readiness = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\ExistingArchitectureRuntimeReadiness.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_05_EXISTING_ARCHITECTURE.md'
+    }
+    $paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 05 artifact missing: $_" } }
+    $change = Get-Content -Raw $paths.Change
+    @('Status: **Approved for Operationalization Wave 05**','Decision: **Approved by the repository owner','No new package is requested','Npgsql` `10.0.3','Neo4j.Driver` `6.3.0') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 05 approval missing: $_" } }
+    $master = Get-Content -Raw $paths.Master
+    @('Approved operationalization addendum — CR-006','CR-006-OPERATIONALIZATION-WAVE-05.md') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master Specification CR-006 authority missing: $_" } }
+
+    $reader = Get-Content -Raw $paths.Reader
+    @('IAuthorizedExistingSystemsSnapshotReader','tenant_id = @tenant_id AND discovery_id = @discovery_id','record_sha256_digest','JsonSerializer.Deserialize','SHA256.HashData','evidence://existing-systems','Digest(record)','ExistingArchitectureDependencyUnavailableException') | ForEach-Object { if ($reader -notmatch [regex]::Escape($_)) { throw "Existing Systems prerequisite reader guard missing: $_" } }
+    if ($reader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Existing Systems snapshot reader contains a mutation.' }
+    $policy = Get-Content -Raw $paths.Policy
+    @('internal-service.existing-architecture.discover','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','scope.AllowedSystemIds','scope.AllowedItemKinds','scope.AllowedRelationshipTypes','enterprise-graph','scope.RequiredRoles','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Existing Architecture OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Existing Architecture OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $paths.Engine
+    if ($engine.IndexOf('systemsReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('conformanceValidator.ValidateScopeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('conformanceValidator.ValidateScopeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('DiscoverFromSourceAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('DiscoverFromSourceAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Existing Architecture prerequisite, policy, conformance, source, and evidence order is invalid.' }
+    @('ValidateCandidate','ValidateItemAsync','existing-architecture.item.read','RequiredRoles','CanAdvance: false') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Existing Architecture engine guard missing: $_" } }
+    $graph = Get-Content -Raw $paths.Graph
+    @('IExistingArchitectureSource','SourceKind => "enterprise-graph"','UNWIND $systemIds','tenantId: $tenantId','classificationRank <= $maximumClassificationRank','item.approvalState = $approvedState','item.lifecycle = $activeLifecycle','item.kind IN $itemKinds','item.relationshipType IS NULL OR item.relationshipType IN $relationshipTypes','LIMIT $maximumResults','AccessMode.Read') | ForEach-Object { if ($graph -notmatch [regex]::Escape($_)) { throw "Scope-first Existing Architecture Graph guard missing: $_" } }
+    if ($graph -match '(?im)^\s*(CREATE|MERGE|SET|DELETE|REMOVE|DROP)\s') { throw 'Existing Architecture Graph source contains a write or schema mutation.' }
+    $conformance = Get-Content -Raw $paths.Conformance
+    @('docs/PROJECT_MASTER_SPECIFICATION_V2.md','ExistingArchitectureApprovalState.Approved','LifecycleState.Active','CredentialsIncluded','GeneratedContentIncluded','evidence://existing-architecture/conformance') | ForEach-Object { if ($conformance -notmatch [regex]::Escape($_)) { throw "Constitutional conformance guard missing: $_" } }
+    $authorization = Get-Content -Raw $paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.architecture.discover','request.AllowedSystemIds','request.AllowedItemKinds','request.AllowedRelationshipTypes','request.AllowedSourceKinds','evidence://existing-architecture/authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Existing Architecture result authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $paths.Evidence
+    @('IExistingArchitectureEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://existing-architecture','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Existing Architecture evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Existing Architecture runtime evidence adapter contains mutation outside append.' }
+    $migration = Get-Content -Raw $paths.Migration
+    @('BEGIN;','software_factory.existing_architecture_evidence','PRIMARY KEY (tenant_id, discovery_id)','record_json jsonb','FOREIGN KEY (tenant_id, systems_discovery_id)','software_factory.existing_systems_evidence','COMMIT;') | ForEach-Object { if ($migration -notmatch [regex]::Escape($_)) { throw "Existing Architecture migration guard missing: $_" } }
+    $services = Get-Content -Raw $paths.Services
+    @('ExistingArchitectureRuntimeReadiness','IAuthorizedExistingSystemsSnapshotReader','IExistingArchitecturePolicyGate','IExistingArchitectureConformanceValidator','IExistingArchitectureSource, Neo4jExistingArchitectureSource','IExistingArchitectureResultAuthorizer','IExistingArchitectureEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Existing Architecture composition missing: $_" } }
+    $operations = Get-Content -Raw $paths.Operations
+    @('ExistingArchitectureRuntimeReadiness','existingArchitecture') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Existing Architecture readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $paths.OpenApi
+    @('existingArchitecture','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Existing Architecture OpenAPI readiness contract missing: $_" } }
+    $acceptance = Get-Content -Raw $wave05AcceptancePath
+    @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 05 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

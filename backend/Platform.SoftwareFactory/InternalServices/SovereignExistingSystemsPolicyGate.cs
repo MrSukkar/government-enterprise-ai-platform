@@ -60,7 +60,8 @@ public sealed class SovereignExistingSystemsPolicyGate(
             ?? throw new UnauthorizedAccessException("OPA permit did not return an Existing Systems scope envelope.");
         var scope = envelope.ExistingSystems
             ?? throw new UnauthorizedAccessException("OPA permit did not return the action-specific Existing Systems scope.");
-        if (!envelope.AllowedResourceIds.IsDefaultOrEmpty ||
+        if (envelope.ExistingArchitecture is not null ||
+            !envelope.AllowedResourceIds.IsDefaultOrEmpty ||
             !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||
             !string.IsNullOrWhiteSpace(envelope.MaximumClassification))

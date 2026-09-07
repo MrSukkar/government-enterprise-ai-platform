@@ -36,11 +36,21 @@ public sealed record SovereignPolicyEvaluationScope(
     ImmutableArray<string> AllowedModalities,
     ImmutableArray<string> RequiredRoles,
     int MaximumResults,
-    SovereignExistingSystemsPolicyScope? ExistingSystems);
+    SovereignExistingSystemsPolicyScope? ExistingSystems,
+    SovereignExistingArchitecturePolicyScope? ExistingArchitecture);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
     ImmutableArray<string> AllowedSystemIds,
+    ImmutableArray<string> AllowedRelationshipTypes,
+    string AllowedSourceKind,
+    ImmutableArray<string> RequiredRoles,
+    int MaximumResults);
+
+public sealed record SovereignExistingArchitecturePolicyScope(
+    string MaximumClassification,
+    ImmutableArray<string> AllowedSystemIds,
+    ImmutableArray<string> AllowedItemKinds,
     ImmutableArray<string> AllowedRelationshipTypes,
     string AllowedSourceKind,
     ImmutableArray<string> RequiredRoles,
