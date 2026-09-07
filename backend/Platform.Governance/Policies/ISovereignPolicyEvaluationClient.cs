@@ -35,6 +35,15 @@ public sealed record SovereignPolicyEvaluationScope(
     ImmutableArray<string> AllowedResourceIds,
     ImmutableArray<string> AllowedModalities,
     ImmutableArray<string> RequiredRoles,
+    int MaximumResults,
+    SovereignExistingSystemsPolicyScope? ExistingSystems);
+
+public sealed record SovereignExistingSystemsPolicyScope(
+    string MaximumClassification,
+    ImmutableArray<string> AllowedSystemIds,
+    ImmutableArray<string> AllowedRelationshipTypes,
+    string AllowedSourceKind,
+    ImmutableArray<string> RequiredRoles,
     int MaximumResults);
 
 public interface ISovereignPolicyEvaluationClient

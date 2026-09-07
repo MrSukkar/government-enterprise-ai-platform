@@ -86,12 +86,27 @@
       "platform.domain": {
         "type": "Project"
       },
+      "platform.enterprisemodel": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )"
+        }
+      },
       "platform.identity": {
         "type": "Project",
         "dependencies": {
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.11, )",
           "Platform.Application": "[1.0.0, )",
           "Platform.Domain": "[1.0.0, )"
+        }
+      },
+      "platform.integrations": {
+        "type": "Project",
+        "dependencies": {
+          "Platform.Application": "[1.0.0, )",
+          "Platform.Domain": "[1.0.0, )",
+          "Platform.EnterpriseModel": "[1.0.0, )"
         }
       }
     }

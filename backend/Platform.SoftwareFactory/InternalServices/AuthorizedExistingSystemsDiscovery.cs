@@ -6,6 +6,7 @@ using Platform.Domain.Security;
 using Platform.EnterpriseModel.Model;
 using Platform.Identity.Access;
 using Platform.Integrations.ExistingSystems;
+using Platform.Knowledge.Retrieval;
 
 namespace Platform.SoftwareFactory.InternalService;
 
@@ -69,6 +70,7 @@ public interface IAuthorizedEnterpriseContextSnapshotReader
     Task<AuthorizedEnterpriseContextDiscoveryReceipt?> LoadAsync(
         Guid contextDiscoveryId,
         string tenantId,
+        string purpose,
         CancellationToken cancellationToken);
 }
 
@@ -108,6 +110,7 @@ public sealed record ExistingSystemsPolicyDecision(
     ImmutableHashSet<EnterpriseObjectId> AllowedSystemIds,
     ImmutableHashSet<string> AllowedRelationshipTypes,
     ImmutableHashSet<string> AllowedSourceKinds,
+    ImmutableHashSet<string> RequiredRoles,
     int MaximumResults,
     ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences,
@@ -125,6 +128,7 @@ public sealed record ExistingSystemResultAuthorizationRequest(
     Guid DiscoveryId,
     string TenantId,
     string SubjectId,
+    GovernedIdentity Identity,
     string Purpose,
     string Action,
     EnterpriseObjectId SystemId,
@@ -132,6 +136,10 @@ public sealed record ExistingSystemResultAuthorizationRequest(
     string? RelationshipType,
     DataClassification Classification,
     string SourceKind,
+    ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<EnterpriseObjectId> AllowedSystemIds,
+    ImmutableHashSet<string> AllowedRelationshipTypes,
+    ImmutableHashSet<string> AllowedSourceKinds,
     ImmutableArray<string> EvidenceReferences,
     DateTimeOffset RequestedAt);
 
@@ -261,6 +269,7 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
         var context = await contextReader.LoadAsync(
             request.ContextDiscoveryId,
             request.Identity.TenantId,
+            request.Purpose,
             cancellationToken) ?? throw new KeyNotFoundException("Authorized Enterprise Context snapshot was not found.");
         ValidateContext(request, context);
 
@@ -328,7 +337,7 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
         var sourceResults = await Task.WhenAll(selectedSources.Select(async source =>
             new InventorySourceResult(
                 source.SourceKind,
-                await source.DiscoverAsync(scope, cancellationToken)
+                await DiscoverFromSourceAsync(source, scope, cancellationToken)
                     ?? throw new InvalidOperationException("Existing Systems source returned no result collection."))));
         var candidates = sourceResults
             .SelectMany(result => result.Candidates.Select(candidate => (result.SourceKind, Candidate: candidate)))
@@ -429,6 +438,22 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
             .ToArray();
     }
 
+    private static async Task<IReadOnlyCollection<ExistingSystemInventoryCandidate>> DiscoverFromSourceAsync(
+        IExistingSystemInventorySource source,
+        ExistingSystemInventoryScope scope,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await source.DiscoverAsync(scope, cancellationToken);
+        }
+        catch (KnowledgeRetrievalSourceUnavailableException)
+        {
+            throw new ExistingSystemsDependencyUnavailableException(
+                "The authorized Existing Systems source is unavailable.");
+        }
+    }
+
     private static void ValidateContext(
         AuthorizedExistingSystemsDiscoveryRequest request,
         AuthorizedEnterpriseContextDiscoveryReceipt context)
@@ -474,6 +499,7 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
         ArgumentNullException.ThrowIfNull(decision.AllowedSystemIds);
         ArgumentNullException.ThrowIfNull(decision.AllowedRelationshipTypes);
         ArgumentNullException.ThrowIfNull(decision.AllowedSourceKinds);
+        ArgumentNullException.ThrowIfNull(decision.RequiredRoles);
         if (decision.DecisionRequestId != input.DecisionRequestId ||
             decision.DiscoveryId != input.DiscoveryId ||
             decision.ContextDiscoveryId != input.ContextDiscoveryId ||
@@ -500,11 +526,13 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
             throw new InvalidOperationException("OPA Existing Systems decision predates evaluation.");
         if (decision.Outcome == GovernedIntentPolicyOutcome.Permit &&
             (decision.AllowedSystemIds.IsEmpty || decision.AllowedRelationshipTypes.IsEmpty ||
-             decision.AllowedSourceKinds.IsEmpty || decision.MaximumResults <= 0))
+             decision.AllowedSourceKinds.IsEmpty || decision.RequiredRoles.IsEmpty ||
+             decision.MaximumResults <= 0))
             throw new UnauthorizedAccessException("OPA permit did not establish an explicit Existing Systems scope.");
         if (decision.AllowedSystemIds.Any(id => id.Value == Guid.Empty) ||
             decision.AllowedRelationshipTypes.Any(string.IsNullOrWhiteSpace) ||
-            decision.AllowedSourceKinds.Any(string.IsNullOrWhiteSpace))
+            decision.AllowedSourceKinds.Any(string.IsNullOrWhiteSpace) ||
+            decision.RequiredRoles.Any(string.IsNullOrWhiteSpace))
             throw new UnauthorizedAccessException("OPA returned an invalid Existing Systems scope.");
     }
 
@@ -558,11 +586,20 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
         IExistingSystemResultAuthorizer authorizer,
         CancellationToken cancellationToken)
     {
+        var systemEvidence = system.EvidenceReferences
+            .Append(decision.PolicyVerificationEvidenceReference)
+            .Concat(decision.EvidenceReferences)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToImmutableArray();
         var systemAuthorization = await AuthorizeResultAsync(
             new ExistingSystemResultAuthorizationRequest(
                 Guid.NewGuid(), request.DiscoveryId, system.TenantId, request.Identity.SubjectId,
+                request.Identity,
                 request.Purpose, "existing-system.read", system.Id, null, null,
-                system.Classification, sourceKind, system.EvidenceReferences, decision.DecidedAt),
+                system.Classification, sourceKind, decision.RequiredRoles, decision.AllowedSystemIds,
+                decision.AllowedRelationshipTypes, decision.AllowedSourceKinds,
+                systemEvidence, decision.DecidedAt),
             authorizer,
             cancellationToken);
         var relationships = ImmutableArray.CreateBuilder<AuthorizedExistingSystemRelationship>(system.Relationships.Length);
@@ -571,12 +608,21 @@ public sealed class AuthorizedExistingSystemsDiscoveryEngine(
                      .ThenBy(item => item.RelationshipType, StringComparer.Ordinal)
                      .ThenBy(item => item.Source, StringComparer.Ordinal))
         {
+            var relationshipEvidence = relationship.EvidenceReferences
+                .Append(decision.PolicyVerificationEvidenceReference)
+                .Concat(decision.EvidenceReferences)
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .ToImmutableArray();
             var relationshipAuthorization = await AuthorizeResultAsync(
                 new ExistingSystemResultAuthorizationRequest(
                     Guid.NewGuid(), request.DiscoveryId, system.TenantId, request.Identity.SubjectId,
+                    request.Identity,
                     request.Purpose, "existing-system.relationship.read", system.Id,
                     relationship.TargetId, relationship.RelationshipType, system.Classification,
-                    sourceKind, relationship.EvidenceReferences, decision.DecidedAt),
+                    sourceKind, decision.RequiredRoles, decision.AllowedSystemIds,
+                    decision.AllowedRelationshipTypes, decision.AllowedSourceKinds,
+                    relationshipEvidence, decision.DecidedAt),
                 authorizer,
                 cancellationToken);
             relationships.Add(new AuthorizedExistingSystemRelationship(

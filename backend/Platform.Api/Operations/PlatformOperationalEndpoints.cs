@@ -12,7 +12,8 @@ internal static class PlatformOperationalEndpoints
             Platform.Governance.Policies.PolicyControlPlaneReadiness policy,
             Platform.SoftwareFactory.Persistence.PostgreSqlIntentRegistrationReadiness persistence,
             Platform.Knowledge.Retrieval.Neo4jEnterpriseGraphReadiness graph,
-            Platform.SoftwareFactory.InternalService.EnterpriseContextRuntimeReadiness enterpriseContext) =>
+            Platform.SoftwareFactory.InternalService.EnterpriseContextRuntimeReadiness enterpriseContext,
+            Platform.SoftwareFactory.InternalService.ExistingSystemsRuntimeReadiness existingSystems) =>
         {
             var payload = new
             {
@@ -24,7 +25,8 @@ internal static class PlatformOperationalEndpoints
                     policy = policy.State.ToString().ToLowerInvariant(),
                     postgresqlIntentRegistration = persistence.State.ToString().ToLowerInvariant(),
                     neo4jEnterpriseGraph = graph.State.ToString().ToLowerInvariant(),
-                    enterpriseContext = enterpriseContext.State.ToString().ToLowerInvariant()
+                    enterpriseContext = enterpriseContext.State.ToString().ToLowerInvariant(),
+                    existingSystems = existingSystems.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 03 - Authorized Enterprise Context Runtime",
+    "wave": "Wave 04 - Authorized Existing Systems Runtime",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-004-OPERATIONALIZATION-WAVE-03.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_03_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_02_ACCEPTANCE.md",
-    "executionBoundary": "Authorized Enterprise Context adapters for registered-intent read, exact OPA scope, scope-first Neo4j Graph retrieval, per-result authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; live infrastructure, schemas, graph data, credentials, PKI, and deployment remain separately controlled"
+    "changeControl": "docs/change-control/CR-005-OPERATIONALIZATION-WAVE-04.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_04_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_03_ACCEPTANCE.md",
+    "executionBoundary": "Authorized Existing Systems adapters for cryptographically verified tenant-scoped Enterprise Context read, action-specific OPA scope, scope-first Neo4j inventory retrieval, per-system and per-relationship RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; the Authorized Existing Systems snapshot reader, Existing Architecture, live connectors, Graph mutation, network probes, later stations, live infrastructure, schemas, graph data, credentials, PKI, and deployment remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_03_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_04_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

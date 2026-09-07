@@ -14,6 +14,7 @@ using Platform.SoftwareFactory.ClosedLoop;
 using Platform.SoftwareFactory.VerticalSlice;
 using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Persistence;
+using Platform.Integrations.ExistingSystems;
 
 namespace Platform.SoftwareFactory;
 
@@ -48,6 +49,16 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? EnterpriseContextRuntimeConfigurationState.Configured
                     : EnterpriseContextRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new EnterpriseContextRuntimeReadiness(enterpriseContextState));
+        var existingSystemsState =
+            persistenceOptions.ConfigurationState == PostgreSqlIntentRegistrationConfigurationState.Invalid ||
+            policyOptions.ConfigurationState == PolicyControlPlaneConfigurationState.Invalid ||
+            graphOptions.ConfigurationState == Neo4jEnterpriseGraphConfigurationState.Invalid
+                ? ExistingSystemsRuntimeConfigurationState.Invalid
+                : persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured &&
+                  graphOptions.IsOperationallyConfigured
+                    ? ExistingSystemsRuntimeConfigurationState.Configured
+                    : ExistingSystemsRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new ExistingSystemsRuntimeReadiness(existingSystemsState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -63,6 +74,15 @@ public static class SoftwareFactoryServiceCollectionExtensions
                 services.AddScoped<IEnterpriseContextEvidenceRecorder,
                     PostgreSqlEnterpriseContextEvidenceRecorder>();
                 services.AddScoped<IKnowledgeRetrievalSource, Neo4jEnterpriseGraphRetrievalSource>();
+                services.AddScoped<PostgreSqlAuthorizedEnterpriseContextSnapshotReader>();
+                services.AddScoped<IAuthorizedEnterpriseContextSnapshotReader>(provider =>
+                    provider.GetRequiredService<PostgreSqlAuthorizedEnterpriseContextSnapshotReader>());
+                services.AddScoped<IExistingSystemsPolicyGate, SovereignExistingSystemsPolicyGate>();
+                services.AddScoped<IExistingSystemInventorySource, Neo4jExistingSystemInventorySource>();
+                services.AddScoped<IExistingSystemResultAuthorizer,
+                    DeterministicExistingSystemResultAuthorizer>();
+                services.AddScoped<IExistingSystemsEvidenceRecorder,
+                    PostgreSqlExistingSystemsEvidenceRecorder>();
             }
         }
         services.AddSingleton<IPackageEligibilityEvaluator, PackageEligibilityEvaluator>();

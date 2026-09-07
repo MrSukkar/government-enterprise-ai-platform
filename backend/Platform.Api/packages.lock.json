@@ -192,7 +192,9 @@
           "Neo4j.Driver": "[6.3.0, )",
           "Platform.Application": "[1.0.0, )",
           "Platform.Domain": "[1.0.0, )",
-          "Platform.Identity": "[1.0.0, )"
+          "Platform.EnterpriseModel": "[1.0.0, )",
+          "Platform.Identity": "[1.0.0, )",
+          "Platform.Integrations": "[1.0.0, )"
         }
       },
       "platform.modeling": {

@@ -746,13 +746,14 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "postgresqlIntentRegistration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "neo4jEnterpriseGraph": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "enterpriseContext": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "enterpriseContext": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "existingSystems": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },
