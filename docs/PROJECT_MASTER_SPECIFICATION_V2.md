@@ -170,6 +170,8 @@ Operational Increment 18 is **Governed Sovereign Deployment**. It defines protec
 
 Operational Increment 19 is **Governed OpenTelemetry Activation**. It defines protected activation of the exact approved telemetry profile for an accepted governed Deployment and a deterministic delivery run stopped at `Deployment`. Verified OPA policy authorizes the exact Deployment, runtime, Artifact, effect posture, telemetry profile, resource identity, required signals, collectors, redaction, tenant, purpose, classification, environment, and evidence before reads or configuration. Strict redaction and trusted sovereign collector routing are independently verified before a vendor-neutral gateway may configure traces, metrics, and logs and prove resource binding, baggage clearing, redaction, signal acceptance, and evidence. Result authorization and cryptographic evidence are mandatory. No Automatic Registration, Enterprise Model mutation, or workflow advancement is available.
 
+Operational Increment 20 is **Governed Automatic Registration**. It defines protected deterministic registration of the exact deployed and observed service from an accepted OpenTelemetry receipt and a delivery run stopped at `OpenTelemetry`. Verified OPA authorizes the exact activation, runtime, Artifact, service key, signed registration manifest, owner, classification, policies, permitted actions, relationships, tenant, purpose, environment, and evidence before reads or mutation. The existing Phase 17 engine performs one atomic evidence-backed registration and validates the returned Enterprise Object. Result authorization and cryptographic evidence are mandatory. No workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, or autonomous action is available.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -193,3 +195,13 @@ Increment 13 amendment: `docs/change-control/CR-001-AMENDMENT-10-TESTS.md`.
 Increment 14 amendment: `docs/change-control/CR-001-AMENDMENT-11-HUMAN-REVIEW.md`.
 
 Increment 15 amendment: `docs/change-control/CR-001-AMENDMENT-12-GIT.md`.
+
+Increment 16 amendment: `docs/change-control/CR-001-AMENDMENT-13-CICD.md`.
+
+Increment 17 amendment: `docs/change-control/CR-001-AMENDMENT-14-ARTIFACT.md`.
+
+Increment 18 amendment: `docs/change-control/CR-001-AMENDMENT-15-DEPLOYMENT.md`.
+
+Increment 19 amendment: `docs/change-control/CR-001-AMENDMENT-16-OPENTELEMETRY.md`.
+
+Increment 20 amendment: `docs/change-control/CR-001-AMENDMENT-17-AUTOMATIC-REGISTRATION.md`.

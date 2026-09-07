@@ -173,6 +173,12 @@ internal sealed class PlatformRuntimeReadiness
             ("Institutional OpenTelemetry gateway", typeof(IInstitutionalOpenTelemetryGateway)),
             ("OpenTelemetry result authorizer", typeof(IOpenTelemetryResultAuthorizer)),
             ("OpenTelemetry evidence recorder", typeof(IOpenTelemetryEvidenceRecorder))
+            ,("Automatic Registration OPA policy gate", typeof(IAutomaticRegistrationPolicyGate))
+            ,("Authorized OpenTelemetry activation receipt reader", typeof(IAuthorizedOpenTelemetryActivationReceiptReader))
+            ,("Automatic Registration delivery-run reader", typeof(IAutomaticRegistrationDeliveryRunReader))
+            ,("Governed Automatic Registration manifest reader", typeof(IGovernedAutomaticRegistrationManifestReader))
+            ,("Automatic Registration result authorizer", typeof(IAutomaticRegistrationResultAuthorizer))
+            ,("Automatic Registration evidence recorder", typeof(IAutomaticRegistrationEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

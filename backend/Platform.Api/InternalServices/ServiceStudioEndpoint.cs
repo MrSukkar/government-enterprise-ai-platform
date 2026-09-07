@@ -10,6 +10,7 @@ using Platform.SoftwareFactory.AiDevelopment;
 using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.SupplyChain;
+using Platform.EnterpriseModel.Registration;
 
 namespace Platform.Api.InternalService;
 
@@ -178,6 +179,14 @@ internal static class InternalServiceEndpoint
         System.Collections.Immutable.ImmutableHashSet<GovernedTelemetrySignal> RequiredSignals,
         string ExpectedRedactionPolicyReference, string ExpectedRedactionPolicySha256Digest,
         string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record AutomaticRegistrationInput(
+        Guid RegistrationId, Guid DeliveryRunId, Guid ManifestId, string ManifestVersion,
+        string ExpectedManifestSha256Digest, string ExpectedRuntimeIdentity,
+        string ExpectedServiceIdentity, string ExpectedServiceVersion, string ExpectedArtifactDigest,
+        string ExpectedOpenTelemetryEvidenceReference, string Purpose,
+        DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
@@ -1532,6 +1541,59 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact Deployment, profile, resource, signals, collectors, and redaction before reads or configuration. No automatic registration, Enterprise Model mutation, or workflow advancement is available.")
             .Accepts<OpenTelemetryActivationInput>("application/json")
             .Produces<GovernedOpenTelemetryActivationReceipt>(200).Produces<GovernedOpenTelemetryActivationReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceAutomaticRegistration(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/opentelemetry/{activationId:guid}/automatic-registration",
+            async (Guid activationId, AutomaticRegistrationInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedAutomaticRegistrationEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.registration.execute",
+                        input.ExpectedServiceIdentity, context.Identity.TenantId, input.MaximumClassification,
+                        [], ["operator.internal-service.registration.execute"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IAutomaticRegistrationPolicyGate>();
+                    var activationReader = services.GetService<IAuthorizedOpenTelemetryActivationReceiptReader>();
+                    var runReader = services.GetService<IAutomaticRegistrationDeliveryRunReader>();
+                    var manifestReader = services.GetService<IGovernedAutomaticRegistrationManifestReader>();
+                    var repository = services.GetService<IAutomaticRegistrationRepository>();
+                    var authorizer = services.GetService<IAutomaticRegistrationResultAuthorizer>();
+                    var evidence = services.GetService<IAutomaticRegistrationEvidenceRecorder>();
+                    if (policy is null || activationReader is null || runReader is null || manifestReader is null ||
+                        repository is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Automatic Registration is not operationally ready.");
+                    var request = new GovernedAutomaticRegistrationRequest(
+                        input.RegistrationId, activationId, input.DeliveryRunId, input.ManifestId,
+                        input.ManifestVersion, input.ExpectedManifestSha256Digest, input.ExpectedRuntimeIdentity,
+                        input.ExpectedServiceIdentity, input.ExpectedServiceVersion, input.ExpectedArtifactDigest,
+                        input.ExpectedOpenTelemetryEvidenceReference, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference, input.Environment,
+                        input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.RegisterAsync(request, policy, activationReader, runReader,
+                        manifestReader, repository, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Automatic Registration denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Automatic Registration prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Automatic Registration request or boundary result is invalid."); }
+            })
+            .WithName("ExecuteGovernedAutomaticRegistration").WithTags("Create Internal Service")
+            .WithSummary("Register one exact deployed and observed internal service.")
+            .WithDescription("OPA authorizes the exact OpenTelemetry receipt, run, signed manifest, service key, policies, actions, relationships, and evidence before atomic registration. No workflow advancement or later station is available.")
+            .Accepts<AutomaticRegistrationInput>("application/json")
+            .Produces<GovernedAutomaticRegistrationReceipt>(200).Produces<GovernedAutomaticRegistrationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

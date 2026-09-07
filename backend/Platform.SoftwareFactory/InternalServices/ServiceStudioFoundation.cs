@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 19 - Governed OpenTelemetry Activation",
-        "Governed OpenTelemetry contract available; all Deployment, profile, redaction, collector, authorization, and evidence adapters fail-closed",
+        "Operational Increment 20 - Governed Automatic Registration",
+        "Governed Automatic Registration contract available; all policy, prerequisite, manifest, repository, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -102,6 +102,10 @@ public static class InternalServiceFoundationCatalog
             "Sensitive attributes are dropped, unknown values redacted, strings bounded, and baggage cleared",
             "Traces, metrics, and logs require unique accepted evidence through trusted collector routing",
             "OpenTelemetry cannot register the service, mutate the Enterprise Model, or advance workflow",
+            "Automatic Registration requires an accepted OpenTelemetry receipt and a delivery run stopped at OpenTelemetry",
+            "OPA authorizes the exact signed manifest, stable service key, runtime, Artifact, policies, actions, relationships, and evidence before reads",
+            "The Phase 17 repository atomically creates, updates, or confirms the registered Enterprise Object",
+            "Automatic Registration cannot advance workflow, contextualize the Enterprise Model, complete Evidence, infer, or act autonomously",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

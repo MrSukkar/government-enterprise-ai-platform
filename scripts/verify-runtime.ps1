@@ -155,6 +155,10 @@ try {
     $openTelemetry = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/deployments/00000000-0000-0000-0000-000000000010/opentelemetry",
         $openTelemetryContent).GetAwaiter().GetResult()
+    $automaticRegistrationContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $automaticRegistration = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/opentelemetry/00000000-0000-0000-0000-000000000011/automatic-registration",
+        $automaticRegistrationContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -228,12 +232,15 @@ try {
     if ([int]$openTelemetry.StatusCode -ne 401 -or $openTelemetry.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous OpenTelemetry activation did not fail closed with a bearer challenge.'
     }
+    if ([int]$automaticRegistration.StatusCode -ne 401 -or $automaticRegistration.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous Automatic Registration did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 124) {
-        throw 'Readiness response did not disclose the expected 124 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 130) {
+        throw 'Readiness response did not disclose the expected 130 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -246,7 +253,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 19 - Governed OpenTelemetry Activation' -or
+        $internalServiceBody.increment -ne 'Operational Increment 20 - Governed Automatic Registration' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -269,8 +276,9 @@ try {
         -not $openApiBody.paths.'/api/v1/internal-services/git/{gitOperationId}/cicd' -or
         -not $openApiBody.paths.'/api/v1/internal-services/cicd/{ciCdExecutionId}/artifact' -or
         -not $openApiBody.paths.'/api/v1/internal-services/artifacts/{artifactPublicationId}/deployment' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/deployments/{deploymentId}/opentelemetry') {
-        throw 'Runtime OpenAPI response does not contain the approved path through OpenTelemetry.'
+        -not $openApiBody.paths.'/api/v1/internal-services/deployments/{deploymentId}/opentelemetry' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/opentelemetry/{activationId}/automatic-registration') {
+        throw 'Runtime OpenAPI response does not contain the approved path through Automatic Registration.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -280,7 +288,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 124 runtime dependencies fail-closed, and Governed OpenTelemetry remains protected without Deployment, profile, redaction, collector, authorization, or evidence adapters.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 130 runtime dependencies fail-closed, and Governed Automatic Registration remains protected without policy, prerequisite, manifest, repository, authorization, or evidence adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

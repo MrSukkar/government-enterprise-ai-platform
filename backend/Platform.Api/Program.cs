@@ -108,6 +108,7 @@ app.MapInternalServiceCiCd();
 app.MapInternalServiceArtifact();
 app.MapInternalServiceDeployment();
 app.MapInternalServiceOpenTelemetry();
+app.MapInternalServiceAutomaticRegistration();
 
 if (app.Environment.IsDevelopment())
 {

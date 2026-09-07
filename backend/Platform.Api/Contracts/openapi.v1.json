@@ -658,6 +658,24 @@
         }
       }
     },
+    "/api/v1/internal-services/opentelemetry/{activationId}/automatic-registration": {
+      "post": {
+        "operationId": "executeGovernedAutomaticRegistration",
+        "summary": "Register one exact deployed and observed internal service.",
+        "description": "OPA authorizes the exact OpenTelemetry receipt, run, signed manifest, service key, policies, actions, relationships, and evidence before atomic registration. No workflow advancement or later station is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [ { "name": "activationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AutomaticRegistrationInput" } } } },
+        "responses": {
+          "200": { "description": "The exact service was registered atomically with authorization and evidence.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedAutomaticRegistrationReceipt" } } } },
+          "400": { "description": "Invalid Automatic Registration boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Registration access, OPA, manifest, repository, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedAutomaticRegistrationReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no read or registration occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1670,6 +1688,37 @@
           "telemetryProfileSha256Digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "serviceName": { "type": "string" }, "serviceVersion": { "type": "string" },
           "signals": { "type": "array", "items": { "$ref": "#/components/schemas/GovernedTelemetrySignalResult" } },
           "openTelemetryEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AutomaticRegistrationInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["registrationId", "deliveryRunId", "manifestId", "manifestVersion", "expectedManifestSha256Digest", "expectedRuntimeIdentity", "expectedServiceIdentity", "expectedServiceVersion", "expectedArtifactDigest", "expectedOpenTelemetryEvidenceReference", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "registrationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "manifestId": { "type": "string", "format": "uuid" }, "manifestVersion": { "type": "string", "minLength": 1 },
+          "expectedManifestSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedRuntimeIdentity": { "type": "string", "minLength": 1 }, "expectedServiceIdentity": { "type": "string", "minLength": 1 },
+          "expectedServiceVersion": { "type": "string", "minLength": 1 }, "expectedArtifactDigest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "expectedOpenTelemetryEvidenceReference": { "type": "string", "minLength": 1 }, "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedAutomaticRegistrationReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["registrationId", "activationId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "automaticRegistrationOccurred", "enterpriseModelObjectPersisted", "workflowAdvanced", "canAdvance", "serviceIdentity", "serviceVersion", "runtimeIdentity", "artifactDigest", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "registrationId": { "type": "string", "format": "uuid" }, "activationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "automaticRegistrationOccurred": { "type": "boolean" }, "enterpriseModelObjectPersisted": { "type": "boolean" },
+          "workflowAdvanced": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "serviceIdentity": { "type": "string" }, "serviceVersion": { "type": "string" }, "runtimeIdentity": { "type": "string" },
+          "artifactDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "requestFingerprint": { "type": ["string", "null"] },
+          "disposition": { "type": ["string", "null"], "enum": ["Created", "Updated", "Unchanged", null] },
+          "enterpriseObjectId": { "type": ["string", "null"], "format": "uuid" }, "registrationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

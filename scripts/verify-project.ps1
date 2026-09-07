@@ -1640,6 +1640,30 @@ if (Test-Path $increment19AcceptancePath) {
     @('Status: **Satisfied**','all 124 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 19 acceptance missing: $_"}}
 }
 
+$increment20AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_20_ACCEPTANCE.md'
+if (Test-Path $increment20AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedAutomaticRegistration.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-17-AUTOMATIC-REGISTRATION.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 20 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 20**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 20 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IAutomaticRegistrationPolicyGate','IAuthorizedOpenTelemetryActivationReceiptReader','IAutomaticRegistrationDeliveryRunReader','DeliveryStage.OpenTelemetry','IGovernedAutomaticRegistrationManifestReader','AutomaticRegistrationEngine','IAutomaticRegistrationRepository','RegisterAsync','RegistrationDisposition','IAutomaticRegistrationResultAuthorizer','IAutomaticRegistrationEvidenceRecorder','WorkflowAdvanced','CanAdvance','Separately approved Enterprise Model contextualization')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Automatic Registration guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('activationReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Automatic Registration prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion'){throw 'Automatic Registration must not create a workflow stage completion.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/opentelemetry/{activationId:guid}/automatic-registration','operator.internal-service.registration.execute','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Automatic Registration endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Automatic Registration OPA policy gate','Authorized OpenTelemetry activation receipt reader','Automatic Registration delivery-run reader','Governed Automatic Registration manifest reader','Automatic Registration result authorizer','Automatic Registration evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Automatic Registration readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/opentelemetry/{activationId}/automatic-registration','AutomaticRegistrationInput','GovernedAutomaticRegistrationReceipt','automaticRegistrationOccurred','enterpriseModelObjectPersisted','workflowAdvanced','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Automatic Registration OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment20AcceptancePath
+    @('Status: **Satisfied**','all 130 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 20 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
