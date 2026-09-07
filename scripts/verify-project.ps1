@@ -1688,6 +1688,33 @@ if (Test-Path $increment21AcceptancePath) {
     @('Status: **Satisfied**','all 136 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 21 acceptance missing: $_"}}
 }
 
+$increment22AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_22_ACCEPTANCE.md'
+if (Test-Path $increment22AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedEvidenceCompletion.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-19-EVIDENCE-COMPLETION.md'
+    $projectPath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Platform.SoftwareFactory.csproj'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath,$projectPath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 22 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 22**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 22 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IEvidenceCompletionPolicyGate','IAuthorizedEnterpriseModelContextualizationReceiptReader','IEvidenceCompletionDeliveryRunReader','DeliveryStage.EnterpriseModel','IEvidenceChainStore','IEvidenceAccessAuthorizer','IEvidenceSigner','IEvidenceSignatureVerifier','CryptographicEvidenceEngine','EvidenceStage.Evidence','AppendAsync','VerifyAsync','IsComplete','HashValid','SignatureValid','IEvidenceCompletionResultAuthorizer','EvidenceCryptographicallyVerified','EvidenceCompleted','VerticalSliceComplete','WorkflowAdvanced','CanAdvance','Complete — approved Create Internal Service vertical slice proven')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Evidence completion guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('contextualizationReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Evidence completion prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion|SaveAsync|UpdateAsync|DeleteAsync'){throw 'Evidence completion crossed its append-only or workflow boundary.'}
+    $project=Get-Content -Raw $projectPath
+    if($project -notmatch [regex]::Escape('Platform.Evidence\Platform.Evidence.csproj')){throw 'Software Factory does not reference the approved Evidence module.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/enterprise-model/{contextualizationId:guid}/evidence','operator.internal-service.evidence.complete','evidence.append','evidence.verify','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Evidence completion endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Evidence access authorizer','Evidence sovereign signer','Evidence signature verifier','Evidence completion OPA policy gate','Authorized Enterprise Model contextualization receipt reader','Evidence completion delivery-run reader','Evidence completion result authorizer')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Evidence completion readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/enterprise-model/{contextualizationId}/evidence','EvidenceCompletionInput','GovernedEvidenceCompletionReceipt','evidenceAppended','evidenceCryptographicallyVerified','evidenceCompleted','verticalSliceComplete','workflowAdvanced','canAdvance','verifiedEntryCount')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Evidence completion OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment22AcceptancePath
+    @('Status: **Satisfied**','all 143 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 22 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

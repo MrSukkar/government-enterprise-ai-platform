@@ -110,6 +110,7 @@ app.MapInternalServiceDeployment();
 app.MapInternalServiceOpenTelemetry();
 app.MapInternalServiceAutomaticRegistration();
 app.MapInternalServiceEnterpriseModel();
+app.MapInternalServiceEvidenceCompletion();
 
 if (app.Environment.IsDevelopment())
 {

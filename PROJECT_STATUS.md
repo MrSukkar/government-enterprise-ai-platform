@@ -8,9 +8,9 @@ Status: **Phase 30 complete — Evidence Engine**
 - Completed phases: **01 — Product Constitution** through **30 — Evidence Engine**
 - Phase 30 artifacts: `backend/Platform.Evidence/Chain`, `docs/phase-30/EVIDENCE_ENGINE.md`, `docs/phase-30/PHASE_30_ACCEPTANCE.md`
 - Next permitted phase: **None — the approved 30-phase roadmap is complete**
-- Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–21 authorized under CR-001 and Amendments 01–18**
-- Current product increment: **Governed Enterprise Model Contextualization — contract complete and verified**
-- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_21_ACCEPTANCE.md`
-- Execution boundary: **Governed Enterprise Model contextualization requires deployment-controlled OPA, an accepted Automatic Registration receipt and run, an authorized registered-object reader, result authorization, and evidence; no read occurs while dependencies are absent, and no additional model mutation, analysis, simulation, workflow advancement, or Evidence completion is available**
+- Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
+- Current product increment: **Governed Evidence Completion — contract complete and verified**
+- Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
+- Execution boundary: **The approved Create Internal Service vertical-slice contract is complete from Intent through Evidence; final proof requires deployment-controlled OPA, accepted Enterprise Model contextualization and run, the Phase 30 append-only store, access authorizer, sovereign signer, signature verifier, and result authorizer; all real operations remain fail closed while adapters are absent**
 
 The approved platform foundation is complete through Phase 30. Evidence is append-only, tenant- and classification-scoped, tamper-evident, cryptographically signed and verifiable, strictly ordered, correlated, traceable, and suitable for sovereign or air-gapped key-management implementations.

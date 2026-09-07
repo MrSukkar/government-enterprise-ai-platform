@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 21 - Governed Enterprise Model Contextualization",
-        "Governed Enterprise Model contextualization contract available; all policy, prerequisite, object-read, authorization, and evidence adapters fail-closed",
+        "Operational Increment 22 - Governed Evidence Completion",
+        "Approved Create Internal Service vertical-slice contract complete; operational adapters remain fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -110,6 +110,11 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact registered object, tenant, classification, fingerprint, and evidence before reads",
             "Registered object lifecycle, policies, actions, relationships, timestamps, and evidence are revalidated",
             "Enterprise Model contextualization cannot mutate, analyze, simulate, infer, act, advance workflow, or complete Evidence",
+            "Evidence completion requires accepted Enterprise Model contextualization and a delivery run stopped at EnterpriseModel",
+            "OPA and Evidence authorization precede prerequisite reads and append-only chain access",
+            "Only the final Evidence entry may be atomically appended after Telemetry",
+            "All ten evidence stages, hashes, links, signatures, scope, correlation, and completeness are cryptographically verified",
+            "No post-Evidence station, workflow advancement, evidence update or deletion, model mutation, or action is available",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

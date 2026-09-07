@@ -694,6 +694,25 @@
         }
       }
     },
+    "/api/v1/internal-services/enterprise-model/{contextualizationId}/evidence": {
+      "post": {
+        "operationId": "completeGovernedEvidence",
+        "summary": "Append and verify the final cryptographic Evidence entry.",
+        "description": "OPA and Evidence authorization precede access. The Phase 30 engine appends only the final Evidence entry and verifies the exact complete ten-stage chain. No later station exists.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [ { "name": "contextualizationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EvidenceCompletionInput" } } } },
+        "responses": {
+          "200": { "description": "The final Evidence entry was appended and the complete ten-stage chain cryptographically verified.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedEvidenceCompletionReceipt" } } } },
+          "400": { "description": "Invalid Evidence completion boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Evidence access, OPA, append, verification, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedEvidenceCompletionReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "409": { "description": "Evidence chain cryptographic verification failed.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no prerequisite read or evidence append occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1763,6 +1782,34 @@
           "enterpriseObjectId": { "type": "string", "format": "uuid" }, "requestFingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "contextualizationEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EvidenceCompletionInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["completionId", "deliveryRunId", "chainId", "correlationId", "expectedContextualizationEvidenceReference", "payloadSha256Digest", "traceReferences", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "completionId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "chainId": { "type": "string", "format": "uuid" }, "correlationId": { "type": "string", "minLength": 1 },
+          "expectedContextualizationEvidenceReference": { "type": "string", "minLength": 1 },
+          "payloadSha256Digest": { "type": "string", "pattern": "^[0-9A-Fa-f]{64}$" },
+          "traceReferences": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "purpose": { "type": "string", "minLength": 1 }, "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedEvidenceCompletionReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["completionId", "contextualizationId", "deliveryRunId", "chainId", "tenantId", "policyOutcome", "isAccepted", "evidenceAppended", "evidenceCryptographicallyVerified", "evidenceCompleted", "verticalSliceComplete", "workflowAdvanced", "canAdvance", "verifiedEntryCount", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "completionId": { "type": "string", "format": "uuid" }, "contextualizationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "chainId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "evidenceAppended": { "type": "boolean" }, "evidenceCryptographicallyVerified": { "type": "boolean" }, "evidenceCompleted": { "type": "boolean" },
+          "verticalSliceComplete": { "type": "boolean" }, "workflowAdvanced": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "rootSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }, "headSha256Digest": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "verifiedEntryCount": { "type": "integer", "minimum": 0, "maximum": 10 }, "verificationAuthorizationEvidenceReference": { "type": ["string", "null"] },
+          "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } }, "nextRequiredGate": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
         }
       },
       "ProblemDetails": {

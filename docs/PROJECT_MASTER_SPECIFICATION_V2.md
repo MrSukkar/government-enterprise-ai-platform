@@ -174,6 +174,8 @@ Operational Increment 20 is **Governed Automatic Registration**. It defines prot
 
 Operational Increment 21 is **Governed Enterprise Model Contextualization**. It defines protected confirmation of the exact atomically registered service as an authorized Enterprise Object from a delivery run stopped at `AutomaticRegistration`. Verified OPA authorizes the exact registration receipt, object identity, fingerprint, tenant, purpose, environment, classification, and evidence before reads. The object and its lifecycle, source, policies, actions, relationships, timestamps, and evidence are revalidated and result-authorized before an evidence-bearing contextualization receipt is released. No additional model mutation, workflow advancement, impact analysis, simulation, inference, action, or Evidence completion is available.
 
+Operational Increment 22 is **Governed Evidence Completion**. It defines protected completion and cryptographic verification of the exact evidence chain for an accepted Enterprise Model contextualization and a delivery run stopped at `EnterpriseModel`. Verified OPA authorizes the exact chain, correlation, contextualization, payload digest, trace references, tenant, purpose, environment, classification, and evidence before reads or append. The existing Phase 30 engine atomically appends only the final `Evidence` entry and then verifies all ten ordered entries, hashes, links, signatures, authorization, scope, and completeness. Independent result authorization is mandatory before release. No workflow advancement, evidence update/deletion, model mutation, production action, or later station is available.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -209,3 +211,5 @@ Increment 19 amendment: `docs/change-control/CR-001-AMENDMENT-16-OPENTELEMETRY.m
 Increment 20 amendment: `docs/change-control/CR-001-AMENDMENT-17-AUTOMATIC-REGISTRATION.md`.
 
 Increment 21 amendment: `docs/change-control/CR-001-AMENDMENT-18-ENTERPRISE-MODEL.md`.
+
+Increment 22 amendment: `docs/change-control/CR-001-AMENDMENT-19-EVIDENCE-COMPLETION.md`.

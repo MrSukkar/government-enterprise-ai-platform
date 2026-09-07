@@ -185,6 +185,13 @@ internal sealed class PlatformRuntimeReadiness
             ,("Authorized registered Enterprise Object reader", typeof(IAuthorizedRegisteredEnterpriseObjectReader))
             ,("Enterprise Model contextualization result authorizer", typeof(IEnterpriseModelContextResultAuthorizer))
             ,("Enterprise Model contextualization evidence recorder", typeof(IEnterpriseModelContextEvidenceRecorder))
+            ,("Evidence access authorizer", typeof(IEvidenceAccessAuthorizer))
+            ,("Evidence sovereign signer", typeof(IEvidenceSigner))
+            ,("Evidence signature verifier", typeof(IEvidenceSignatureVerifier))
+            ,("Evidence completion OPA policy gate", typeof(IEvidenceCompletionPolicyGate))
+            ,("Authorized Enterprise Model contextualization receipt reader", typeof(IAuthorizedEnterpriseModelContextualizationReceiptReader))
+            ,("Evidence completion delivery-run reader", typeof(IEvidenceCompletionDeliveryRunReader))
+            ,("Evidence completion result authorizer", typeof(IEvidenceCompletionResultAuthorizer))
         };
 
         var dependencies = requiredDependencies

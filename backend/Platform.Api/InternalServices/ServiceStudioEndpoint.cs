@@ -12,6 +12,7 @@ using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.SupplyChain;
 using Platform.EnterpriseModel.Registration;
 using Platform.EnterpriseModel.Model;
+using Platform.Evidence.Chain;
 
 namespace Platform.Api.InternalService;
 
@@ -193,6 +194,13 @@ internal static class InternalServiceEndpoint
     private sealed record EnterpriseModelContextualizationInput(
         Guid ContextualizationId, Guid DeliveryRunId, Guid ExpectedEnterpriseObjectId,
         string ExpectedRequestFingerprint, string ExpectedRegistrationEvidenceReference,
+        string Purpose, DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record EvidenceCompletionInput(
+        Guid CompletionId, Guid DeliveryRunId, Guid ChainId, string CorrelationId,
+        string ExpectedContextualizationEvidenceReference, string PayloadSha256Digest,
+        System.Collections.Immutable.ImmutableArray<string> TraceReferences,
         string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
@@ -1652,6 +1660,61 @@ internal static class InternalServiceEndpoint
             .Accepts<EnterpriseModelContextualizationInput>("application/json")
             .Produces<GovernedEnterpriseModelContextualizationReceipt>(200).Produces<GovernedEnterpriseModelContextualizationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceEvidenceCompletion(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/enterprise-model/{contextualizationId:guid}/evidence",
+            async (Guid contextualizationId, EvidenceCompletionInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedEvidenceCompletionEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.evidence.complete",
+                        input.ChainId.ToString(), context.Identity.TenantId, input.MaximumClassification,
+                        [], ["operator.internal-service.evidence.complete", "evidence.append", "evidence.verify"],
+                        context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IEvidenceCompletionPolicyGate>();
+                    var contextualizationReader = services.GetService<IAuthorizedEnterpriseModelContextualizationReceiptReader>();
+                    var runReader = services.GetService<IEvidenceCompletionDeliveryRunReader>();
+                    var store = services.GetService<IEvidenceChainStore>();
+                    var evidenceAccess = services.GetService<IEvidenceAccessAuthorizer>();
+                    var signer = services.GetService<IEvidenceSigner>();
+                    var signatureVerifier = services.GetService<IEvidenceSignatureVerifier>();
+                    var authorizer = services.GetService<IEvidenceCompletionResultAuthorizer>();
+                    if (policy is null || contextualizationReader is null || runReader is null || store is null || evidenceAccess is null ||
+                        signer is null || signatureVerifier is null || authorizer is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Evidence completion is not operationally ready.");
+                    var request = new GovernedEvidenceCompletionRequest(
+                        input.CompletionId, contextualizationId, input.DeliveryRunId, input.ChainId,
+                        input.CorrelationId, input.ExpectedContextualizationEvidenceReference,
+                        input.PayloadSha256Digest, input.TraceReferences, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.CompleteAsync(request, policy, contextualizationReader, runReader,
+                        store, evidenceAccess, signer, signatureVerifier, authorizer, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Evidence completion denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Evidence completion prerequisite was not found."); }
+                catch (System.Security.Cryptography.CryptographicException) { return Results.Problem(statusCode: 409, title: "Evidence chain cryptographic verification failed."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Evidence completion request or boundary result is invalid."); }
+            })
+            .WithName("CompleteGovernedEvidence").WithTags("Create Internal Service")
+            .WithSummary("Append and verify the final cryptographic Evidence entry.")
+            .WithDescription("OPA and Evidence authorization precede access. The Phase 30 engine appends only the final Evidence entry and verifies the exact complete ten-stage chain. No later station exists.")
+            .Accepts<EvidenceCompletionInput>("application/json")
+            .Produces<GovernedEvidenceCompletionReceipt>(200).Produces<GovernedEvidenceCompletionReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(409).ProducesProblem(503)
             .RequireAuthorization();
     }
 }
