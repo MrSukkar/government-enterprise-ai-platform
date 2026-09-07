@@ -676,6 +676,24 @@
         }
       }
     },
+    "/api/v1/internal-services/registrations/{registrationId}/enterprise-model": {
+      "post": {
+        "operationId": "contextualizeGovernedEnterpriseModel",
+        "summary": "Confirm one exact registered service in authorized Enterprise Model context.",
+        "description": "OPA authorizes the exact registration, Enterprise Object, tenant, classification, and evidence before reads. No model mutation, analysis, simulation, workflow advancement, or Evidence completion is available.",
+        "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
+        "parameters": [ { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EnterpriseModelContextualizationInput" } } } },
+        "responses": {
+          "200": { "description": "The exact registered service was confirmed in authorized Enterprise Model context with evidence.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedEnterpriseModelContextualizationReceipt" } } } },
+          "400": { "description": "Invalid Enterprise Model boundary result.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "403": { "description": "Enterprise Model access, OPA, object, or result authorization denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedEnterpriseModelContextualizationReceipt" } } } },
+          "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+          "503": { "description": "A governed dependency is unavailable; no prerequisite or Enterprise Model read occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+        }
+      }
+    },
     "/openapi/v1.json": {
       "get": {
         "operationId": "getOpenApiContract",
@@ -1719,6 +1737,31 @@
           "disposition": { "type": ["string", "null"], "enum": ["Created", "Updated", "Unchanged", null] },
           "enterpriseObjectId": { "type": ["string", "null"], "format": "uuid" }, "registrationEvidenceReference": { "type": ["string", "null"] },
           "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "EnterpriseModelContextualizationInput": {
+        "type": "object", "additionalProperties": false,
+        "required": ["contextualizationId", "deliveryRunId", "expectedEnterpriseObjectId", "expectedRequestFingerprint", "expectedRegistrationEvidenceReference", "purpose", "maximumClassification", "environment", "policyBundle"],
+        "properties": {
+          "contextualizationId": { "type": "string", "format": "uuid" }, "deliveryRunId": { "type": "string", "format": "uuid" },
+          "expectedEnterpriseObjectId": { "type": "string", "format": "uuid" }, "expectedRequestFingerprint": { "type": "string", "pattern": "^sha256:[0-9A-Fa-f]{64}$" },
+          "expectedRegistrationEvidenceReference": { "type": "string", "minLength": 1 }, "purpose": { "type": "string", "minLength": 1 },
+          "maximumClassification": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Secret", "TopSecret"] },
+          "environment": { "type": "string", "minLength": 1 }, "policyBundle": { "$ref": "#/components/schemas/IntentPolicyBundleReference" }
+        }
+      },
+      "GovernedEnterpriseModelContextualizationReceipt": {
+        "type": "object", "additionalProperties": false,
+        "required": ["contextualizationId", "registrationId", "deliveryRunId", "tenantId", "policyOutcome", "isAccepted", "enterpriseModelContextualized", "enterpriseModelMutated", "workflowAdvanced", "evidenceCompleted", "canAdvance", "enterpriseObjectId", "requestFingerprint", "evidenceReferences", "nextRequiredGate", "completedAt"],
+        "properties": {
+          "contextualizationId": { "type": "string", "format": "uuid" }, "registrationId": { "type": "string", "format": "uuid" },
+          "deliveryRunId": { "type": "string", "format": "uuid" }, "tenantId": { "type": "string" },
+          "policyOutcome": { "type": "string", "enum": ["Deny", "Permit"] }, "isAccepted": { "type": "boolean" },
+          "enterpriseModelContextualized": { "type": "boolean" }, "enterpriseModelMutated": { "type": "boolean", "const": false },
+          "workflowAdvanced": { "type": "boolean", "const": false }, "evidenceCompleted": { "type": "boolean", "const": false }, "canAdvance": { "type": "boolean", "const": false },
+          "enterpriseObjectId": { "type": "string", "format": "uuid" }, "requestFingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "contextualizationEvidenceReference": { "type": ["string", "null"] }, "evidenceReferences": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "nextRequiredGate": { "type": "string" }, "completedAt": { "type": "string", "format": "date-time" }
         }
       },

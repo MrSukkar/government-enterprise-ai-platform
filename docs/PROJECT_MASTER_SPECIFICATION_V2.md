@@ -172,6 +172,8 @@ Operational Increment 19 is **Governed OpenTelemetry Activation**. It defines pr
 
 Operational Increment 20 is **Governed Automatic Registration**. It defines protected deterministic registration of the exact deployed and observed service from an accepted OpenTelemetry receipt and a delivery run stopped at `OpenTelemetry`. Verified OPA authorizes the exact activation, runtime, Artifact, service key, signed registration manifest, owner, classification, policies, permitted actions, relationships, tenant, purpose, environment, and evidence before reads or mutation. The existing Phase 17 engine performs one atomic evidence-backed registration and validates the returned Enterprise Object. Result authorization and cryptographic evidence are mandatory. No workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, or autonomous action is available.
 
+Operational Increment 21 is **Governed Enterprise Model Contextualization**. It defines protected confirmation of the exact atomically registered service as an authorized Enterprise Object from a delivery run stopped at `AutomaticRegistration`. Verified OPA authorizes the exact registration receipt, object identity, fingerprint, tenant, purpose, environment, classification, and evidence before reads. The object and its lifecycle, source, policies, actions, relationships, timestamps, and evidence are revalidated and result-authorized before an evidence-bearing contextualization receipt is released. No additional model mutation, workflow advancement, impact analysis, simulation, inference, action, or Evidence completion is available.
+
 The governing path remains:
 
 `Intent -> Enterprise Context -> Existing Systems -> Existing Architecture -> Approved Packages -> AI Planning -> Code Generation -> Validation -> Security -> Sandbox -> Tests -> Human Review -> Git -> CI/CD -> Artifact -> Deployment -> OpenTelemetry -> Automatic Registration -> Enterprise Model -> Evidence`
@@ -205,3 +207,5 @@ Increment 18 amendment: `docs/change-control/CR-001-AMENDMENT-15-DEPLOYMENT.md`.
 Increment 19 amendment: `docs/change-control/CR-001-AMENDMENT-16-OPENTELEMETRY.md`.
 
 Increment 20 amendment: `docs/change-control/CR-001-AMENDMENT-17-AUTOMATIC-REGISTRATION.md`.
+
+Increment 21 amendment: `docs/change-control/CR-001-AMENDMENT-18-ENTERPRISE-MODEL.md`.

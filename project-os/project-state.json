@@ -10,17 +10,17 @@
   "nextPermittedPhase": null,
   "businessImplementation": {
     "product": "Create Internal Service Workspace",
-    "increment": "Operational Increment 20 - Governed Automatic Registration",
+    "increment": "Operational Increment 21 - Governed Enterprise Model Contextualization",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-001-AMENDMENT-17-AUTOMATIC-REGISTRATION.md",
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_20_ACCEPTANCE.md",
-    "executionBoundary": "Governed Automatic Registration contract verified; policy, OpenTelemetry receipt/run, signed manifest, atomic repository, result authorization, and evidence unavailable; no read, registration, workflow advancement, Enterprise Model contextualization, Evidence completion, inference, or autonomous action"
+    "changeControl": "docs/change-control/CR-001-AMENDMENT-18-ENTERPRISE-MODEL.md",
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_21_ACCEPTANCE.md",
+    "executionBoundary": "Governed Enterprise Model contextualization contract verified; policy, Automatic Registration receipt/run, authorized object reader, result authorization, and evidence unavailable; no read, additional model mutation, analysis, simulation, workflow advancement, or Evidence completion"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_20_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/phase-29/OPERATIONAL_INCREMENT_21_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

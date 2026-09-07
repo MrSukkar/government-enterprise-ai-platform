@@ -11,6 +11,7 @@ using Platform.SoftwareFactory.Validation;
 using Platform.SoftwareFactory.Sandbox;
 using Platform.SoftwareFactory.SupplyChain;
 using Platform.EnterpriseModel.Registration;
+using Platform.EnterpriseModel.Model;
 
 namespace Platform.Api.InternalService;
 
@@ -187,6 +188,12 @@ internal static class InternalServiceEndpoint
         string ExpectedServiceIdentity, string ExpectedServiceVersion, string ExpectedArtifactDigest,
         string ExpectedOpenTelemetryEvidenceReference, string Purpose,
         DataClassification MaximumClassification, string Environment,
+        IntentPolicyBundleReference PolicyBundle);
+
+    private sealed record EnterpriseModelContextualizationInput(
+        Guid ContextualizationId, Guid DeliveryRunId, Guid ExpectedEnterpriseObjectId,
+        string ExpectedRequestFingerprint, string ExpectedRegistrationEvidenceReference,
+        string Purpose, DataClassification MaximumClassification, string Environment,
         IntentPolicyBundleReference PolicyBundle);
 
     internal static IEndpointConventionBuilder MapInternalServiceFoundation(this IEndpointRouteBuilder endpoints)
@@ -1594,6 +1601,56 @@ internal static class InternalServiceEndpoint
             .WithDescription("OPA authorizes the exact OpenTelemetry receipt, run, signed manifest, service key, policies, actions, relationships, and evidence before atomic registration. No workflow advancement or later station is available.")
             .Accepts<AutomaticRegistrationInput>("application/json")
             .Produces<GovernedAutomaticRegistrationReceipt>(200).Produces<GovernedAutomaticRegistrationReceipt>(403)
+            .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
+            .RequireAuthorization();
+    }
+
+    internal static IEndpointConventionBuilder MapInternalServiceEnterpriseModel(this IEndpointRouteBuilder endpoints)
+    {
+        return endpoints.MapPost(
+            "/api/v1/internal-services/registrations/{registrationId:guid}/enterprise-model",
+            async (Guid registrationId, EnterpriseModelContextualizationInput input, HttpContext httpContext,
+                IServiceProvider services, GovernedRequestContextFactory contextFactory,
+                IAccessPolicyEvaluator accessPolicyEvaluator, GovernedEnterpriseModelContextualizationEngine engine,
+                CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    var context = contextFactory.Create(httpContext.User);
+                    var access = accessPolicyEvaluator.Evaluate(new AccessRequest(
+                        context.Identity, input.Purpose, "internal-service.enterprise-model.contextualize",
+                        input.ExpectedEnterpriseObjectId.ToString(), context.Identity.TenantId, input.MaximumClassification,
+                        [], ["operator.internal-service.enterprise-model.contextualize"], context.Identity.SubjectId, false));
+                    if (!access.IsAllowed) throw new UnauthorizedAccessException();
+                    var policy = services.GetService<IEnterpriseModelContextPolicyGate>();
+                    var registrationReader = services.GetService<IAuthorizedAutomaticRegistrationReceiptReader>();
+                    var runReader = services.GetService<IEnterpriseModelDeliveryRunReader>();
+                    var objectReader = services.GetService<IAuthorizedRegisteredEnterpriseObjectReader>();
+                    var authorizer = services.GetService<IEnterpriseModelContextResultAuthorizer>();
+                    var evidence = services.GetService<IEnterpriseModelContextEvidenceRecorder>();
+                    if (policy is null || registrationReader is null || runReader is null || objectReader is null || authorizer is null || evidence is null)
+                        return Results.Problem(statusCode: 503, title: "Governed Enterprise Model contextualization is not operationally ready.");
+                    var request = new GovernedEnterpriseModelContextualizationRequest(
+                        input.ContextualizationId, registrationId, input.DeliveryRunId,
+                        new EnterpriseObjectId(input.ExpectedEnterpriseObjectId), input.ExpectedRequestFingerprint,
+                        input.ExpectedRegistrationEvidenceReference, context.Identity, input.Purpose,
+                        input.MaximumClassification, context.AuthorizationEvidenceReference,
+                        input.Environment, input.PolicyBundle, DateTimeOffset.UtcNow);
+                    var receipt = await engine.ContextualizeAsync(request, policy, registrationReader, runReader,
+                        objectReader, authorizer, evidence, cancellationToken);
+                    return receipt.PolicyOutcome == GovernedIntentPolicyOutcome.Permit && receipt.IsAccepted
+                        ? Results.Ok(receipt) : Results.Json(receipt, statusCode: 403);
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Enterprise Model contextualization denied."); }
+                catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Enterprise Model prerequisite was not found."); }
+                catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+                { return Results.Problem(statusCode: 400, title: "Enterprise Model request or boundary result is invalid."); }
+            })
+            .WithName("ContextualizeGovernedEnterpriseModel").WithTags("Create Internal Service")
+            .WithSummary("Confirm one exact registered service in authorized Enterprise Model context.")
+            .WithDescription("OPA authorizes the exact registration, Enterprise Object, tenant, classification, and evidence before reads. No model mutation, analysis, simulation, workflow advancement, or Evidence completion is available.")
+            .Accepts<EnterpriseModelContextualizationInput>("application/json")
+            .Produces<GovernedEnterpriseModelContextualizationReceipt>(200).Produces<GovernedEnterpriseModelContextualizationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)
             .RequireAuthorization();
     }

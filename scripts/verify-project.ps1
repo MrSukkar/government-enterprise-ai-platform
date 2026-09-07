@@ -1664,6 +1664,30 @@ if (Test-Path $increment20AcceptancePath) {
     @('Status: **Satisfied**','all 130 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 20 acceptance missing: $_"}}
 }
 
+$increment21AcceptancePath = Join-Path $repositoryRoot 'docs\phase-29\OPERATIONAL_INCREMENT_21_ACCEPTANCE.md'
+if (Test-Path $increment21AcceptancePath) {
+    $enginePath=Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedEnterpriseModelContextualization.cs'
+    $endpointPath=Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $readinessPath=Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+    $openApiPath=Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $changePath=Join-Path $repositoryRoot 'docs\change-control\CR-001-AMENDMENT-18-ENTERPRISE-MODEL.md'
+    @($enginePath,$endpointPath,$readinessPath,$openApiPath,$changePath)|ForEach-Object{if(-not(Test-Path $_)){throw "Increment 21 artifact missing: $_"}}
+    $change=Get-Content -Raw $changePath
+    @('Status: **Approved for Operational Increment 21**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 21 approval missing: $_"}}
+    $engine=Get-Content -Raw $enginePath
+    @('IEnterpriseModelContextPolicyGate','IAuthorizedAutomaticRegistrationReceiptReader','IEnterpriseModelDeliveryRunReader','DeliveryStage.AutomaticRegistration','IAuthorizedRegisteredEnterpriseObjectReader','LifecycleState.Active','automatic-registration','IEnterpriseModelContextResultAuthorizer','IEnterpriseModelContextEvidenceRecorder','EnterpriseModelMutated','WorkflowAdvanced','EvidenceCompleted','CanAdvance','Separately approved Evidence completion')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Enterprise Model guard missing: $_"}}
+    if($engine.IndexOf('ValidatePolicy(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('registrationReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Enterprise Model prerequisite read occurs before OPA validation.'}
+    if($engine -match 'StageCompletion|EnterpriseImpactAnalysisEngine|EnterpriseSimulationEngine'){throw 'Enterprise Model contextualization crossed its analysis, simulation, or workflow boundary.'}
+    $endpoint=Get-Content -Raw $endpointPath
+    @('/api/v1/internal-services/registrations/{registrationId:guid}/enterprise-model','operator.internal-service.enterprise-model.contextualize','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Enterprise Model endpoint missing: $_"}}
+    $readiness=Get-Content -Raw $readinessPath
+    @('Enterprise Model contextualization OPA policy gate','Authorized Automatic Registration receipt reader','Enterprise Model contextualization delivery-run reader','Authorized registered Enterprise Object reader','Enterprise Model contextualization result authorizer','Enterprise Model contextualization evidence recorder')|ForEach-Object{if($readiness -notmatch [regex]::Escape($_)){throw "Enterprise Model readiness missing: $_"}}
+    $openApi=Get-Content -Raw $openApiPath
+    @('/api/v1/internal-services/registrations/{registrationId}/enterprise-model','EnterpriseModelContextualizationInput','GovernedEnterpriseModelContextualizationReceipt','enterpriseModelContextualized','enterpriseModelMutated','workflowAdvanced','evidenceCompleted','canAdvance')|ForEach-Object{if($openApi -notmatch [regex]::Escape($_)){throw "Enterprise Model OpenAPI missing: $_"}}
+    $acceptance=Get-Content -Raw $increment21AcceptancePath
+    @('Status: **Satisfied**','all 136 required runtime dependencies remain fail closed')|ForEach-Object{if($acceptance -notmatch [regex]::Escape($_)){throw "Increment 21 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

@@ -109,6 +109,7 @@ app.MapInternalServiceArtifact();
 app.MapInternalServiceDeployment();
 app.MapInternalServiceOpenTelemetry();
 app.MapInternalServiceAutomaticRegistration();
+app.MapInternalServiceEnterpriseModel();
 
 if (app.Environment.IsDevelopment())
 {

@@ -22,8 +22,8 @@ public static class InternalServiceFoundationCatalog
     public static InternalServiceFoundation Current { get; } = new(
         "sovereign-internal-services",
         "Create Internal Service Workspace",
-        "Operational Increment 20 - Governed Automatic Registration",
-        "Governed Automatic Registration contract available; all policy, prerequisite, manifest, repository, authorization, and evidence adapters fail-closed",
+        "Operational Increment 21 - Governed Enterprise Model Contextualization",
+        "Governed Enterprise Model contextualization contract available; all policy, prerequisite, object-read, authorization, and evidence adapters fail-closed",
         "Create an internal government service through governed context, delivery, operations, and proof.",
         Enum.GetValues<DeliveryStage>()
             .Select((stage, ordinal) => new InternalServiceDeliveryStage(
@@ -106,6 +106,10 @@ public static class InternalServiceFoundationCatalog
             "OPA authorizes the exact signed manifest, stable service key, runtime, Artifact, policies, actions, relationships, and evidence before reads",
             "The Phase 17 repository atomically creates, updates, or confirms the registered Enterprise Object",
             "Automatic Registration cannot advance workflow, contextualize the Enterprise Model, complete Evidence, infer, or act autonomously",
+            "Enterprise Model contextualization requires accepted Automatic Registration and a delivery run stopped at AutomaticRegistration",
+            "OPA authorizes the exact registered object, tenant, classification, fingerprint, and evidence before reads",
+            "Registered object lifecycle, policies, actions, relationships, timestamps, and evidence are revalidated",
+            "Enterprise Model contextualization cannot mutate, analyze, simulate, infer, act, advance workflow, or complete Evidence",
             "Developer console is available",
             "All 15 projects build with zero warnings and zero errors"
         ]);

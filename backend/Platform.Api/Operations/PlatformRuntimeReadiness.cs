@@ -179,6 +179,12 @@ internal sealed class PlatformRuntimeReadiness
             ,("Governed Automatic Registration manifest reader", typeof(IGovernedAutomaticRegistrationManifestReader))
             ,("Automatic Registration result authorizer", typeof(IAutomaticRegistrationResultAuthorizer))
             ,("Automatic Registration evidence recorder", typeof(IAutomaticRegistrationEvidenceRecorder))
+            ,("Enterprise Model contextualization OPA policy gate", typeof(IEnterpriseModelContextPolicyGate))
+            ,("Authorized Automatic Registration receipt reader", typeof(IAuthorizedAutomaticRegistrationReceiptReader))
+            ,("Enterprise Model contextualization delivery-run reader", typeof(IEnterpriseModelDeliveryRunReader))
+            ,("Authorized registered Enterprise Object reader", typeof(IAuthorizedRegisteredEnterpriseObjectReader))
+            ,("Enterprise Model contextualization result authorizer", typeof(IEnterpriseModelContextResultAuthorizer))
+            ,("Enterprise Model contextualization evidence recorder", typeof(IEnterpriseModelContextEvidenceRecorder))
         };
 
         var dependencies = requiredDependencies

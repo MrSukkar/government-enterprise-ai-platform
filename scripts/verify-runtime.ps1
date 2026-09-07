@@ -159,6 +159,10 @@ try {
     $automaticRegistration = $client.PostAsync(
         "$baseAddress/api/v1/internal-services/opentelemetry/00000000-0000-0000-0000-000000000011/automatic-registration",
         $automaticRegistrationContent).GetAwaiter().GetResult()
+    $enterpriseModelContent = [Net.Http.StringContent]::new('{}', [Text.Encoding]::UTF8, 'application/json')
+    $enterpriseModel = $client.PostAsync(
+        "$baseAddress/api/v1/internal-services/registrations/00000000-0000-0000-0000-000000000012/enterprise-model",
+        $enterpriseModelContent).GetAwaiter().GetResult()
 
     if ([int]$readiness.StatusCode -ne 503) {
         throw "Expected fail-closed readiness status 503, received $([int]$readiness.StatusCode)."
@@ -235,12 +239,15 @@ try {
     if ([int]$automaticRegistration.StatusCode -ne 401 -or $automaticRegistration.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
         throw 'Anonymous Automatic Registration did not fail closed with a bearer challenge.'
     }
+    if ([int]$enterpriseModel.StatusCode -ne 401 -or $enterpriseModel.Headers.WwwAuthenticate.Scheme -notcontains 'Bearer') {
+        throw 'Anonymous Enterprise Model contextualization did not fail closed with a bearer challenge.'
+    }
 
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 130) {
-        throw 'Readiness response did not disclose the expected 130 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 136) {
+        throw 'Readiness response did not disclose the expected 136 fail-closed runtime dependencies.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -253,7 +260,7 @@ try {
     )
     $actualDeliveryStages = @($internalServiceBody.deliveryStages | ForEach-Object { $_.key })
     if ($internalServiceBody.productId -ne 'sovereign-internal-services' -or
-        $internalServiceBody.increment -ne 'Operational Increment 20 - Governed Automatic Registration' -or
+        $internalServiceBody.increment -ne 'Operational Increment 21 - Governed Enterprise Model Contextualization' -or
         [int]$actualDeliveryStages.Count -ne $expectedDeliveryStages.Count -or
         ($actualDeliveryStages -join ',') -ne ($expectedDeliveryStages -join ',')) {
         throw 'Create Internal Service Workspace foundation is unavailable or incomplete.'
@@ -277,8 +284,9 @@ try {
         -not $openApiBody.paths.'/api/v1/internal-services/cicd/{ciCdExecutionId}/artifact' -or
         -not $openApiBody.paths.'/api/v1/internal-services/artifacts/{artifactPublicationId}/deployment' -or
         -not $openApiBody.paths.'/api/v1/internal-services/deployments/{deploymentId}/opentelemetry' -or
-        -not $openApiBody.paths.'/api/v1/internal-services/opentelemetry/{activationId}/automatic-registration') {
-        throw 'Runtime OpenAPI response does not contain the approved path through Automatic Registration.'
+        -not $openApiBody.paths.'/api/v1/internal-services/opentelemetry/{activationId}/automatic-registration' -or
+        -not $openApiBody.paths.'/api/v1/internal-services/registrations/{registrationId}/enterprise-model') {
+        throw 'Runtime OpenAPI response does not contain the approved path through Enterprise Model contextualization.'
     }
 
     $portalBody = $developerPortal.Content.ReadAsStringAsync().GetAwaiter().GetResult()
@@ -288,7 +296,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, 130 runtime dependencies fail-closed, and Governed Automatic Registration remains protected without policy, prerequisite, manifest, repository, authorization, or evidence adapters.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, 136 runtime dependencies fail-closed, and Governed Enterprise Model contextualization remains protected without policy, prerequisite, object-read, authorization, or evidence adapters.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

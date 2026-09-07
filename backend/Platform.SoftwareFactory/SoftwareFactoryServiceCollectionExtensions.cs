@@ -45,6 +45,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddScoped<GovernedSovereignDeploymentEngine>();
         services.AddScoped<GovernedOpenTelemetryActivationEngine>();
         services.AddScoped<GovernedAutomaticRegistrationEngine>();
+        services.AddScoped<GovernedEnterpriseModelContextualizationEngine>();
         return services;
     }
 }
