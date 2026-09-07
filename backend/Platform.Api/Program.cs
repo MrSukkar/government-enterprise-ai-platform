@@ -29,7 +29,7 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build());
 builder.Services.AddPlatformIdentityFoundation(builder.Configuration);
-builder.Services.AddPlatformKnowledgeFoundation();
+builder.Services.AddPlatformKnowledgeFoundation(builder.Configuration);
 builder.Services.AddPlatformSoftwareFactoryFoundation(builder.Configuration);
 builder.Services.AddPlatformInfrastructureFoundation();
 builder.Services.AddPlatformObservabilityFoundation(builder.Configuration);

@@ -27,7 +27,15 @@ public sealed record SovereignPolicyEvaluationDecision(
     OpaDecisionOutcome Outcome,
     ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences,
+    SovereignPolicyEvaluationScope? Scope,
     DateTimeOffset DecidedAt);
+
+public sealed record SovereignPolicyEvaluationScope(
+    string MaximumClassification,
+    ImmutableArray<string> AllowedResourceIds,
+    ImmutableArray<string> AllowedModalities,
+    ImmutableArray<string> RequiredRoles,
+    int MaximumResults);
 
 public interface ISovereignPolicyEvaluationClient
 {

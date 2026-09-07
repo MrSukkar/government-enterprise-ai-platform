@@ -32,7 +32,7 @@
       "get": {
         "operationId": "getPlatformReadiness",
         "summary": "Read fail-closed runtime readiness.",
-        "description": "Returns 503 until every required runtime boundary is connected. It reports identity, policy, and governed-intent PostgreSQL configuration as unconfigured, invalid, or configured without exposing configuration values.",
+        "description": "Returns 503 until every required runtime boundary is connected. It reports identity, policy, governed-intent PostgreSQL, Neo4j Enterprise Graph, and Enterprise Context composition as unconfigured, invalid, or configured without exposing configuration values.",
         "tags": ["Platform"],
         "security": [],
         "responses": {
@@ -746,11 +746,13 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "postgresqlIntentRegistration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "postgresqlIntentRegistration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "neo4jEnterpriseGraph": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "enterpriseContext": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

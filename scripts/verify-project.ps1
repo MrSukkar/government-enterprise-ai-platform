@@ -974,7 +974,7 @@ if (Test-Path -LiteralPath $increment04AcceptancePath) {
         }
     }
     $decisionValidationIndex = $contextEngine.IndexOf('ValidateDecision(policyInput', [StringComparison]::Ordinal)
-    $retrievalIndex = $contextEngine.IndexOf('var context = await _knowledgeRetriever.RetrieveAsync', [StringComparison]::Ordinal)
+    $retrievalIndex = $contextEngine.IndexOf('_knowledgeRetriever.RetrieveAsync', [StringComparison]::Ordinal)
     if ($decisionValidationIndex -lt 0 -or $retrievalIndex -lt 0 -or $decisionValidationIndex -ge $retrievalIndex) {
         throw 'Enterprise Context retrieval is not structurally ordered after OPA decision validation.'
     }
@@ -1815,6 +1815,75 @@ if (Test-Path $wave02AcceptancePath) {
     @('postgresqlIntentRegistration','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "PostgreSQL OpenAPI readiness contract missing: $_" } }
     $acceptance = Get-Content -Raw $wave02AcceptancePath
     @('Status: **Satisfied**','all 142 disconnected institutional dependencies fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 02 acceptance missing: $_" } }
+}
+
+$wave03AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_03_ACCEPTANCE.md'
+if (Test-Path $wave03AcceptancePath) {
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-004-OPERATIONALIZATION-WAVE-03.md'
+    $policyContractPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\ISovereignPolicyEvaluationClient.cs'
+    $policyClientPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\SovereignPolicyEvaluationClient.cs'
+    $contextPolicyPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignEnterpriseContextPolicyGate.cs'
+    $contextEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AuthorizedEnterpriseContextDiscovery.cs'
+    $registrationReaderPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlGovernedIntentRegistrationRepository.cs'
+    $evidenceRecorderPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlEnterpriseContextEvidenceRecorder.cs'
+    $migrationPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\002_enterprise_context_evidence.sql'
+    $graphOptionsPath = Join-Path $repositoryRoot 'backend\Platform.Knowledge\Retrieval\Neo4jEnterpriseGraphOptions.cs'
+    $graphSourcePath = Join-Path $repositoryRoot 'backend\Platform.Knowledge\Retrieval\Neo4jEnterpriseGraphRetrievalSource.cs'
+    $knowledgeServicesPath = Join-Path $repositoryRoot 'backend\Platform.Knowledge\KnowledgeServiceCollectionExtensions.cs'
+    $softwareServicesPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+    $knowledgeProjectPath = Join-Path $repositoryRoot 'backend\Platform.Knowledge\Platform.Knowledge.csproj'
+    $knowledgeLockPath = Join-Path $repositoryRoot 'backend\Platform.Knowledge\packages.lock.json'
+    $operationalEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $guidePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_03_ENTERPRISE_CONTEXT.md'
+    @($changePath,$policyContractPath,$policyClientPath,$contextPolicyPath,$contextEnginePath,$registrationReaderPath,$evidenceRecorderPath,$migrationPath,$graphOptionsPath,$graphSourcePath,$knowledgeServicesPath,$softwareServicesPath,$knowledgeProjectPath,$knowledgeLockPath,$operationalEndpointPath,$openApiPath,$guidePath) | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 03 artifact missing: $_" } }
+
+    $change = Get-Content -Raw $changePath
+    @('Status: **Approved for Operationalization Wave 03**','Decision: **Approved by the repository owner','Neo4j.Driver` package at version `6.3.0') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 03 approval missing: $_" } }
+    $project = Get-Content -Raw $knowledgeProjectPath
+    $lock = Get-Content -Raw $knowledgeLockPath
+    if ($project -notmatch 'PackageReference Include="Neo4j.Driver" Version="6\.3\.0"') { throw 'Neo4j.Driver is not pinned at the approved version.' }
+    @('"requested": "[6.3.0, )"','"resolved": "6.3.0"') | ForEach-Object { if ($lock -notmatch [regex]::Escape($_)) { throw "Neo4j.Driver lock evidence missing: $_" } }
+    if ($project -match 'Qdrant|pgvector|Embedding|ObjectGraphMapper') { throw 'An unapproved retrieval or graph-mapping package was introduced.' }
+
+    $graphOptions = Get-Content -Raw $graphOptionsPath
+    @('Neo4jEnterpriseGraphConfigurationState.Unconfigured','Neo4jEnterpriseGraphConfigurationState.Invalid','neo4j+s','bolt+s','endpoint.UserInfo','endpoint.Query','endpoint.Fragment','QueryTimeoutSeconds <= 0','MaximumRecords <= 0') | ForEach-Object { if ($graphOptions -notmatch [regex]::Escape($_)) { throw "Neo4j profile guard missing: $_" } }
+    $knowledgeServices = Get-Content -Raw $knowledgeServicesPath
+    @('options.IsOperationallyConfigured','GraphDatabase.Driver','AuthTokens.Basic') | ForEach-Object { if ($knowledgeServices -notmatch [regex]::Escape($_)) { throw "Neo4j driver composition missing: $_" } }
+    $graphSource = Get-Content -Raw $graphSourcePath
+    @('RetrievalModality.Graph','UNWIND $resourceIds','tenantId: $tenantId','classificationRank <= $maximumClassificationRank','LIMIT $maximumResults','AccessMode.Read','WithTimeout','scope.MaximumResults > options.MaximumRecords','KnowledgeRetrievalSourceUnavailableException') | ForEach-Object { if ($graphSource -notmatch [regex]::Escape($_)) { throw "Scope-first Enterprise Graph guard missing: $_" } }
+    if ($graphSource -match '(?im)^\s*(CREATE|MERGE|SET|DELETE|REMOVE|DROP)\s') { throw 'Enterprise Graph retrieval source contains a write or schema mutation.' }
+    if ($graphSource.IndexOf('UNWIND $resourceIds',[StringComparison]::Ordinal) -ge $graphSource.IndexOf('MATCH (resource:EnterpriseObject',[StringComparison]::Ordinal) -or
+        $graphSource.IndexOf('MATCH (resource:EnterpriseObject',[StringComparison]::Ordinal) -ge $graphSource.IndexOf('WHERE resource.classificationRank',[StringComparison]::Ordinal)) { throw 'Enterprise Graph query does not establish scope before matching and classification.' }
+
+    $policyContract = Get-Content -Raw $policyContractPath
+    @('SovereignPolicyEvaluationScope','MaximumClassification','AllowedResourceIds','AllowedModalities','RequiredRoles','MaximumResults') | ForEach-Object { if ($policyContract -notmatch [regex]::Escape($_)) { throw "Typed policy scope contract missing: $_" } }
+    $contextPolicy = Get-Content -Raw $contextPolicyPath
+    @('internal-service.enterprise-context.discover','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','RetrievalModality.Graph','scope.MaximumResults','AllowedResourceIds','AllowedModalities','MaximumClassification') | ForEach-Object { if ($contextPolicy -notmatch [regex]::Escape($_)) { throw "Enterprise Context policy adapter guard missing: $_" } }
+    if ($contextPolicy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $contextPolicy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Enterprise Context OPA evaluation does not follow signed bundle verification.' }
+
+    $contextEngine = Get-Content -Raw $contextEnginePath
+    if ($contextEngine.IndexOf('registrationReader.LoadAsync',[StringComparison]::Ordinal) -ge $contextEngine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -or
+        $contextEngine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $contextEngine.IndexOf('_knowledgeRetriever.RetrieveAsync',[StringComparison]::Ordinal) -or
+        $contextEngine.IndexOf('_knowledgeRetriever.RetrieveAsync',[StringComparison]::Ordinal) -ge $contextEngine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Enterprise Context read, policy, retrieval, and evidence order is invalid.' }
+    @('ValidateSourceScope','knowledge.context.read','ValidateAndMapContext','CanAdvance: false') | ForEach-Object { if (($contextEngine + (Get-Content -Raw (Join-Path $repositoryRoot 'backend\Platform.Knowledge\Retrieval\AuthorizedKnowledgeRetriever.cs'))) -notmatch [regex]::Escape($_)) { throw "Enterprise Context re-authorization guard missing: $_" } }
+
+    $registrationReader = Get-Content -Raw $registrationReaderPath
+    @('IGovernedIntentRegistrationReader','ReadSql','tenant_id = @tenant_id AND registration_id = @registration_id','CommandTimeout','NpgsqlParameter') | ForEach-Object { if ($registrationReader -notmatch [regex]::Escape($_)) { throw "Tenant-scoped registered-intent reader missing: $_" } }
+    $evidenceRecorder = Get-Content -Raw $evidenceRecorderPath
+    @('IEnterpriseContextEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','RecordSha256Digest','evidence://enterprise-context','CommitAsync','EnterpriseContextDependencyUnavailableException') | ForEach-Object { if ($evidenceRecorder -notmatch [regex]::Escape($_)) { throw "Atomic Enterprise Context evidence guard missing: $_" } }
+    if ($evidenceRecorder -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Enterprise Context runtime evidence adapter contains mutation outside append.' }
+    $migration = Get-Content -Raw $migrationPath
+    @('BEGIN;','software_factory.enterprise_context_evidence','PRIMARY KEY (tenant_id, discovery_id)','record_sha256_digest','record_json jsonb','FOREIGN KEY (tenant_id, registration_id)','ON UPDATE RESTRICT ON DELETE RESTRICT','COMMIT;') | ForEach-Object { if ($migration -notmatch [regex]::Escape($_)) { throw "Enterprise Context migration guard missing: $_" } }
+
+    $softwareServices = Get-Content -Raw $softwareServicesPath
+    @('graphOptions.IsOperationallyConfigured','IGovernedIntentRegistrationReader','IEnterpriseContextPolicyGate','IEnterpriseContextEvidenceRecorder','IKnowledgeRetrievalSource, Neo4jEnterpriseGraphRetrievalSource','EnterpriseContextRuntimeReadiness') | ForEach-Object { if ($softwareServices -notmatch [regex]::Escape($_)) { throw "Enterprise Context runtime composition missing: $_" } }
+    $operationalEndpoint = Get-Content -Raw $operationalEndpointPath
+    @('Neo4jEnterpriseGraphReadiness','EnterpriseContextRuntimeReadiness','neo4jEnterpriseGraph','enterpriseContext') | ForEach-Object { if ($operationalEndpoint -notmatch [regex]::Escape($_)) { throw "Enterprise Context readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $openApiPath
+    @('neo4jEnterpriseGraph','enterpriseContext','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Enterprise Context OpenAPI readiness contract missing: $_" } }
+    $acceptance = Get-Content -Raw $wave03AcceptancePath
+    @('Status: **Satisfied**','all 142 disconnected institutional dependencies fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 03 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

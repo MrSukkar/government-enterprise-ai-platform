@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Platform.Governance.Policies;
+using Platform.Knowledge.Retrieval;
 using Platform.SoftwareFactory.Packages;
 using Platform.SoftwareFactory.Delivery;
 using Platform.SoftwareFactory.AiDevelopment;
@@ -30,16 +31,39 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var policyOptions = configuration
             .GetSection(PolicyControlPlaneOptions.SectionName)
             .Get<PolicyControlPlaneOptions>() ?? new();
+        var graphOptions = configuration
+            .GetSection(Neo4jEnterpriseGraphOptions.SectionName)
+            .Get<Neo4jEnterpriseGraphOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
+        var enterpriseContextState =
+            persistenceOptions.ConfigurationState == PostgreSqlIntentRegistrationConfigurationState.Invalid ||
+            policyOptions.ConfigurationState == PolicyControlPlaneConfigurationState.Invalid ||
+            graphOptions.ConfigurationState == Neo4jEnterpriseGraphConfigurationState.Invalid
+                ? EnterpriseContextRuntimeConfigurationState.Invalid
+                : persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured &&
+                  graphOptions.IsOperationallyConfigured
+                    ? EnterpriseContextRuntimeConfigurationState.Configured
+                    : EnterpriseContextRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new EnterpriseContextRuntimeReadiness(enterpriseContextState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
+            services.AddScoped<PostgreSqlGovernedIntentRegistrationRepository>();
             services.AddScoped<IGovernedIntentPolicyGate, SovereignGovernedIntentPolicyGate>();
-            services.AddScoped<IGovernedIntentRegistrationRepository,
-                PostgreSqlGovernedIntentRegistrationRepository>();
+            services.AddScoped<IGovernedIntentRegistrationRepository>(provider =>
+                provider.GetRequiredService<PostgreSqlGovernedIntentRegistrationRepository>());
+            if (graphOptions.IsOperationallyConfigured)
+            {
+                services.AddScoped<IGovernedIntentRegistrationReader>(provider =>
+                    provider.GetRequiredService<PostgreSqlGovernedIntentRegistrationRepository>());
+                services.AddScoped<IEnterpriseContextPolicyGate, SovereignEnterpriseContextPolicyGate>();
+                services.AddScoped<IEnterpriseContextEvidenceRecorder,
+                    PostgreSqlEnterpriseContextEvidenceRecorder>();
+                services.AddScoped<IKnowledgeRetrievalSource, Neo4jEnterpriseGraphRetrievalSource>();
+            }
         }
         services.AddSingleton<IPackageEligibilityEvaluator, PackageEligibilityEvaluator>();
         services.AddSingleton<ISoftwareFactoryEngine, DeterministicSoftwareFactoryEngine>();

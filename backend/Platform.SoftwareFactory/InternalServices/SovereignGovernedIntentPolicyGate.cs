@@ -39,6 +39,8 @@ public sealed class SovereignGovernedIntentPolicyGate(
                 input.SubjectId, input.Purpose, input.Classification.ToString(), input.Environment,
                 verification, attributes, evidence, evaluatedAt),
             cancellationToken);
+        if (decision.Scope is not null)
+            throw new UnauthorizedAccessException("Intent policy decision returned an unauthorized retrieval scope.");
 
         return new GovernedIntentPolicyDecision(
             decision.DecisionRequestId, input.RegistrationId, input.TenantId,

@@ -6,14 +6,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operationalization wave 02 / Governed intent</p>
+        <p class="eyebrow">Operationalization wave 03 / Enterprise Context</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + POSTGRESQL</span>
-        <strong>Governed Intent Registration runtime available; deployment configuration required</strong>
-        <small>Signed policy verification precedes atomic tenant-scoped persistence. The repository profile contains no connection, credential, or trust material and remains fail closed.</small>
+        <span class="state-chip">OPA + NEO4J</span>
+        <strong>Authorized Enterprise Context runtime available; deployment configuration required</strong>
+        <small>Scope-first Graph retrieval and per-result authorization precede atomic evidence. Repository defaults contain no connection, credential, data, or trust material.</small>
     </aside>
 </section>
 
@@ -41,6 +41,8 @@
         <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
         <ul class="context-list">
             <li><span>Identity and purpose</span><strong class="@(ExperienceContext.IsGovernedIdentityEstablished ? "available" : "waiting")">@(ExperienceContext.IsGovernedIdentityEstablished ? "Established" : "Waiting")</strong></li>
+            <li><span>Governed Intent reader</span><strong class="waiting">Adapter available / not configured</strong></li>
+            <li><span>Enterprise Context OPA, Graph, and evidence</span><strong class="waiting">Adapters available / not configured</strong></li>
             <li><span>Enterprise Context snapshot reader</span><strong class="waiting">Not connected</strong></li>
             <li><span>Existing Systems OPA gate</span><strong class="waiting">Not connected</strong></li>
             <li><span>Inventory source contracts</span><strong class="waiting">No live adapters</strong></li>

@@ -225,3 +225,9 @@ Change-control record: `docs/change-control/CR-002-OPERATIONALIZATION-WAVE-01.md
 Operationalization Wave 02 connects the existing Governed Intent Registration contract to signed-bundle-bound OPA evaluation and an atomic tenant-scoped PostgreSQL repository. The adapters are composed only under complete, safe deployment configuration; repository defaults contain no connection or secret and remain fail closed. Schema application, external infrastructure, credentials, Enterprise Context reads, later stations, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-003-OPERATIONALIZATION-WAVE-02.md`.
+
+## Approved operationalization addendum — CR-004
+
+Operationalization Wave 03 connects Authorized Enterprise Context Discovery to the exact tenant-scoped governed-intent record, signed-bundle-bound OPA scope, the Neo4j Enterprise Graph baseline, existing pre-access and per-result authorization, and immutable PostgreSQL context evidence. Only fixed, parameterized, scope-first Graph reads are enabled under complete deployment configuration. Graph mutation, unrestricted retrieval, vector/lexical technology, later stations, external provisioning, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-004-OPERATIONALIZATION-WAVE-03.md`.

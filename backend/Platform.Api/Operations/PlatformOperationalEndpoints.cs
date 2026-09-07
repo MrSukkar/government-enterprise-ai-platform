@@ -10,7 +10,9 @@ internal static class PlatformOperationalEndpoints
         return endpoints.MapGet("/health/ready", (PlatformRuntimeReadiness readiness,
             Platform.Identity.IdentityControlPlaneReadiness identity,
             Platform.Governance.Policies.PolicyControlPlaneReadiness policy,
-            Platform.SoftwareFactory.Persistence.PostgreSqlIntentRegistrationReadiness persistence) =>
+            Platform.SoftwareFactory.Persistence.PostgreSqlIntentRegistrationReadiness persistence,
+            Platform.Knowledge.Retrieval.Neo4jEnterpriseGraphReadiness graph,
+            Platform.SoftwareFactory.InternalService.EnterpriseContextRuntimeReadiness enterpriseContext) =>
         {
             var payload = new
             {
@@ -20,7 +22,9 @@ internal static class PlatformOperationalEndpoints
                 {
                     identity = identity.State.ToString().ToLowerInvariant(),
                     policy = policy.State.ToString().ToLowerInvariant(),
-                    postgresqlIntentRegistration = persistence.State.ToString().ToLowerInvariant()
+                    postgresqlIntentRegistration = persistence.State.ToString().ToLowerInvariant(),
+                    neo4jEnterpriseGraph = graph.State.ToString().ToLowerInvariant(),
+                    enterpriseContext = enterpriseContext.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

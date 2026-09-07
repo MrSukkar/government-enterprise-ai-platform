@@ -13,7 +13,7 @@ namespace Platform.SoftwareFactory.Persistence;
 public sealed class PostgreSqlGovernedIntentRegistrationRepository(
     NpgsqlDataSource dataSource,
     IOptions<PostgreSqlIntentRegistrationOptions> configuredOptions)
-    : IGovernedIntentRegistrationRepository
+    : IGovernedIntentRegistrationRepository, IGovernedIntentRegistrationReader
 {
     private const string SelectSql = """
         SELECT submission_id, subject_id, classification, purpose, service_name, mission,
@@ -23,7 +23,17 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
                registered_at
           FROM software_factory.governed_intent_registration
          WHERE tenant_id = @tenant_id AND registration_id = @registration_id
-         FOR UPDATE
+        FOR UPDATE
+        """;
+
+    private const string ReadSql = """
+        SELECT submission_id, subject_id, classification, purpose, service_name, mission,
+               primary_users, intent_sha256_digest, policy_decision_request_id,
+               policy_bundle_id, policy_bundle_version, policy_bundle_sha256_digest,
+               idempotency_key, version, evidence_references, registration_evidence_reference,
+               registered_at
+          FROM software_factory.governed_intent_registration
+         WHERE tenant_id = @tenant_id AND registration_id = @registration_id
         """;
 
     private const string InsertSql = """
@@ -57,7 +67,7 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
             await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(
                 IsolationLevel.ReadCommitted, cancellationToken);
-            var existing = await LoadAsync(connection, transaction, candidate.TenantId,
+            var existing = await LoadStoredAsync(connection, transaction, SelectSql, candidate.TenantId,
                 candidate.RegistrationId, options.CommandTimeoutSeconds, cancellationToken);
             if (existing is not null)
             {
@@ -106,7 +116,7 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
                 options.CommandTimeoutSeconds, cancellationToken);
             if (inserted == 0)
             {
-                existing = await LoadAsync(connection, transaction, candidate.TenantId,
+                existing = await LoadStoredAsync(connection, transaction, SelectSql, candidate.TenantId,
                     candidate.RegistrationId, options.CommandTimeoutSeconds, cancellationToken)
                     ?? throw new GovernedIntentConcurrencyException(
                         "A conflicting governed intent registration exists outside the authorized key.");
@@ -136,6 +146,36 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
         {
             throw new GovernedIntentPersistenceUnavailableException(
                 "Governed intent persistence timed out.", exception);
+        }
+    }
+
+    public async Task<RegisteredGovernedIntent?> LoadAsync(
+        Guid registrationId,
+        string tenantId,
+        CancellationToken cancellationToken)
+    {
+        if (registrationId == Guid.Empty)
+            throw new InvalidOperationException("Governed intent registration identity is required.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(tenantId);
+        var options = configuredOptions.Value;
+        if (!options.IsOperationallyConfigured)
+            throw new EnterpriseContextDependencyUnavailableException(
+                "PostgreSQL governed intent reading is not validly configured.");
+        try
+        {
+            await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+            return await LoadStoredAsync(connection, transaction: null, ReadSql, tenantId,
+                registrationId, options.CommandTimeoutSeconds, cancellationToken);
+        }
+        catch (NpgsqlException)
+        {
+            throw new EnterpriseContextDependencyUnavailableException(
+                "PostgreSQL governed intent reading is unavailable.");
+        }
+        catch (TimeoutException)
+        {
+            throw new EnterpriseContextDependencyUnavailableException(
+                "PostgreSQL governed intent reading timed out.");
         }
     }
 
@@ -172,15 +212,16 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
         return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task<RegisteredGovernedIntent?> LoadAsync(
+    private static async Task<RegisteredGovernedIntent?> LoadStoredAsync(
         NpgsqlConnection connection,
-        NpgsqlTransaction transaction,
+        NpgsqlTransaction? transaction,
+        string sql,
         string tenantId,
         Guid registrationId,
         int commandTimeoutSeconds,
         CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand(SelectSql, connection, transaction)
+        await using var command = new NpgsqlCommand(sql, connection, transaction)
         {
             CommandTimeout = commandTimeoutSeconds
         };

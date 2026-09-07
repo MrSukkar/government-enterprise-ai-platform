@@ -259,7 +259,16 @@ public sealed class AuthorizedEnterpriseContextDiscoveryEngine(
             decision.RequiredRoles,
             decision.AllowedModalities,
             decision.MaximumResults);
-        var context = await _knowledgeRetriever.RetrieveAsync(query, cancellationToken);
+        AuthorizedKnowledgeContext context;
+        try
+        {
+            context = await _knowledgeRetriever.RetrieveAsync(query, cancellationToken);
+        }
+        catch (KnowledgeRetrievalSourceUnavailableException)
+        {
+            throw new EnterpriseContextDependencyUnavailableException(
+                "The authorized Enterprise Context source is unavailable.");
+        }
         var items = ValidateAndMapContext(registered, decision, context);
         var contextDigest = Digest(registered, decision, items);
         var contextEvidence = decisionEvidence

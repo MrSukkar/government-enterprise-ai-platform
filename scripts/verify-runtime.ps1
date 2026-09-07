@@ -258,8 +258,10 @@ try {
     }
     if ($readinessBody.controlPlanes.identity -ne 'unconfigured' -or
         $readinessBody.controlPlanes.policy -ne 'unconfigured' -or
-        $readinessBody.controlPlanes.postgresqlIntentRegistration -ne 'unconfigured') {
-        throw 'Repository-default identity, policy, and governed-intent PostgreSQL control planes did not remain explicitly unconfigured.'
+        $readinessBody.controlPlanes.postgresqlIntentRegistration -ne 'unconfigured' -or
+        $readinessBody.controlPlanes.neo4jEnterpriseGraph -ne 'unconfigured' -or
+        $readinessBody.controlPlanes.enterpriseContext -ne 'unconfigured') {
+        throw 'Repository-default identity, policy, PostgreSQL, Neo4j, and Enterprise Context control planes did not remain explicitly unconfigured.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -309,7 +311,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live, sovereign identity, policy, and governed-intent PostgreSQL control planes remain safely unconfigured, 142 runtime dependencies fail-closed, and the approved Create Internal Service contract is complete through cryptographically verified Evidence.'
+    Write-Output 'RUNTIME VERIFIED: Development API live, sovereign identity, policy, PostgreSQL, Neo4j, and Enterprise Context control planes remain safely unconfigured, 142 runtime dependencies fail-closed, and the approved Create Internal Service contract is complete through cryptographically verified Evidence.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

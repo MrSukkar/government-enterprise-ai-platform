@@ -36,7 +36,8 @@ public sealed class SovereignPolicyEvaluationClient(
         return new SovereignPolicyEvaluationDecision(
             result.DecisionRequestId, result.Action, result.ResourceId, result.BundleId,
             result.BundleVersion, result.BundleSha256Digest, result.Environment, outcome,
-            Normalize(result.Reasons), Normalize(result.EvidenceReferences), result.DecidedAt);
+            Normalize(result.Reasons), Normalize(result.EvidenceReferences), result.Scope,
+            result.DecidedAt);
     }
 
     private static void ValidateRequest(SovereignPolicyEvaluationRequest request)
@@ -75,5 +76,6 @@ public sealed class SovereignPolicyEvaluationClient(
         Guid DecisionRequestId, string Action, string ResourceId, string BundleId,
         string BundleVersion, string BundleSha256Digest, string Environment, string Outcome,
         ImmutableArray<string> Reasons, ImmutableArray<string> EvidenceReferences,
+        SovereignPolicyEvaluationScope? Scope,
         DateTimeOffset DecidedAt);
 }
