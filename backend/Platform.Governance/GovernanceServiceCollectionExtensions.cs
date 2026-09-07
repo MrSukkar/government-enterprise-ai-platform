@@ -15,6 +15,7 @@ public static class GovernanceServiceCollectionExtensions
         services.AddSingleton(new PolicyControlPlaneReadiness(policyOptions.ConfigurationState));
         services.AddHttpClient<IPolicyBundleVerifier, SovereignPolicyBundleVerifier>();
         services.AddHttpClient<IOpaPolicyDecisionPoint, SovereignOpaPolicyDecisionPoint>();
+        services.AddHttpClient<ISovereignPolicyEvaluationClient, SovereignPolicyEvaluationClient>();
         services.AddScoped<GovernedActions.GovernedActionGateway>();
         return services;
     }

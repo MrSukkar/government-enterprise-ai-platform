@@ -1761,6 +1761,62 @@ if (Test-Path $wave01AcceptancePath) {
     @('Status: **Satisfied**','remaining 142 institutional runtime dependencies remain disconnected and fail closed','15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 01 acceptance missing: $_" } }
 }
 
+$wave02AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_02_ACCEPTANCE.md'
+if (Test-Path $wave02AcceptancePath) {
+    $changePath = Join-Path $repositoryRoot 'docs\change-control\CR-003-OPERATIONALIZATION-WAVE-02.md'
+    $policyContractPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\ISovereignPolicyEvaluationClient.cs'
+    $policyClientPath = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\SovereignPolicyEvaluationClient.cs'
+    $intentPolicyPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignGovernedIntentPolicyGate.cs'
+    $intentEnginePath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedIntentRegistration.cs'
+    $persistenceOptionsPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlIntentRegistrationOptions.cs'
+    $repositoryPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlGovernedIntentRegistrationRepository.cs'
+    $migrationPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\001_governed_intent_registration.sql'
+    $servicesPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+    $projectPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Platform.SoftwareFactory.csproj'
+    $lockPath = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\packages.lock.json'
+    $endpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+    $operationalEndpointPath = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+    $openApiPath = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+    $guidePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_02_GOVERNED_INTENT_REGISTRATION.md'
+    @($changePath,$policyContractPath,$policyClientPath,$intentPolicyPath,$intentEnginePath,$persistenceOptionsPath,$repositoryPath,$migrationPath,$servicesPath,$projectPath,$lockPath,$endpointPath,$operationalEndpointPath,$openApiPath,$guidePath) | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 02 artifact missing: $_" } }
+
+    $change = Get-Content -Raw $changePath
+    @('Status: **Approved for Operationalization Wave 02**','Decision: **Approved by the repository owner','Npgsql` package at version `10.0.3') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 02 approval missing: $_" } }
+    $project = Get-Content -Raw $projectPath
+    $lock = Get-Content -Raw $lockPath
+    if ($project -notmatch 'PackageReference Include="Npgsql" Version="10\.0\.3"') { throw 'Npgsql is not pinned at the approved version.' }
+    @('"requested": "[10.0.3, )"','"resolved": "10.0.3"') | ForEach-Object { if ($lock -notmatch [regex]::Escape($_)) { throw "Npgsql lock evidence missing: $_" } }
+    if ($project -match 'EntityFramework|Dapper') { throw 'An unapproved ORM or database package was introduced.' }
+
+    $persistenceOptions = Get-Content -Raw $persistenceOptionsPath
+    @('PostgreSqlIntentRegistrationConfigurationState.Unconfigured','PostgreSqlIntentRegistrationConfigurationState.Invalid','SslMode.VerifyFull','IncludeErrorDetail','CommandTimeoutSeconds <= 0') | ForEach-Object { if ($persistenceOptions -notmatch [regex]::Escape($_)) { throw "PostgreSQL profile guard missing: $_" } }
+    $services = Get-Content -Raw $servicesPath
+    @('persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured','NpgsqlDataSource.Create','IGovernedIntentPolicyGate, SovereignGovernedIntentPolicyGate','IGovernedIntentRegistrationRepository') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Governed Intent runtime composition missing: $_" } }
+
+    $policyClient = Get-Content -Raw $policyClientPath
+    @('SovereignPolicyBundleVerifier.PostAsync','DecisionRequestId','Action','ResourceId','BundleSha256Digest','Environment','Enum.TryParse<OpaDecisionOutcome>','EvidenceReferences','DecidedAt') | ForEach-Object { if ($policyClient -notmatch [regex]::Escape($_)) { throw "Typed sovereign policy validation missing: $_" } }
+    $intentPolicy = Get-Content -Raw $intentPolicyPath
+    @('internal-service.intent.register','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','registrationId','intentSha256Digest','PolicySignatureValid: true') | ForEach-Object { if ($intentPolicy -notmatch [regex]::Escape($_)) { throw "Governed Intent OPA adapter guard missing: $_" } }
+    if ($intentPolicy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $intentPolicy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Intent OPA evaluation does not follow signed bundle verification.' }
+    $intentEngine = Get-Content -Raw $intentEnginePath
+    if ($intentEngine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $intentEngine.IndexOf('repository.RegisterAtomicallyAsync',[StringComparison]::Ordinal)) { throw 'Governed Intent persistence does not follow OPA evaluation.' }
+
+    $repository = Get-Content -Raw $repositoryPath
+    @('BeginTransactionAsync','IsolationLevel.ReadCommitted','ON CONFLICT DO NOTHING','FOR UPDATE','CommandTimeout','NpgsqlParameter','tenant_id = @tenant_id AND registration_id = @registration_id','expectedVersion != -1','candidate.Version != 0','ValidateUnchanged','SHA256.HashData','evidence://intent-registration','CommitAsync','GovernedIntentPersistenceUnavailableException','PostgresErrorCodes.UniqueViolation') | ForEach-Object { if ($repository -notmatch [regex]::Escape($_)) { throw "Atomic PostgreSQL repository guard missing: $_" } }
+    if ($repository -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'The runtime repository contains an unapproved mutation or startup DDL path.' }
+    $migration = Get-Content -Raw $migrationPath
+    @('BEGIN;','CREATE SCHEMA IF NOT EXISTS software_factory','PRIMARY KEY (tenant_id, registration_id)','UNIQUE (tenant_id, submission_id)','UNIQUE (tenant_id, idempotency_key)','CHECK (version >= 0)','COMMIT;') | ForEach-Object { if ($migration -notmatch [regex]::Escape($_)) { throw "Governed Intent migration guard missing: $_" } }
+
+    $endpoint = Get-Content -Raw $endpointPath
+    @('GovernedIntentPersistenceUnavailableException','StatusCodes.Status503ServiceUnavailable','GovernedIntentConcurrencyException','StatusCodes.Status409Conflict') | ForEach-Object { if ($endpoint -notmatch [regex]::Escape($_)) { throw "Governed Intent endpoint failure mapping missing: $_" } }
+    $operationalEndpoint = Get-Content -Raw $operationalEndpointPath
+    @('PostgreSqlIntentRegistrationReadiness','postgresqlIntentRegistration') | ForEach-Object { if ($operationalEndpoint -notmatch [regex]::Escape($_)) { throw "PostgreSQL readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $openApiPath
+    @('postgresqlIntentRegistration','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "PostgreSQL OpenAPI readiness contract missing: $_" } }
+    $acceptance = Get-Content -Raw $wave02AcceptancePath
+    @('Status: **Satisfied**','all 142 disconnected institutional dependencies fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 02 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

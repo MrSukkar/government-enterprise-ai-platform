@@ -62,6 +62,11 @@
           "Microsoft.IdentityModel.Logging": "8.19.2"
         }
       },
+      "Npgsql": {
+        "type": "Transitive",
+        "resolved": "10.0.3",
+        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w=="
+      },
       "OpenTelemetry": {
         "type": "Transitive",
         "resolved": "1.17.0",
@@ -205,10 +210,12 @@
       "platform.softwarefactory": {
         "type": "Project",
         "dependencies": {
+          "Npgsql": "[10.0.3, )",
           "Platform.Application": "[1.0.0, )",
           "Platform.Domain": "[1.0.0, )",
           "Platform.EnterpriseModel": "[1.0.0, )",
           "Platform.Evidence": "[1.0.0, )",
+          "Platform.Governance": "[1.0.0, )",
           "Platform.Identity": "[1.0.0, )",
           "Platform.Integrations": "[1.0.0, )",
           "Platform.Knowledge": "[1.0.0, )"

@@ -353,6 +353,12 @@ internal static class InternalServiceEndpoint
                         statusCode: StatusCodes.Status409Conflict,
                         title: "Governed intent registration version conflict.");
                 }
+                catch (GovernedIntentPersistenceUnavailableException)
+                {
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status503ServiceUnavailable,
+                        title: "Governed intent persistence is unavailable.");
+                }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 {
                     return Results.Problem(

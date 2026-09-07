@@ -147,6 +147,9 @@ public interface IGovernedIntentRegistrationRepository
 
 public sealed class GovernedIntentConcurrencyException(string message) : Exception(message);
 
+public sealed class GovernedIntentPersistenceUnavailableException(string message, Exception innerException)
+    : Exception(message, innerException);
+
 public sealed record GovernedIntentRegistrationReceipt(
     Guid RegistrationId,
     Guid SubmissionId,

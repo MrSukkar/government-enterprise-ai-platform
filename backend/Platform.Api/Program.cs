@@ -30,7 +30,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 builder.Services.AddPlatformIdentityFoundation(builder.Configuration);
 builder.Services.AddPlatformKnowledgeFoundation();
-builder.Services.AddPlatformSoftwareFactoryFoundation();
+builder.Services.AddPlatformSoftwareFactoryFoundation(builder.Configuration);
 builder.Services.AddPlatformInfrastructureFoundation();
 builder.Services.AddPlatformObservabilityFoundation(builder.Configuration);
 builder.Services.AddPlatformEnterpriseModelFoundation();

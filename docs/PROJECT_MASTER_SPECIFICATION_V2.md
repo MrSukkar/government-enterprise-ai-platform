@@ -219,3 +219,9 @@ Increment 22 amendment: `docs/change-control/CR-001-AMENDMENT-19-EVIDENCE-COMPLE
 Operationalization Wave 01 introduces configuration-gated, standards-based bearer authentication and sovereign, vendor-neutral signed-policy-bundle and OPA adapters inside the existing Identity, Governance, and API module boundaries. Missing, incomplete, or unsafe deployment configuration preserves the fail-closed authentication and runtime posture. This addendum selects no provider, credential, trust anchor, deployment, organization-specific claim mapping, persistence technology, or new workflow authority.
 
 Change-control record: `docs/change-control/CR-002-OPERATIONALIZATION-WAVE-01.md`.
+
+## Approved operationalization addendum — CR-003
+
+Operationalization Wave 02 connects the existing Governed Intent Registration contract to signed-bundle-bound OPA evaluation and an atomic tenant-scoped PostgreSQL repository. The adapters are composed only under complete, safe deployment configuration; repository defaults contain no connection or secret and remain fail closed. Schema application, external infrastructure, credentials, Enterprise Context reads, later stations, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-003-OPERATIONALIZATION-WAVE-02.md`.

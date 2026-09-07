@@ -6,12 +6,14 @@
     <ProjectReference Include="..\Platform.EnterpriseModel\Platform.EnterpriseModel.csproj" />
     <ProjectReference Include="..\Platform.Evidence\Platform.Evidence.csproj" />
     <ProjectReference Include="..\Platform.Identity\Platform.Identity.csproj" />
+    <ProjectReference Include="..\Platform.Governance\Platform.Governance.csproj" />
     <ProjectReference Include="..\Platform.Integrations\Platform.Integrations.csproj" />
     <ProjectReference Include="..\Platform.Knowledge\Platform.Knowledge.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
   </ItemGroup>
 
   <PropertyGroup>

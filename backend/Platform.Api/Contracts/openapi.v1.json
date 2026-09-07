@@ -32,7 +32,7 @@
       "get": {
         "operationId": "getPlatformReadiness",
         "summary": "Read fail-closed runtime readiness.",
-        "description": "Returns 503 until every required runtime boundary is connected. It also reports identity and policy control-plane configuration as unconfigured, invalid, or configured without exposing configuration values.",
+        "description": "Returns 503 until every required runtime boundary is connected. It reports identity, policy, and governed-intent PostgreSQL configuration as unconfigured, invalid, or configured without exposing configuration values.",
         "tags": ["Platform"],
         "security": [],
         "responses": {
@@ -746,10 +746,11 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "postgresqlIntentRegistration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

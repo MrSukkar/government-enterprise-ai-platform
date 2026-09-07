@@ -9,7 +9,8 @@ internal static class PlatformOperationalEndpoints
 
         return endpoints.MapGet("/health/ready", (PlatformRuntimeReadiness readiness,
             Platform.Identity.IdentityControlPlaneReadiness identity,
-            Platform.Governance.Policies.PolicyControlPlaneReadiness policy) =>
+            Platform.Governance.Policies.PolicyControlPlaneReadiness policy,
+            Platform.SoftwareFactory.Persistence.PostgreSqlIntentRegistrationReadiness persistence) =>
         {
             var payload = new
             {
@@ -18,7 +19,8 @@ internal static class PlatformOperationalEndpoints
                 controlPlanes = new
                 {
                     identity = identity.State.ToString().ToLowerInvariant(),
-                    policy = policy.State.ToString().ToLowerInvariant()
+                    policy = policy.State.ToString().ToLowerInvariant(),
+                    postgresqlIntentRegistration = persistence.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

@@ -1,6 +1,6 @@
 # Project Status
 
-Status: **Operationalization Wave 01 complete — Sovereign Identity and Policy Control Plane**
+Status: **Operationalization Wave 02 complete — Governed Intent Registration Runtime**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
@@ -11,8 +11,8 @@ Status: **Operationalization Wave 01 complete — Sovereign Identity and Policy 
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
 - Current product increment: **Governed Evidence Completion — contract complete and verified**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
-- Operationalization: **Wave 01 — Sovereign Identity and Policy Control Plane — contract complete and verified under CR-002**
-- Operationalization acceptance: `docs/operationalization/WAVE_01_ACCEPTANCE.md`
-- Execution boundary: **Configuration-gated bearer authentication and shared signed-policy-bundle/OPA adapters are implemented. The repository profile contains no provider, credential, trust material, or endpoint configuration and remains fail closed; 142 institutional runtime dependencies remain disconnected. Live provider, OPA, PKI, claim-profile, and deployment acceptance require separately approved deployment configuration.**
+- Operationalization: **Wave 02 — Governed Intent Registration Runtime — adapter implementation complete and verified under CR-003**
+- Operationalization acceptance: `docs/operationalization/WAVE_02_ACCEPTANCE.md`
+- Execution boundary: **The protected Governed Intent Registration station has an exact signed-bundle/OPA adapter and atomic tenant-scoped PostgreSQL repository. Both exact runtime contracts are registered only under complete policy and PostgreSQL profiles. The repository profile contains no provider, endpoint, connection, credential, certificate, or trust material; 142 institutional runtime dependencies therefore remain disconnected and fail closed. Live identity, OPA, PostgreSQL schema, PKI, and deployment acceptance remain separately controlled.**
 
-The approved platform foundation is complete through Phase 30 and the approved Create Internal Service contract is complete through Evidence. Operationalization Wave 01 now establishes the sovereign identity and policy adapter boundary while preserving every constitutional invariant and the safe default posture.
+The approved platform foundation is complete through Phase 30 and the approved Create Internal Service contract is complete through Evidence. Wave 01 established the sovereign identity/policy control plane; Wave 02 implements the first state-changing station with policy-before-persistence ordering while preserving the safe default posture.
