@@ -58,6 +58,7 @@ public sealed class SovereignEnterpriseContextPolicyGate(
         var scope = decision.Scope
             ?? throw new UnauthorizedAccessException("OPA permit did not return Enterprise Context scope.");
         if (scope.ExistingSystems is not null || scope.ExistingArchitecture is not null ||
+            scope.ApprovedPackages is not null ||
             !Enum.TryParse<DataClassification>(scope.MaximumClassification, ignoreCase: false,
                 out var maximumClassification) || !Enum.IsDefined(maximumClassification) ||
             scope.AllowedResourceIds.IsDefaultOrEmpty || scope.AllowedModalities.IsDefaultOrEmpty ||

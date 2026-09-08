@@ -174,7 +174,8 @@ public sealed class GovernedSandboxExecutionEngine(IPackageEligibilityEvaluator 
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
 
-        var package = await registryReader.FindExactAsync(request.SandboxImage, cancellationToken)
+        var package = await registryReader.FindExactAsync(
+            request.SandboxImage, request.Identity.TenantId, request.Environment, cancellationToken)
             ?? throw new SandboxDependencyUnavailableException("The exact authorized sandbox image is unavailable.");
         ValidatePackage(request, package, decision.DecidedAt);
         var eligibility = eligibilityEvaluator.Evaluate(package,

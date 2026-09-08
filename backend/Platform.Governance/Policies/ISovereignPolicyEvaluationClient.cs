@@ -37,7 +37,8 @@ public sealed record SovereignPolicyEvaluationScope(
     ImmutableArray<string> RequiredRoles,
     int MaximumResults,
     SovereignExistingSystemsPolicyScope? ExistingSystems,
-    SovereignExistingArchitecturePolicyScope? ExistingArchitecture);
+    SovereignExistingArchitecturePolicyScope? ExistingArchitecture,
+    SovereignApprovedPackagesPolicyScope? ApprovedPackages);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -53,6 +54,18 @@ public sealed record SovereignExistingArchitecturePolicyScope(
     ImmutableArray<string> AllowedItemKinds,
     ImmutableArray<string> AllowedRelationshipTypes,
     string AllowedSourceKind,
+    ImmutableArray<string> RequiredRoles,
+    int MaximumResults);
+
+public sealed record SovereignApprovedPackageCoordinate(
+    string Kind,
+    string Name,
+    string Version,
+    string ContentDigest);
+
+public sealed record SovereignApprovedPackagesPolicyScope(
+    string MaximumClassification,
+    ImmutableArray<SovereignApprovedPackageCoordinate> AllowedCoordinates,
     ImmutableArray<string> RequiredRoles,
     int MaximumResults);
 

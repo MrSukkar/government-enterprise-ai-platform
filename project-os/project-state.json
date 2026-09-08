@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 05 - Authorized Existing Architecture Runtime",
+    "wave": "Wave 06 - Governed Approved Packages Runtime",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-006-OPERATIONALIZATION-WAVE-05.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_05_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_04_ACCEPTANCE.md",
-    "executionBoundary": "Authorized Existing Architecture adapters for cryptographically verified tenant-scoped Existing Systems read, action-specific OPA scope, deterministic Master Specification conformance, scope-first Neo4j architecture retrieval, per-item RBAC/ABAC re-authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; the Authorized Existing Architecture snapshot reader, Approved Packages and later stations, live connectors, Graph mutation, live infrastructure, schemas, graph data, credentials, PKI, deployment, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-007-OPERATIONALIZATION-WAVE-06.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_06_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_05_ACCEPTANCE.md",
+    "executionBoundary": "Governed Approved Packages adapters for cryptographically verified tenant-scoped Existing Architecture read, action-specific OPA exact-coordinate scope, read-only PostgreSQL institutional package lookup, deployment-pinned RSA/ECDSA supply-chain attestation verification, per-package RBAC/ABAC re-authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; the Authorized Approved Packages snapshot reader, AI Planning and later stations, package transfer or execution, public registries, live infrastructure, schemas, institutional data, credentials, PKI, deployment, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_05_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_06_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

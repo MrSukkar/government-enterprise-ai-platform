@@ -59,7 +59,7 @@ public sealed class SovereignExistingArchitecturePolicyGate(
             ?? throw new UnauthorizedAccessException("OPA permit omitted Existing Architecture scope.");
         var scope = envelope.ExistingArchitecture
             ?? throw new UnauthorizedAccessException("OPA permit omitted action-specific Existing Architecture scope.");
-        if (envelope.ExistingSystems is not null ||
+        if (envelope.ExistingSystems is not null || envelope.ApprovedPackages is not null ||
             !envelope.AllowedResourceIds.IsDefaultOrEmpty ||
             !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||

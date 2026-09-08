@@ -243,3 +243,9 @@ Change-control record: `docs/change-control/CR-005-OPERATIONALIZATION-WAVE-04.md
 Operationalization Wave 05 connects Authorized Existing Architecture Discovery to the exact evidence-bearing Existing Systems snapshot, signed-bundle-bound OPA scope, the Neo4j Enterprise Graph baseline, deterministic conformance to the Master Specification, per-item RBAC/ABAC re-authorization, and immutable PostgreSQL architecture evidence. Only fixed, parameterized, scope-first reads of already approved and versioned architecture facts are enabled under complete deployment configuration. Architecture creation, approval, redesign, source crawling, Graph mutation, Approved Packages and later stations, external provisioning, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-006-OPERATIONALIZATION-WAVE-05.md`.
+
+## Approved operationalization addendum — CR-007
+
+Operationalization Wave 06 connects Governed Approved Packages Selection to the exact evidence-bearing Existing Architecture snapshot, signed-bundle-bound exact-coordinate OPA scope, a read-only PostgreSQL institutional package catalog, deterministic institutional eligibility, cryptographically verified digest-bound supply-chain attestations under deployment-pinned trust, per-package RBAC/ABAC re-authorization, and immutable PostgreSQL selection evidence. Only exact, approved, current, sovereign, attested package metadata is released under complete deployment configuration. Package discovery, recommendation, transfer, installation, execution, publication, catalog or approval mutation, AI Planning and later stations, external provisioning, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-007-OPERATIONALIZATION-WAVE-06.md`.

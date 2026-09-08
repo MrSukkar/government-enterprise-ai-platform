@@ -86,6 +86,7 @@ public interface IAuthorizedExistingArchitectureSnapshotReader
     Task<AuthorizedExistingArchitectureDiscoveryReceipt?> LoadAsync(
         Guid architectureDiscoveryId,
         string tenantId,
+        string purpose,
         CancellationToken cancellationToken);
 }
 
@@ -129,6 +130,7 @@ public sealed record ApprovedPackagesPolicyDecision(
     GovernedIntentPolicyOutcome Outcome,
     DataClassification MaximumClassification,
     ImmutableHashSet<PackageCoordinate> AllowedCoordinates,
+    ImmutableHashSet<string> RequiredRoles,
     int MaximumResults,
     ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences,
@@ -176,9 +178,14 @@ public sealed record ApprovedPackageResultAuthorizationRequest(
     Guid SelectionId,
     string TenantId,
     string SubjectId,
+    GovernedIdentity Identity,
     string Purpose,
     string Action,
     PackageCoordinate Coordinate,
+    DataClassification Classification,
+    string Environment,
+    ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<PackageCoordinate> AllowedCoordinates,
     ImmutableArray<string> EvidenceReferences,
     DateTimeOffset RequestedAt);
 
@@ -288,7 +295,7 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
         request.Validate();
 
         var architecture = await architectureReader.LoadAsync(
-            request.ArchitectureDiscoveryId, request.Identity.TenantId, cancellationToken)
+            request.ArchitectureDiscoveryId, request.Identity.TenantId, request.Purpose, cancellationToken)
             ?? throw new KeyNotFoundException("Authorized Existing Architecture snapshot was not found.");
         ValidateArchitecture(request, architecture);
 
@@ -313,13 +320,14 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
                 request.SelectionId, architecture.DiscoveryId, architecture.SystemsDiscoveryId,
                 architecture.ContextDiscoveryId, architecture.RegistrationId, architecture.RegistrationVersion,
                 architecture.TenantId, architecture.ArchitectureSha256Digest!, decision.Outcome,
-                false, false, null, [], null, policyEvidence,
+                false, CanAdvance: false, null, [], null, policyEvidence,
                 "Policy denial requires a new governed Approved Packages request", decision.DecidedAt);
 
         var selected = ImmutableArray.CreateBuilder<GovernedApprovedPackage>(decision.AllowedCoordinates.Count);
         foreach (var coordinate in decision.AllowedCoordinates.OrderBy(CoordinateKey, StringComparer.Ordinal))
         {
-            var package = await registryReader.FindExactAsync(coordinate, cancellationToken)
+            var package = await registryReader.FindExactAsync(
+                coordinate, request.Identity.TenantId, request.Environment, cancellationToken)
                 ?? throw new ApprovedPackagesDependencyUnavailableException("An exact authorized package record is unavailable.");
             package.Validate();
             ValidatePackageRecord(package, coordinate, request, decision);
@@ -337,7 +345,9 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
             ValidateAssurance(request, coordinate, assurance);
             var authorizationRequest = new ApprovedPackageResultAuthorizationRequest(
                 Guid.NewGuid(), request.SelectionId, architecture.TenantId, request.Identity.SubjectId,
-                request.Purpose, "approved-package.read", coordinate,
+                request.Identity, request.Purpose, "approved-package.read", coordinate,
+                decision.MaximumClassification, request.Environment, decision.RequiredRoles,
+                decision.AllowedCoordinates,
                 assurance.EvidenceReferences.Concat(policyEvidence).Distinct(StringComparer.Ordinal)
                     .Order(StringComparer.Ordinal).ToImmutableArray(), assurance.DecidedAt);
             var authorization = await resultAuthorizer.AuthorizeAsync(authorizationRequest, cancellationToken);
@@ -372,7 +382,7 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
             request.SelectionId, architecture.DiscoveryId, architecture.SystemsDiscoveryId,
             architecture.ContextDiscoveryId, architecture.RegistrationId, architecture.RegistrationVersion,
             architecture.TenantId, architecture.ArchitectureSha256Digest!, decision.Outcome,
-            true, false, digest, packages, receipt.EvidenceReference,
+            true, CanAdvance: false, digest, packages, receipt.EvidenceReference,
             evidence.Append(receipt.EvidenceReference).Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal).ToImmutableArray(),
             "Separately approved AI Planning", receipt.RecordedAt);
@@ -428,11 +438,14 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
             throw new InvalidOperationException("Approved Packages policy decision requires current reasons and evidence.");
         ValidateEvidence(decision.EvidenceReferences, "Approved Packages OPA decision");
         if (decision.Outcome == GovernedIntentPolicyOutcome.Permit &&
-            (decision.AllowedCoordinates.IsEmpty || decision.MaximumResults != input.RequestedCoordinates.Length ||
+            (decision.AllowedCoordinates.IsEmpty || decision.RequiredRoles.IsEmpty ||
+             decision.MaximumResults != input.RequestedCoordinates.Length ||
              decision.MaximumResults <= 0 || !decision.AllowedCoordinates.SetEquals(input.RequestedCoordinates)))
             throw new UnauthorizedAccessException("OPA permit did not authorize the exact requested package set.");
         foreach (var coordinate in decision.AllowedCoordinates)
             GovernedApprovedPackagesSelectionRequest.ValidateExactCoordinate(coordinate);
+        if (decision.RequiredRoles.Any(string.IsNullOrWhiteSpace))
+            throw new UnauthorizedAccessException("OPA returned invalid Approved Packages roles.");
     }
 
     private static void ValidatePackageRecord(
@@ -450,8 +463,10 @@ public sealed class GovernedApprovedPackagesSelectionEngine(IPackageEligibilityE
         if (approval is null || approval.Status != PackageApprovalStatus.Approved ||
             approval.ExpiresAt <= decision.DecidedAt || string.IsNullOrWhiteSpace(approval.EvidenceReference))
             throw new UnauthorizedAccessException("A current evidence-bearing institutional package approval is required.");
-        if (string.IsNullOrWhiteSpace(package.SbomReference) || string.IsNullOrWhiteSpace(package.SignatureReference))
+        if (string.IsNullOrWhiteSpace(package.SbomReference) || string.IsNullOrWhiteSpace(package.SignatureReference) ||
+            package.SupplyChainAttestation is null)
             throw new UnauthorizedAccessException("Approved packages require SBOM and signature references.");
+        package.SupplyChainAttestation.Validate();
     }
 
     private static void ValidateAssurance(

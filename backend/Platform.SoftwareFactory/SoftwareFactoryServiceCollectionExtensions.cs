@@ -36,8 +36,13 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var graphOptions = configuration
             .GetSection(Neo4jEnterpriseGraphOptions.SectionName)
             .Get<Neo4jEnterpriseGraphOptions>() ?? new();
+        var packageTrustOptions = configuration
+            .GetSection(ApprovedPackagesTrustOptions.SectionName)
+            .Get<ApprovedPackagesTrustOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
+        services.Configure<ApprovedPackagesTrustOptions>(
+            configuration.GetSection(ApprovedPackagesTrustOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -70,6 +75,16 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? ExistingArchitectureRuntimeConfigurationState.Configured
                     : ExistingArchitectureRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new ExistingArchitectureRuntimeReadiness(existingArchitectureState));
+        var approvedPackagesState =
+            persistenceOptions.ConfigurationState == PostgreSqlIntentRegistrationConfigurationState.Invalid ||
+            policyOptions.ConfigurationState == PolicyControlPlaneConfigurationState.Invalid ||
+            packageTrustOptions.ConfigurationState == ApprovedPackagesTrustConfigurationState.Invalid
+                ? ApprovedPackagesRuntimeConfigurationState.Invalid
+                : persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured &&
+                  packageTrustOptions.IsOperationallyConfigured
+                    ? ApprovedPackagesRuntimeConfigurationState.Configured
+                    : ApprovedPackagesRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new ApprovedPackagesRuntimeReadiness(approvedPackagesState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -77,6 +92,20 @@ public static class SoftwareFactoryServiceCollectionExtensions
             services.AddScoped<IGovernedIntentPolicyGate, SovereignGovernedIntentPolicyGate>();
             services.AddScoped<IGovernedIntentRegistrationRepository>(provider =>
                 provider.GetRequiredService<PostgreSqlGovernedIntentRegistrationRepository>());
+            if (packageTrustOptions.IsOperationallyConfigured)
+            {
+                services.AddScoped<IAuthorizedExistingArchitectureSnapshotReader,
+                    PostgreSqlAuthorizedExistingArchitectureSnapshotReader>();
+                services.AddScoped<IApprovedPackagesPolicyGate, SovereignApprovedPackagesPolicyGate>();
+                services.AddScoped<IInstitutionalPackageRegistryReader,
+                    PostgreSqlInstitutionalPackageRegistryReader>();
+                services.AddScoped<IApprovedPackageSupplyChainVerifier,
+                    CryptographicApprovedPackageSupplyChainVerifier>();
+                services.AddScoped<IApprovedPackageResultAuthorizer,
+                    DeterministicApprovedPackageResultAuthorizer>();
+                services.AddScoped<IApprovedPackagesEvidenceRecorder,
+                    PostgreSqlApprovedPackagesEvidenceRecorder>();
+            }
             if (graphOptions.IsOperationallyConfigured)
             {
                 services.AddScoped<IGovernedIntentRegistrationReader>(provider =>

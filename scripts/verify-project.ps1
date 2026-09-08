@@ -2009,6 +2009,71 @@ if (Test-Path $wave05AcceptancePath) {
     @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 05 acceptance missing: $_" } }
 }
 
+$wave06AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_06_ACCEPTANCE.md'
+if (Test-Path $wave06AcceptancePath) {
+    $wave06Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-007-OPERATIONALIZATION-WAVE-06.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedApprovedPackagesSelection.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignApprovedPackagesPolicyGate.cs'
+        Reader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedExistingArchitectureSnapshotReader.cs'
+        Registry = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlInstitutionalPackageRegistryReader.cs'
+        Trust = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Packages\ApprovedPackagesTrustOptions.cs'
+        Attestation = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Packages\PackageSupplyChainAttestation.cs'
+        Assurance = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\CryptographicApprovedPackageSupplyChainVerifier.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicApprovedPackageResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlApprovedPackagesEvidenceRecorder.cs'
+        CatalogMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\005_institutional_package_catalog.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\006_approved_packages_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_06_APPROVED_PACKAGES.md'
+    }
+    $wave06Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 06 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave06Paths.Change
+    @('Status: **Approved for Operationalization Wave 06**','Decision: **Approved by the repository owner','No new package is requested','Npgsql` `10.0.3','built-in .NET cryptography') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 06 approval missing: $_" } }
+    $master = Get-Content -Raw $wave06Paths.Master
+    @('Approved operationalization addendum — CR-007','CR-007-OPERATIONALIZATION-WAVE-06.md') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master Specification CR-007 authority missing: $_" } }
+    $reader = Get-Content -Raw $wave06Paths.Reader
+    @('IAuthorizedExistingArchitectureSnapshotReader','tenant_id = @tenant_id AND discovery_id = @discovery_id','record_sha256_digest','JsonSerializer.Deserialize','SHA256.HashData','evidence://existing-architecture','Digest(record)','ApprovedPackagesDependencyUnavailableException') | ForEach-Object { if ($reader -notmatch [regex]::Escape($_)) { throw "Existing Architecture prerequisite reader guard missing: $_" } }
+    if ($reader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Existing Architecture snapshot reader contains a mutation.' }
+    $policy = Get-Content -Raw $wave06Paths.Policy
+    @('internal-service.approved-packages.select','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','scope.AllowedCoordinates','scope.RequiredRoles','scope.MaximumResults','sha256:','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Approved Packages OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Approved Packages OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave06Paths.Engine
+    if ($engine.IndexOf('architectureReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('registryReader.FindExactAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('registryReader.FindExactAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('supplyChainVerifier.VerifyAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('supplyChainVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Approved Packages prerequisite, policy, registry, assurance, authorization, and evidence order is invalid.' }
+    @('ValidateExactCoordinate','IPackageEligibilityEvaluator','RequiredRoles','AllowedCoordinates','CanAdvance: false') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Approved Packages engine guard missing: $_" } }
+    $registry = Get-Content -Raw $wave06Paths.Registry
+    @('IInstitutionalPackageRegistryReader','package_kind = @package_kind','package_name = @package_name','package_version = @package_version','content_digest = @content_digest','@tenant_id = ANY(allowed_tenant_ids)','@environment = ANY(allowed_environments)','record_sha256_digest','SHA256.HashData','NpgsqlParameter') | ForEach-Object { if ($registry -notmatch [regex]::Escape($_)) { throw "Institutional package catalog guard missing: $_" } }
+    if ($registry -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Institutional package catalog reader contains a mutation.' }
+    $trust = Get-Content -Raw $wave06Paths.Trust
+    @('ApprovedPackagesTrustConfigurationState.Unconfigured','ApprovedPackagesTrustConfigurationState.Invalid','RS256','ES256','TrustedPublicKeysPem') | ForEach-Object { if ($trust -notmatch [regex]::Escape($_)) { throw "Approved Packages trust guard missing: $_" } }
+    $assurance = Get-Content -Raw $wave06Paths.Assurance
+    @('RSA.Create','ECDsa.Create','ImportFromPem','VerifyHash','CoordinateSha256Digest','ContentSha256Digest','ProvenanceSha256Digest','SbomSha256Digest','SovereignRegistrySha256Digest','PackageTransferred: false','PackageExecuted: false','ExternalEffectOccurred: false') | ForEach-Object { if ($assurance -notmatch [regex]::Escape($_)) { throw "Approved Packages cryptographic assurance guard missing: $_" } }
+    $authorization = Get-Content -Raw $wave06Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.packages.select','request.AllowedCoordinates','evidence://approved-packages/authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Approved Package authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave06Paths.Evidence
+    @('IApprovedPackagesEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://approved-packages','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Approved Packages evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Approved Packages evidence adapter contains mutation outside append.' }
+    $catalogMigration = Get-Content -Raw $wave06Paths.CatalogMigration
+    @('software_factory.institutional_package_catalog','PRIMARY KEY','content_digest','allowed_tenant_ids','allowed_environments','record_json jsonb') | ForEach-Object { if ($catalogMigration -notmatch [regex]::Escape($_)) { throw "Package catalog migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave06Paths.EvidenceMigration
+    @('software_factory.approved_packages_evidence','PRIMARY KEY (tenant_id, selection_id)','FOREIGN KEY (tenant_id, architecture_discovery_id)','software_factory.existing_architecture_evidence','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Approved Packages evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave06Paths.Services
+    @('ApprovedPackagesRuntimeReadiness','ApprovedPackagesTrustOptions','IAuthorizedExistingArchitectureSnapshotReader','IApprovedPackagesPolicyGate','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','IApprovedPackageResultAuthorizer','IApprovedPackagesEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Approved Packages composition missing: $_" } }
+    $operations = Get-Content -Raw $wave06Paths.Operations
+    @('ApprovedPackagesRuntimeReadiness','approvedPackages') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Approved Packages readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $wave06Paths.OpenApi
+    @('approvedPackages','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Approved Packages OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave06AcceptancePath
+    @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 06 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

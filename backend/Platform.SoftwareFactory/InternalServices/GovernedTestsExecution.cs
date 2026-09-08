@@ -251,7 +251,8 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
             ?? throw new TestsDependencyUnavailableException("The governed test manifest is unavailable.");
         ValidateManifest(request, manifest);
 
-        var package = await registryReader.FindExactAsync(request.TestImage, cancellationToken)
+        var package = await registryReader.FindExactAsync(
+            request.TestImage, request.Identity.TenantId, request.Environment, cancellationToken)
             ?? throw new TestsDependencyUnavailableException("The exact authorized test image is unavailable.");
         ValidatePackage(request, package, decision.DecidedAt);
         var eligibility = eligibilityEvaluator.Evaluate(package,

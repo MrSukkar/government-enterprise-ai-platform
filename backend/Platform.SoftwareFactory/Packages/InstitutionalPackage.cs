@@ -12,6 +12,7 @@ public sealed record InstitutionalPackage
     public required ImmutableArray<PackageApproval> ApprovalHistory { get; init; }
     public string? SbomReference { get; init; }
     public string? SignatureReference { get; init; }
+    public PackageSupplyChainAttestation? SupplyChainAttestation { get; init; }
     public bool AvailableInSovereignRegistry { get; init; }
 
     public PackageApproval? CurrentApproval => ApprovalHistory
