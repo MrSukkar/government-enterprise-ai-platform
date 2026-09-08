@@ -261,3 +261,9 @@ Change-control record: `docs/change-control/CR-008-OPERATIONALIZATION-WAVE-07.md
 Operationalization Wave 08 connects Governed Code Generation to the exact immutable AI Planning and Approved Packages evidence chain and a deterministic delivery-run snapshot stopped at `AiPlanning`, signed-bundle-bound exact Code Generation OPA scope, signed governed prompt and re-authorized context, a provider-neutral sovereign HTTPS generation protocol, separately configured and trusted independent evaluation, exact safe relative-path authorization, and immutable PostgreSQL evidence. Only non-executable, unapplied, non-advancing code-candidate data can be released under complete deployment configuration. Filesystem access, tools, commands, package operations, workflow advancement, Static Validation and later stations, external provisioning, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-009-OPERATIONALIZATION-WAVE-08.md`.
+
+## Approved operationalization addendum — CR-010
+
+Operationalization Wave 09 connects Governed Static Validation to the exact immutable Code Generation evidence and a deterministic delivery-run snapshot stopped at `CodeGeneration`, signed-bundle-bound exact Static OPA scope, deployment-configured cryptographically signed deterministic in-process Static control profiles, the existing `CodeValidationPipeline`, per-result RBAC/ABAC authorization, and immutable PostgreSQL evidence. Only an evidence-bearing non-executable, non-advancing Static report can be released under complete deployment configuration. Source mutation, compilation, commands, packages, external analyzers, network controls, AI invocation, workflow advancement, Security Validation and later stations, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-010-OPERATIONALIZATION-WAVE-09.md`.

@@ -2230,6 +2230,68 @@ if (Test-Path $wave08AcceptancePath) {
     @('Status: **Satisfied**','all 142 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 08 acceptance missing: $_" } }
 }
 
+$wave09AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_09_ACCEPTANCE.md'
+if (Test-Path $wave09AcceptancePath) {
+    $wave09Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-010-OPERATIONALIZATION-WAVE-09.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedStaticValidation.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignStaticValidationPolicyGate.cs'
+        Candidate = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedCodeGenerationCandidateReader.cs'
+        Run = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlStaticValidationDeliveryRunReader.cs'
+        Controls = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\StaticValidationRuntimeOptions.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicStaticValidationResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlStaticValidationEvidenceRecorder.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\011_static_validation_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\012_static_validation_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_09_STATIC_VALIDATION.md'
+    }
+    $wave09Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 09 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave09Paths.Change
+    @('Status: **Approved for Operationalization Wave 09**','Decision: **Approved by the repository owner','No new package','deterministic in-process Static control profiles') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Wave 09 approval missing: $_" } }
+    $master = Get-Content -Raw $wave09Paths.Master
+    @('CR-010','CR-010-OPERATIONALIZATION-WAVE-09.md','cryptographically signed deterministic in-process Static control profiles') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master CR-010 authority missing: $_" } }
+    $policy = Get-Content -Raw $wave09Paths.Policy
+    @('internal-service.static-validation.create','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','envelope.StaticValidation','AllowedControlIds','RequiredRoles','static-report','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Static OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Static OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave09Paths.Engine
+    if ($engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('CodeValidationPipeline',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('CodeValidationPipeline',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Static policy/read/control/authorization/evidence order is invalid.' }
+    @('ValidationGate.Static','IsExecutable: false','CanAdvance: false','Separately approved Security Validation','RequiredRoles','static-report') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Static engine guard missing: $_" } }
+    $candidate = Get-Content -Raw $wave09Paths.Candidate
+    @('IStaticValidationCodeGenerationCandidateReader','candidate_sha256_digest = @candidate_sha256_digest','evidence_reference = @evidence_reference','JsonSerializer.Deserialize<CodeGenerationEvidenceRecord>','SHA256.HashData','GovernedGeneratedPath.Validate','record.Evaluation.IsAccepted') | ForEach-Object { if ($candidate -notmatch [regex]::Escape($_)) { throw "Static candidate reader guard missing: $_" } }
+    if ($candidate -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Static candidate reader contains mutation.' }
+    $run = Get-Content -Raw $wave09Paths.Run
+    @('IStaticValidationDeliveryRunReader','purpose = @purpose','generation_id = @generation_id','candidate_sha256_digest = @candidate_sha256_digest','SHA256.HashData','DeliveryStage.CodeGeneration') | ForEach-Object { if ($run -notmatch [regex]::Escape($_)) { throw "Static run reader guard missing: $_" } }
+    if ($run -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Static run reader contains mutation.' }
+    $controls = Get-Content -Raw $wave09Paths.Controls
+    @('StaticValidationRuntimeConfigurationState.Unconfigured','TrustedPublicKeysPem','SignedDeterministicStaticValidationControl','ValidationGate.Static','AiPlanningSignatureVerifier.Verify','RequiredText','ForbiddenText','AllowedFileExtensions','ValidationSeverity.Error','evidence://static-validation/controls') | ForEach-Object { if ($controls -notmatch [regex]::Escape($_)) { throw "Signed Static control guard missing: $_" } }
+    if ($controls -match 'HttpClient|Process|File\.Write|Directory\.Create|ExecuteNonQuery') { throw 'Static control exposes an unauthorized effect capability.' }
+    $authorization = Get-Content -Raw $wave09Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.static-validation.create','static-validation-report.read','evidence://static-validation/result-authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Static authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave09Paths.Evidence
+    @('IStaticValidationEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://static-validation','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Static evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Static evidence adapter contains mutation outside append.' }
+    $inputs = Get-Content -Raw $wave09Paths.InputsMigration
+    @('static_validation_delivery_run_snapshots','generation_id uuid NOT NULL','candidate_sha256_digest text NOT NULL','purpose text NOT NULL','fk_static_validation_run_generation','COMMIT;') | ForEach-Object { if ($inputs -notmatch [regex]::Escape($_)) { throw "Static input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave09Paths.EvidenceMigration
+    @('software_factory.static_validation_evidence','PRIMARY KEY (tenant_id, validation_id)','FOREIGN KEY (tenant_id, generation_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Static evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave09Paths.Services
+    @('StaticValidationRuntimeReadiness','StaticValidationRuntimeOptions','IStaticValidationPolicyGate','IStaticValidationCodeGenerationCandidateReader','IStaticValidationDeliveryRunReader','ICodeValidationControl','SignedDeterministicStaticValidationControl','IStaticValidationResultAuthorizer','IStaticValidationEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Static composition missing: $_" } }
+    $operations = Get-Content -Raw $wave09Paths.Operations
+    @('StaticValidationRuntimeReadiness','staticValidation') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Static readiness missing: $_" } }
+    $openApi = Get-Content -Raw $wave09Paths.OpenApi
+    @('staticValidation','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Static OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave09AcceptancePath
+    @('Status: **Satisfied**','all 142 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 09 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

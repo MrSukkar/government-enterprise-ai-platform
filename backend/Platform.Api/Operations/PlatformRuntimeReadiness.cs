@@ -105,7 +105,7 @@ internal sealed class PlatformRuntimeReadiness
             ("Code Generation result and path authorizer", typeof(ICodeGenerationResultAuthorizer)),
             ("Code Generation evidence recorder", typeof(ICodeGenerationEvidenceRecorder)),
             ("Static Validation OPA policy gate", typeof(IStaticValidationPolicyGate)),
-            ("Authorized Code Generation candidate reader", typeof(IAuthorizedCodeGenerationCandidateReader)),
+            ("Authorized Code Generation candidate reader", typeof(IStaticValidationCodeGenerationCandidateReader)),
             ("Static Validation delivery-run reader", typeof(IStaticValidationDeliveryRunReader)),
             ("Institutionally approved Static Validation controls", typeof(ICodeValidationControl)),
             ("Static Validation result authorizer", typeof(IStaticValidationResultAuthorizer)),

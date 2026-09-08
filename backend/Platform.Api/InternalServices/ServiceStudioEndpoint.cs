@@ -943,7 +943,7 @@ internal static class InternalServiceEndpoint
             .WithName("CreateGovernedCodeGenerationCandidate")
             .WithTags("Create Internal Service")
             .WithSummary("Create a governed non-executable and unapplied code candidate.")
-            .WithDescription("OPA, exact AI Planning evidence, verified prompt, re-authorized context, safe relative paths, independent evaluation, result authorization, and evidence are mandatory. No filesystem access, execution, workflow advancement, or Static Validation is available.")
+            .WithDescription("OPA, exact AI Planning evidence, verified prompt, re-authorized context, safe relative paths, independent evaluation, result authorization, and evidence are mandatory. This endpoint cannot write or execute files, advance workflow, or invoke Static Validation.")
             .Accepts<CodeGenerationInput>("application/json")
             .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status200OK)
             .Produces<GovernedCodeGenerationReceipt>(StatusCodes.Status403Forbidden)
@@ -975,7 +975,7 @@ internal static class InternalServiceEndpoint
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
 
                     var policyGate = services.GetService<IStaticValidationPolicyGate>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var candidateReader = services.GetService<IStaticValidationCodeGenerationCandidateReader>();
                     var runReader = services.GetService<IStaticValidationDeliveryRunReader>();
                     var controls = services.GetServices<ICodeValidationControl>().ToArray();
                     var resultAuthorizer = services.GetService<IStaticValidationResultAuthorizer>();

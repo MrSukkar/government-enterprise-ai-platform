@@ -45,6 +45,9 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var codeGenerationOptions = configuration
             .GetSection(CodeGenerationRuntimeOptions.SectionName)
             .Get<CodeGenerationRuntimeOptions>() ?? new();
+        var staticValidationOptions = configuration
+            .GetSection(StaticValidationRuntimeOptions.SectionName)
+            .Get<StaticValidationRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -53,6 +56,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
             configuration.GetSection(AiPlanningRuntimeOptions.SectionName));
         services.Configure<CodeGenerationRuntimeOptions>(
             configuration.GetSection(CodeGenerationRuntimeOptions.SectionName));
+        services.Configure<StaticValidationRuntimeOptions>(
+            configuration.GetSection(StaticValidationRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -115,6 +120,15 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? CodeGenerationRuntimeConfigurationState.Configured
                     : CodeGenerationRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new CodeGenerationRuntimeReadiness(codeGenerationState));
+        var staticValidationState =
+            codeGenerationState == CodeGenerationRuntimeConfigurationState.Invalid ||
+            staticValidationOptions.ConfigurationState == StaticValidationRuntimeConfigurationState.Invalid
+                ? StaticValidationRuntimeConfigurationState.Invalid
+                : codeGenerationState == CodeGenerationRuntimeConfigurationState.Configured &&
+                  staticValidationOptions.IsOperationallyConfigured
+                    ? StaticValidationRuntimeConfigurationState.Configured
+                    : StaticValidationRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new StaticValidationRuntimeReadiness(staticValidationState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -186,6 +200,21 @@ public static class SoftwareFactoryServiceCollectionExtensions
                         services.AddScoped<ICodeGenerationAiOutputEvaluator, SovereignHttpCodeGenerationEvaluator>();
                         services.AddScoped<ICodeGenerationResultAuthorizer, DeterministicCodeGenerationResultAuthorizer>();
                         services.AddScoped<ICodeGenerationEvidenceRecorder, PostgreSqlCodeGenerationEvidenceRecorder>();
+                        if (staticValidationOptions.IsOperationallyConfigured)
+                        {
+                            services.AddScoped<IStaticValidationPolicyGate, SovereignStaticValidationPolicyGate>();
+                            services.AddScoped<IStaticValidationCodeGenerationCandidateReader,
+                                PostgreSqlAuthorizedCodeGenerationCandidateReader>();
+                            services.AddScoped<IStaticValidationDeliveryRunReader,
+                                PostgreSqlStaticValidationDeliveryRunReader>();
+                            foreach (var profile in staticValidationOptions.Controls)
+                                services.AddSingleton<ICodeValidationControl>(
+                                    new SignedDeterministicStaticValidationControl(profile, staticValidationOptions));
+                            services.AddScoped<IStaticValidationResultAuthorizer,
+                                DeterministicStaticValidationResultAuthorizer>();
+                            services.AddScoped<IStaticValidationEvidenceRecorder,
+                                PostgreSqlStaticValidationEvidenceRecorder>();
+                        }
                     }
                 }
             }

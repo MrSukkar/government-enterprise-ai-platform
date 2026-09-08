@@ -40,7 +40,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignExistingArchitecturePolicyScope? ExistingArchitecture,
     SovereignApprovedPackagesPolicyScope? ApprovedPackages,
     SovereignAiPlanningPolicyScope? AiPlanning,
-    SovereignCodeGenerationPolicyScope? CodeGeneration);
+    SovereignCodeGenerationPolicyScope? CodeGeneration,
+    SovereignStaticValidationPolicyScope? StaticValidation);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -101,6 +102,12 @@ public sealed record SovereignCodeGenerationPolicyScope(
     int RequestTimeoutSeconds,
     int MaximumRequestBytes,
     int MaximumResponseBytes);
+
+public sealed record SovereignStaticValidationPolicyScope(
+    string MaximumClassification,
+    ImmutableArray<string> AllowedControlIds,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
 
 public interface ISovereignPolicyEvaluationClient
 {
