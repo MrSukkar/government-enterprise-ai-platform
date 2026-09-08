@@ -1022,7 +1022,7 @@ internal static class InternalServiceEndpoint
             .WithName("RunGovernedStaticValidation")
             .WithTags("Create Internal Service")
             .WithSummary("Run governed Static Validation against an authoritative inert code candidate.")
-            .WithDescription("Verified OPA authorizes the exact candidate and Static controls before candidate read or control execution. All required controls must pass with evidence. No source mutation, Security Validation, execution, or workflow advancement is available.")
+            .WithDescription("Verified OPA authorizes the exact candidate and Static controls before candidate read or control execution. All required controls must pass with evidence. This endpoint cannot invoke Security Validation, execute code, mutate source, or advance workflow.")
             .Accepts<StaticValidationInput>("application/json")
             .Produces<GovernedStaticValidationReceipt>(StatusCodes.Status200OK)
             .Produces<GovernedStaticValidationReceipt>(StatusCodes.Status403Forbidden)
@@ -1053,7 +1053,7 @@ internal static class InternalServiceEndpoint
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
                     var policy = services.GetService<ISecurityValidationPolicyGate>();
                     var staticReader = services.GetService<IAuthorizedStaticValidationReceiptReader>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var candidateReader = services.GetService<ISecurityValidationCodeGenerationCandidateReader>();
                     var runReader = services.GetService<ISecurityValidationDeliveryRunReader>();
                     var controls = services.GetServices<ICodeValidationControl>().ToArray();
                     var authorizer = services.GetService<ISecurityValidationResultAuthorizer>();
@@ -1080,7 +1080,7 @@ internal static class InternalServiceEndpoint
             })
             .WithName("RunGovernedSecurityValidation").WithTags("Create Internal Service")
             .WithSummary("Run governed Security Validation after accepted Static Validation.")
-            .WithDescription("OPA authorizes exact prerequisites and Security controls before reads or control execution. No Sandbox, execution, mutation, or workflow advancement is available.")
+            .WithDescription("Verified OPA authorizes exact Static evidence, candidate, run, and signed Security controls before reads or control execution. Every exact control must pass with evidence. This endpoint cannot invoke Sandbox, execute code, mutate source, or advance workflow.")
             .Accepts<SecurityValidationInput>("application/json")
             .Produces<GovernedSecurityValidationReceipt>(200).Produces<GovernedSecurityValidationReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)

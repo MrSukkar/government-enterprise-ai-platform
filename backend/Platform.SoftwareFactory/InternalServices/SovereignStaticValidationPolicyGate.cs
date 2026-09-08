@@ -43,6 +43,7 @@ public sealed class SovereignStaticValidationPolicyGate(
         var scope = envelope.StaticValidation ?? throw new UnauthorizedAccessException("OPA permit omitted action-specific Static Validation scope.");
         if (envelope.ExistingSystems is not null || envelope.ExistingArchitecture is not null ||
             envelope.ApprovedPackages is not null || envelope.AiPlanning is not null || envelope.CodeGeneration is not null ||
+            envelope.SecurityValidation is not null ||
             !envelope.AllowedResourceIds.IsDefaultOrEmpty || !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||
             !string.IsNullOrWhiteSpace(envelope.MaximumClassification))

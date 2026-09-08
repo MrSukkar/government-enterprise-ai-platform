@@ -112,6 +112,7 @@ internal sealed class PlatformRuntimeReadiness
             ("Static Validation evidence recorder", typeof(IStaticValidationEvidenceRecorder)),
             ("Security Validation OPA policy gate", typeof(ISecurityValidationPolicyGate)),
             ("Authorized Static Validation receipt reader", typeof(IAuthorizedStaticValidationReceiptReader)),
+            ("Security Validation Code Generation candidate reader", typeof(ISecurityValidationCodeGenerationCandidateReader)),
             ("Security Validation delivery-run reader", typeof(ISecurityValidationDeliveryRunReader)),
             ("Security Validation result authorizer", typeof(ISecurityValidationResultAuthorizer)),
             ("Security Validation evidence recorder", typeof(ISecurityValidationEvidenceRecorder)),

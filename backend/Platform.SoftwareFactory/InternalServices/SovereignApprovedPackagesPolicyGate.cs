@@ -56,6 +56,7 @@ public sealed class SovereignApprovedPackagesPolicyGate(
             ?? throw new UnauthorizedAccessException("OPA permit omitted action-specific Approved Packages scope.");
         if (envelope.ExistingSystems is not null || envelope.ExistingArchitecture is not null ||
             envelope.AiPlanning is not null || envelope.CodeGeneration is not null || envelope.StaticValidation is not null ||
+            envelope.SecurityValidation is not null ||
             !envelope.AllowedResourceIds.IsDefaultOrEmpty || !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||
             !string.IsNullOrWhiteSpace(envelope.MaximumClassification))

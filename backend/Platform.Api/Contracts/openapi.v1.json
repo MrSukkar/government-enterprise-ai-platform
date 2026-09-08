@@ -412,7 +412,7 @@
       "post": {
         "operationId": "runGovernedStaticValidation",
         "summary": "Run governed Static Validation against an authoritative inert code candidate.",
-        "description": "Verified OPA authorizes the exact candidate and required Static controls before candidate read or control execution. Every exact control must complete with evidence and no Error or Critical finding. No source mutation, Security Validation, execution, or workflow advancement is available.",
+        "description": "Verified OPA authorizes the exact candidate and required Static controls before candidate read or control execution. Every exact control must complete with evidence and no Error or Critical finding. This endpoint cannot invoke Security Validation, execute code, mutate source, or advance workflow.",
         "tags": ["Create Internal Service"],
         "security": [ { "oidcBearer": [] } ],
         "parameters": [
@@ -439,7 +439,7 @@
       "post": {
         "operationId": "runGovernedSecurityValidation",
         "summary": "Run governed Security Validation after accepted Static Validation.",
-        "description": "OPA authorizes exact prerequisites and Security controls before reads or control execution. No Sandbox, execution, mutation, or workflow advancement is available.",
+        "description": "Verified OPA authorizes exact Static evidence, candidate, run, and signed Security controls before reads or control execution. Every exact control must complete with evidence and no Error or Critical finding. This endpoint cannot invoke Sandbox, execute code, mutate source, or advance workflow.",
         "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
         "parameters": [
           { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -758,7 +758,8 @@
               "approvedPackages": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "aiPlanning": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "codeGeneration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "staticValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "staticValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "securityValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

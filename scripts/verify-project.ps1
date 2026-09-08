@@ -1430,7 +1430,7 @@ if (Test-Path $increment11AcceptancePath) {
     $change=Get-Content -Raw $changePath
     @('Status: **Approved for Operational Increment 11**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 11 approval missing: $_"}}
     $engine=Get-Content -Raw $enginePath
-    @('ISecurityValidationPolicyGate','IAuthorizedStaticValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.StaticValidation','CodeValidationPipeline','ValidationGate.Security','report.IsAccepted','item.Passed','ISecurityValidationResultAuthorizer','ISecurityValidationEvidenceRecorder','IsExecutable: false','CanAdvance: false','Separately approved Sandbox')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Security Validation guard missing: $_"}}
+    @('ISecurityValidationPolicyGate','IAuthorizedStaticValidationReceiptReader','ISecurityValidationCodeGenerationCandidateReader','DeliveryStage.StaticValidation','CodeValidationPipeline','ValidationGate.Security','report.IsAccepted','item.Passed','ISecurityValidationResultAuthorizer','ISecurityValidationEvidenceRecorder','IsExecutable: false','CanAdvance: false','Separately approved Sandbox')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Security Validation guard missing: $_"}}
     if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('staticReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Security prerequisite read occurs before OPA validation.'}
     $endpoint=Get-Content -Raw $endpointPath
     @('/static-validation/{staticValidationId:guid}/security-validation','developer.internal-service.security-validation.create','RequireAuthorization')|ForEach-Object{if($endpoint -notmatch [regex]::Escape($_)){throw "Security endpoint missing: $_"}}
@@ -2290,6 +2290,80 @@ if (Test-Path $wave09AcceptancePath) {
     @('staticValidation','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Static OpenAPI readiness missing: $_" } }
     $acceptance = Get-Content -Raw $wave09AcceptancePath
     @('Status: **Satisfied**','all 142 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 09 acceptance missing: $_" } }
+}
+
+$wave10AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_10_ACCEPTANCE.md'
+if (Test-Path $wave10AcceptancePath) {
+    $wave10Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-011-OPERATIONALIZATION-WAVE-10.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Envelope = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\ISovereignPolicyEvaluationClient.cs'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedSecurityValidation.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignSecurityValidationPolicyGate.cs'
+        StaticReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedStaticValidationReceiptReader.cs'
+        Candidate = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSecurityValidationCodeGenerationCandidateReader.cs'
+        Run = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSecurityValidationDeliveryRunReader.cs'
+        Controls = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SecurityValidationRuntimeOptions.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicSecurityValidationResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSecurityValidationEvidenceRecorder.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\013_security_validation_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\014_security_validation_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Readiness = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        Endpoint = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_10_SECURITY_VALIDATION.md'
+    }
+    $wave10Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 10 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave10Paths.Change
+    @('Status: **Approved for Operationalization Wave 10**','Decision: **Approved by the repository owner','No scanner vendor','deterministic in-process Security control profiles') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Wave 10 approval missing: $_" } }
+    $master = Get-Content -Raw $wave10Paths.Master
+    @('CR-011','CR-011-OPERATIONALIZATION-WAVE-10.md','cryptographically signed deterministic in-process Security control profiles') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master CR-011 authority missing: $_" } }
+    $envelope = Get-Content -Raw $wave10Paths.Envelope
+    @('SovereignSecurityValidationPolicyScope','SecurityValidation') | ForEach-Object { if ($envelope -notmatch [regex]::Escape($_)) { throw "Security policy envelope missing: $_" } }
+    $policy = Get-Content -Raw $wave10Paths.Policy
+    @('internal-service.security-validation.create','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','envelope.SecurityValidation','AllowedControlIds','RequiredRoles','security-report','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Security OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Security OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave10Paths.Engine
+    if ($engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('staticReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('staticReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('CodeValidationPipeline',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('CodeValidationPipeline',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Security policy/read/control/authorization/evidence order is invalid.' }
+    @('ISecurityValidationCodeGenerationCandidateReader','ValidationGate.Security','DeliveryStage.StaticValidation','IsExecutable: false','CanAdvance: false','Separately approved Sandbox','RequiredRoles','security-report') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Security engine guard missing: $_" } }
+    $staticReader = Get-Content -Raw $wave10Paths.StaticReader
+    @('IAuthorizedStaticValidationReceiptReader','purpose','candidate_sha256_digest = @candidate_sha256_digest','report_sha256_digest = @report_sha256_digest','evidence_reference = @evidence_reference','JsonSerializer.Deserialize<StaticValidationEvidenceRecord>','SHA256.HashData','ValidationGate.Static','ValidationSeverity.Critical') | ForEach-Object { if ($staticReader -notmatch [regex]::Escape($_)) { throw "Security Static-reader guard missing: $_" } }
+    $candidate = Get-Content -Raw $wave10Paths.Candidate
+    @('ISecurityValidationCodeGenerationCandidateReader','JOIN software_factory.static_validation_evidence','static.evidence_reference = @static_evidence_reference','record.Purpose','record.Evaluation.IsAccepted','GovernedGeneratedPath.Validate','SHA256.HashData') | ForEach-Object { if ($candidate -notmatch [regex]::Escape($_)) { throw "Security candidate-reader guard missing: $_" } }
+    $run = Get-Content -Raw $wave10Paths.Run
+    @('ISecurityValidationDeliveryRunReader','purpose = @purpose','static_validation_id = @static_validation_id','static_report_sha256_digest = @static_report_sha256_digest','SHA256.HashData','DeliveryStage.StaticValidation') | ForEach-Object { if ($run -notmatch [regex]::Escape($_)) { throw "Security run-reader guard missing: $_" } }
+    foreach ($readerText in @($staticReader,$candidate,$run)) { if ($readerText -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Security prerequisite reader contains mutation.' } }
+    $controls = Get-Content -Raw $wave10Paths.Controls
+    @('SecurityValidationRuntimeConfigurationState.Unconfigured','TrustedPublicKeysPem','SignedDeterministicSecurityValidationControl','ValidationGate.Security','AiPlanningSignatureVerifier.Verify','RequiredText','ForbiddenText','AllowedFileExtensions','ValidationSeverity.Error','evidence://security-validation/controls') | ForEach-Object { if ($controls -notmatch [regex]::Escape($_)) { throw "Signed Security control guard missing: $_" } }
+    if ($controls -match 'HttpClient|Process|File\.Write|Directory\.Create|ExecuteNonQuery') { throw 'Security control exposes an unauthorized effect capability.' }
+    $authorization = Get-Content -Raw $wave10Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.security-validation.create','security-validation-report.read','evidence://security-validation/result-authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Security authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave10Paths.Evidence
+    @('ISecurityValidationEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://security-validation','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Security evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Security evidence adapter contains mutation outside append.' }
+    $inputs = Get-Content -Raw $wave10Paths.InputsMigration
+    @('security_validation_delivery_run_snapshots','static_validation_id uuid NOT NULL','candidate_sha256_digest text NOT NULL','static_report_sha256_digest text NOT NULL','purpose text NOT NULL','COMMIT;') | ForEach-Object { if ($inputs -notmatch [regex]::Escape($_)) { throw "Security input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave10Paths.EvidenceMigration
+    @('software_factory.security_validation_evidence','PRIMARY KEY (tenant_id, validation_id)','FOREIGN KEY (tenant_id, static_validation_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Security evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave10Paths.Services
+    @('SecurityValidationRuntimeReadiness','SecurityValidationRuntimeOptions','ISecurityValidationPolicyGate','IAuthorizedStaticValidationReceiptReader','ISecurityValidationCodeGenerationCandidateReader','ISecurityValidationDeliveryRunReader','SignedDeterministicSecurityValidationControl','ISecurityValidationResultAuthorizer','ISecurityValidationEvidenceRecorder','hasOverlappingValidationControls') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Security composition missing: $_" } }
+    $readiness = Get-Content -Raw $wave10Paths.Readiness
+    @('Security Validation OPA policy gate','Authorized Static Validation receipt reader','Security Validation Code Generation candidate reader','Security Validation delivery-run reader','Security Validation result authorizer','Security Validation evidence recorder') | ForEach-Object { if ($readiness -notmatch [regex]::Escape($_)) { throw "Security readiness dependency missing: $_" } }
+    $operations = Get-Content -Raw $wave10Paths.Operations
+    @('SecurityValidationRuntimeReadiness','securityValidation') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Security readiness missing: $_" } }
+    $endpoint = Get-Content -Raw $wave10Paths.Endpoint
+    @('GetService<ISecurityValidationCodeGenerationCandidateReader>','Governed Security Validation is not operationally ready','cannot invoke Sandbox') | ForEach-Object { if ($endpoint -notmatch [regex]::Escape($_)) { throw "Security endpoint composition missing: $_" } }
+    $openApi = Get-Content -Raw $wave10Paths.OpenApi
+    @('securityValidation','unconfigured','invalid','configured','signed Security controls','cannot invoke Sandbox') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Security OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave10AcceptancePath
+    @('Status: **Satisfied**','all 143 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 10 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

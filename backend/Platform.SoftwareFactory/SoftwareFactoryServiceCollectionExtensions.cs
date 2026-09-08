@@ -48,6 +48,9 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var staticValidationOptions = configuration
             .GetSection(StaticValidationRuntimeOptions.SectionName)
             .Get<StaticValidationRuntimeOptions>() ?? new();
+        var securityValidationOptions = configuration
+            .GetSection(SecurityValidationRuntimeOptions.SectionName)
+            .Get<SecurityValidationRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -58,6 +61,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
             configuration.GetSection(CodeGenerationRuntimeOptions.SectionName));
         services.Configure<StaticValidationRuntimeOptions>(
             configuration.GetSection(StaticValidationRuntimeOptions.SectionName));
+        services.Configure<SecurityValidationRuntimeOptions>(
+            configuration.GetSection(SecurityValidationRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -129,6 +134,18 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? StaticValidationRuntimeConfigurationState.Configured
                     : StaticValidationRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new StaticValidationRuntimeReadiness(staticValidationState));
+        var hasOverlappingValidationControls = staticValidationOptions.Controls.Select(item => item.ControlId)
+            .Intersect(securityValidationOptions.Controls.Select(item => item.ControlId), StringComparer.Ordinal).Any();
+        var securityValidationState =
+            staticValidationState == StaticValidationRuntimeConfigurationState.Invalid ||
+            securityValidationOptions.ConfigurationState == SecurityValidationRuntimeConfigurationState.Invalid ||
+            hasOverlappingValidationControls
+                ? SecurityValidationRuntimeConfigurationState.Invalid
+                : staticValidationState == StaticValidationRuntimeConfigurationState.Configured &&
+                  securityValidationOptions.IsOperationallyConfigured
+                    ? SecurityValidationRuntimeConfigurationState.Configured
+                    : SecurityValidationRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new SecurityValidationRuntimeReadiness(securityValidationState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -214,6 +231,23 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                 DeterministicStaticValidationResultAuthorizer>();
                             services.AddScoped<IStaticValidationEvidenceRecorder,
                                 PostgreSqlStaticValidationEvidenceRecorder>();
+                            if (securityValidationOptions.IsOperationallyConfigured && !hasOverlappingValidationControls)
+                            {
+                                services.AddScoped<ISecurityValidationPolicyGate, SovereignSecurityValidationPolicyGate>();
+                                services.AddScoped<IAuthorizedStaticValidationReceiptReader,
+                                    PostgreSqlAuthorizedStaticValidationReceiptReader>();
+                                services.AddScoped<ISecurityValidationCodeGenerationCandidateReader,
+                                    PostgreSqlSecurityValidationCodeGenerationCandidateReader>();
+                                services.AddScoped<ISecurityValidationDeliveryRunReader,
+                                    PostgreSqlSecurityValidationDeliveryRunReader>();
+                                foreach (var profile in securityValidationOptions.Controls)
+                                    services.AddSingleton<ICodeValidationControl>(
+                                        new SignedDeterministicSecurityValidationControl(profile, securityValidationOptions));
+                                services.AddScoped<ISecurityValidationResultAuthorizer,
+                                    DeterministicSecurityValidationResultAuthorizer>();
+                                services.AddScoped<ISecurityValidationEvidenceRecorder,
+                                    PostgreSqlSecurityValidationEvidenceRecorder>();
+                            }
                         }
                     }
                 }

@@ -267,3 +267,9 @@ Change-control record: `docs/change-control/CR-009-OPERATIONALIZATION-WAVE-08.md
 Operationalization Wave 09 connects Governed Static Validation to the exact immutable Code Generation evidence and a deterministic delivery-run snapshot stopped at `CodeGeneration`, signed-bundle-bound exact Static OPA scope, deployment-configured cryptographically signed deterministic in-process Static control profiles, the existing `CodeValidationPipeline`, per-result RBAC/ABAC authorization, and immutable PostgreSQL evidence. Only an evidence-bearing non-executable, non-advancing Static report can be released under complete deployment configuration. Source mutation, compilation, commands, packages, external analyzers, network controls, AI invocation, workflow advancement, Security Validation and later stations, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-010-OPERATIONALIZATION-WAVE-09.md`.
+
+## Approved operationalization addendum — CR-011
+
+Operationalization Wave 10 connects Governed Security Validation to the exact immutable accepted Static Validation evidence and its Code Generation candidate plus a deterministic delivery-run snapshot stopped at `StaticValidation`, signed-bundle-bound exact Security OPA scope, deployment-configured cryptographically signed deterministic in-process Security control profiles, the existing `CodeValidationPipeline`, per-result RBAC/ABAC authorization, and immutable PostgreSQL evidence. Only an evidence-bearing non-executable, non-advancing Security report can be released under complete deployment configuration. Source mutation, compilation, commands, packages, dynamic acquisition, external analyzers, network controls, AI invocation, candidate or sandbox execution, workflow advancement, Sandbox and later stations, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-011-OPERATIONALIZATION-WAVE-10.md`.

@@ -50,6 +50,7 @@ public sealed class SovereignCodeGenerationPolicyGate(
         var scope = envelope.CodeGeneration ?? throw new UnauthorizedAccessException("OPA permit omitted action-specific Code Generation scope.");
         if (envelope.ExistingSystems is not null || envelope.ExistingArchitecture is not null ||
             envelope.ApprovedPackages is not null || envelope.AiPlanning is not null || envelope.StaticValidation is not null ||
+            envelope.SecurityValidation is not null ||
             !envelope.AllowedResourceIds.IsDefaultOrEmpty || !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||
             !string.IsNullOrWhiteSpace(envelope.MaximumClassification))

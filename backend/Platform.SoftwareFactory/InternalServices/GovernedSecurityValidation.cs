@@ -45,12 +45,23 @@ public sealed record GovernedSecurityValidationRequest(
 public interface IAuthorizedStaticValidationReceiptReader
 {
     Task<GovernedStaticValidationReceipt?> LoadAsync(
-        Guid validationId, string tenantId, CancellationToken cancellationToken);
+        Guid validationId, string tenantId, string purpose, Guid generationId, Guid deliveryRunId,
+        string candidateSha256Digest, string staticReportSha256Digest,
+        string staticEvidenceReference, CancellationToken cancellationToken);
+}
+
+public interface ISecurityValidationCodeGenerationCandidateReader
+{
+    Task<AuthorizedCodeGenerationCandidateSnapshot?> LoadAsync(
+        Guid generationId, string tenantId, string purpose, string candidateSha256Digest,
+        Guid staticValidationId, string staticEvidenceReference, CancellationToken cancellationToken);
 }
 
 public interface ISecurityValidationDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, string purpose,
+        Guid generationId, Guid staticValidationId, string candidateSha256Digest,
+        string staticReportSha256Digest, CancellationToken cancellationToken);
 }
 
 public sealed record SecurityValidationPolicyInput(
@@ -67,7 +78,8 @@ public sealed record SecurityValidationPolicyDecision(
     string BundleId, string BundleVersion, string BundleSha256Digest,
     bool PolicySignatureValid, string PolicyVerificationEvidenceReference,
     GovernedIntentPolicyOutcome Outcome, DataClassification MaximumClassification,
-    ImmutableHashSet<string> AllowedControlIds, ImmutableArray<string> Reasons,
+    ImmutableHashSet<string> AllowedControlIds, ImmutableHashSet<string> RequiredRoles,
+    string OutputKind, ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface ISecurityValidationPolicyGate
@@ -78,8 +90,11 @@ public interface ISecurityValidationPolicyGate
 
 public sealed record SecurityValidationResultAuthorizationRequest(
     Guid AuthorizationRequestId, Guid ValidationId, Guid GenerationId, string TenantId,
+    string SubjectId, string Purpose, GovernedIdentity Identity,
+    DataClassification MaximumClassification, string Environment,
     string CandidateSha256Digest, string StaticReportSha256Digest, string SecurityReportSha256Digest,
-    ImmutableArray<string> ControlIds, ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
+    ImmutableHashSet<string> RequiredRoles, ImmutableArray<string> ControlIds,
+    ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record SecurityValidationResultAuthorizationDecision(
     Guid AuthorizationRequestId, Guid ValidationId, Guid GenerationId, string TenantId,
@@ -94,7 +109,8 @@ public interface ISecurityValidationResultAuthorizer
 
 public sealed record SecurityValidationEvidenceRecord(
     Guid ValidationId, Guid StaticValidationId, Guid GenerationId, Guid DeliveryRunId,
-    string TenantId, string CandidateSha256Digest, string StaticReportSha256Digest,
+    string TenantId, string SubjectId, string Purpose,
+    string CandidateSha256Digest, string StaticReportSha256Digest,
     Guid PolicyDecisionRequestId, ValidationGateReport Report, string SecurityReportSha256Digest,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset ValidatedAt);
 
@@ -123,7 +139,7 @@ public sealed class GovernedSecurityValidationEngine
     public async Task<GovernedSecurityValidationReceipt> ValidateAsync(
         GovernedSecurityValidationRequest request, ISecurityValidationPolicyGate policyGate,
         IAuthorizedStaticValidationReceiptReader staticReader,
-        IAuthorizedCodeGenerationCandidateReader candidateReader,
+        ISecurityValidationCodeGenerationCandidateReader candidateReader,
         ISecurityValidationDeliveryRunReader runReader, IEnumerable<ICodeValidationControl> controls,
         ISecurityValidationResultAuthorizer resultAuthorizer,
         ISecurityValidationEvidenceRecorder evidenceRecorder, CancellationToken cancellationToken)
@@ -152,15 +168,20 @@ public sealed class GovernedSecurityValidationEngine
                 request.ExpectedStaticReportSha256Digest, null, [], null, policyEvidence,
                 "Policy denial requires a new governed Security Validation request", decision.DecidedAt);
 
-        var staticReceipt = await staticReader.LoadAsync(
-            request.StaticValidationId, request.Identity.TenantId, cancellationToken)
+        var staticReceipt = await staticReader.LoadAsync(request.StaticValidationId,
+            request.Identity.TenantId, request.Purpose, request.GenerationId, request.DeliveryRunId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedStaticReportSha256Digest,
+            request.ExpectedStaticEvidenceReference, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Static Validation receipt was not found.");
         ValidateStatic(request, staticReceipt);
-        var snapshot = await candidateReader.LoadAsync(
-            request.GenerationId, request.Identity.TenantId, cancellationToken)
+        var snapshot = await candidateReader.LoadAsync(request.GenerationId,
+            request.Identity.TenantId, request.Purpose, request.ExpectedCandidateSha256Digest,
+            request.StaticValidationId, request.ExpectedStaticEvidenceReference, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Code Generation candidate was not found.");
         ValidateCandidate(request, snapshot);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId,
+            request.Purpose, request.GenerationId, request.StaticValidationId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedStaticReportSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
         var selected = ValidateControls(request, decision, controls);
@@ -176,8 +197,11 @@ public sealed class GovernedSecurityValidationEngine
             .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToImmutableArray();
         var authRequest = new SecurityValidationResultAuthorizationRequest(
             Guid.NewGuid(), request.ValidationId, request.GenerationId, request.Identity.TenantId,
+            request.Identity.SubjectId, request.Purpose, request.Identity,
+            decision.MaximumClassification, request.Environment,
             request.ExpectedCandidateSha256Digest, request.ExpectedStaticReportSha256Digest,
-            reportDigest, request.RequiredControlIds.Order(StringComparer.Ordinal).ToImmutableArray(),
+            reportDigest, decision.RequiredRoles,
+            request.RequiredControlIds.Order(StringComparer.Ordinal).ToImmutableArray(),
             reportEvidence, decision.DecidedAt);
         var authorization = await resultAuthorizer.AuthorizeAsync(authRequest, cancellationToken);
         ValidateAuthorization(authRequest, authorization);
@@ -185,7 +209,8 @@ public sealed class GovernedSecurityValidationEngine
             .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToImmutableArray();
         var record = new SecurityValidationEvidenceRecord(
             request.ValidationId, request.StaticValidationId, request.GenerationId, request.DeliveryRunId,
-            request.Identity.TenantId, request.ExpectedCandidateSha256Digest,
+            request.Identity.TenantId, request.Identity.SubjectId, request.Purpose,
+            request.ExpectedCandidateSha256Digest,
             request.ExpectedStaticReportSha256Digest, decision.DecisionRequestId,
             report, reportDigest, allEvidence, authorization.DecidedAt);
         var evidence = await evidenceRecorder.RecordAsync(record, cancellationToken);
@@ -217,7 +242,10 @@ public sealed class GovernedSecurityValidationEngine
             value.MaximumClassification > input.MaximumClassification || value.MaximumClassification > identity.Clearance ||
             value.Reasons.IsDefaultOrEmpty || value.EvidenceReferences.IsDefaultOrEmpty || value.DecidedAt < input.EvaluatedAt)
             throw new UnauthorizedAccessException("Security Validation OPA decision is invalid.");
-        if (value.Outcome == GovernedIntentPolicyOutcome.Permit && !value.AllowedControlIds.SetEquals(input.RequiredControlIds))
+        if (value.Outcome == GovernedIntentPolicyOutcome.Permit &&
+            (!value.AllowedControlIds.SetEquals(input.RequiredControlIds) || value.RequiredRoles.IsEmpty ||
+             !value.RequiredRoles.IsSubsetOf(identity.Roles) ||
+             !StringComparer.Ordinal.Equals(value.OutputKind, "security-report")))
             throw new UnauthorizedAccessException("OPA did not authorize the exact Security control set.");
     }
 
