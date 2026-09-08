@@ -65,9 +65,39 @@ public interface IAuthorizedTestsExecutionReceiptReader
     Task<GovernedTestsExecutionReceipt?> LoadAsync(Guid executionId, string tenantId, CancellationToken cancellationToken);
 }
 
+public interface IHumanReviewTestsReceiptReader
+{
+    Task<GovernedTestsExecutionReceipt?> LoadAsync(Guid executionId, string tenantId, string purpose,
+        Guid sandboxExecutionId, Guid securityValidationId, Guid generationId, Guid deliveryRunId,
+        string candidateSha256Digest, string securityReportSha256Digest, string sandboxResultSha256Digest,
+        string testsResultSha256Digest, string testsEvidenceReference, CancellationToken cancellationToken);
+}
+
+public interface IHumanReviewSandboxReceiptReader
+{
+    Task<GovernedSandboxExecutionReceipt?> LoadAsync(Guid executionId, string tenantId, string purpose,
+        Guid securityValidationId, Guid generationId, Guid deliveryRunId, string candidateSha256Digest,
+        string securityReportSha256Digest, string resultSha256Digest, CancellationToken cancellationToken);
+}
+
+public interface IHumanReviewSecurityReceiptReader
+{
+    Task<GovernedSecurityValidationReceipt?> LoadAsync(Guid validationId, string tenantId, string purpose,
+        Guid generationId, Guid deliveryRunId, string candidateSha256Digest,
+        string securityReportSha256Digest, CancellationToken cancellationToken);
+}
+
+public interface IHumanReviewCandidateReader
+{
+    Task<AuthorizedCodeGenerationCandidateSnapshot?> LoadAsync(Guid generationId, string tenantId,
+        string purpose, Guid deliveryRunId, string candidateSha256Digest, CancellationToken cancellationToken);
+}
+
 public interface IHumanReviewDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, string purpose,
+        Guid testsExecutionId, Guid sandboxExecutionId, Guid generationId,
+        string candidateSha256Digest, string testsResultSha256Digest, CancellationToken cancellationToken);
 }
 
 public sealed record HumanReviewPolicyInput(
@@ -153,10 +183,10 @@ public sealed class GovernedHumanReviewEngine
 {
     public async Task<GovernedHumanReviewReceipt> ReviewAsync(
         GovernedHumanReviewRequest request, IHumanReviewPolicyGate policyGate,
-        IAuthorizedTestsExecutionReceiptReader testsReader,
-        IAuthorizedSandboxExecutionReceiptReader sandboxReader,
-        IAuthorizedSecurityValidationReceiptReader securityReader,
-        IAuthorizedCodeGenerationCandidateReader candidateReader,
+        IHumanReviewTestsReceiptReader testsReader,
+        IHumanReviewSandboxReceiptReader sandboxReader,
+        IHumanReviewSecurityReceiptReader securityReader,
+        IHumanReviewCandidateReader candidateReader,
         IHumanReviewDeliveryRunReader runReader,
         IHumanReviewAttestationVerifier attestationVerifier,
         IAtomicHumanReviewRepository repository, CancellationToken cancellationToken)
@@ -187,19 +217,31 @@ public sealed class GovernedHumanReviewEngine
                 request.ExpectedTestsResultSha256Digest, null, null, null, policyEvidence,
                 "Policy denial requires a new governed Human Review request", policy.DecidedAt);
 
-        var tests = await testsReader.LoadAsync(request.TestsExecutionId, request.Identity.TenantId, cancellationToken)
+        var tests = await testsReader.LoadAsync(request.TestsExecutionId, request.Identity.TenantId, request.Purpose,
+            request.SandboxExecutionId, request.SecurityValidationId, request.GenerationId, request.DeliveryRunId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedSecurityReportSha256Digest,
+            request.ExpectedSandboxResultSha256Digest, request.ExpectedTestsResultSha256Digest,
+            request.ExpectedTestsEvidenceReference, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Tests receipt was not found.");
         ValidateTests(request, tests);
-        var sandbox = await sandboxReader.LoadAsync(request.SandboxExecutionId, request.Identity.TenantId, cancellationToken)
+        var sandbox = await sandboxReader.LoadAsync(request.SandboxExecutionId, request.Identity.TenantId, request.Purpose,
+            request.SecurityValidationId, request.GenerationId, request.DeliveryRunId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedSecurityReportSha256Digest,
+            request.ExpectedSandboxResultSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Sandbox receipt was not found.");
         ValidateSandbox(request, sandbox);
-        var security = await securityReader.LoadAsync(request.SecurityValidationId, request.Identity.TenantId, cancellationToken)
+        var security = await securityReader.LoadAsync(request.SecurityValidationId, request.Identity.TenantId,
+            request.Purpose, request.GenerationId, request.DeliveryRunId, request.ExpectedCandidateSha256Digest,
+            request.ExpectedSecurityReportSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Security receipt was not found.");
         ValidateSecurity(request, security);
-        var candidate = await candidateReader.LoadAsync(request.GenerationId, request.Identity.TenantId, cancellationToken)
+        var candidate = await candidateReader.LoadAsync(request.GenerationId, request.Identity.TenantId,
+            request.Purpose, request.DeliveryRunId, request.ExpectedCandidateSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Code Generation candidate was not found.");
         ValidateCandidate(request, candidate);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, request.Purpose,
+            request.TestsExecutionId, request.SandboxExecutionId, request.GenerationId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedTestsResultSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run, policy);
 

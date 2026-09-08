@@ -55,6 +55,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
             .GetSection(SandboxRuntimeOptions.SectionName)
             .Get<SandboxRuntimeOptions>() ?? new();
         var testsOptions = configuration.GetSection(TestsRuntimeOptions.SectionName).Get<TestsRuntimeOptions>() ?? new();
+        var humanReviewOptions = configuration.GetSection(HumanReviewRuntimeOptions.SectionName).Get<HumanReviewRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -70,6 +71,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<SandboxRuntimeOptions>(
             configuration.GetSection(SandboxRuntimeOptions.SectionName));
         services.Configure<TestsRuntimeOptions>(configuration.GetSection(TestsRuntimeOptions.SectionName));
+        services.Configure<HumanReviewRuntimeOptions>(configuration.GetSection(HumanReviewRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -164,6 +166,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new SandboxRuntimeReadiness(sandboxState));
         var testsState=sandboxState==SandboxRuntimeConfigurationState.Invalid||testsOptions.ConfigurationState==TestsRuntimeConfigurationState.Invalid?TestsRuntimeConfigurationState.Invalid:sandboxState==SandboxRuntimeConfigurationState.Configured&&testsOptions.IsOperationallyConfigured?TestsRuntimeConfigurationState.Configured:TestsRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new TestsRuntimeReadiness(testsState));
+        var humanReviewState=testsState==TestsRuntimeConfigurationState.Invalid||humanReviewOptions.ConfigurationState==HumanReviewRuntimeConfigurationState.Invalid?HumanReviewRuntimeConfigurationState.Invalid:testsState==TestsRuntimeConfigurationState.Configured&&humanReviewOptions.IsOperationallyConfigured?HumanReviewRuntimeConfigurationState.Configured:HumanReviewRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new HumanReviewRuntimeReadiness(humanReviewState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -294,6 +298,18 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                         services.AddScoped<IGovernedTestRuntime,SovereignHttpGovernedTestRuntime>();
                                         services.AddScoped<ITestsResultAuthorizer,DeterministicTestsResultAuthorizer>();
                                         services.AddScoped<ITestsEvidenceRecorder,PostgreSqlTestsEvidenceRecorder>();
+                                        if (humanReviewOptions.IsOperationallyConfigured)
+                                        {
+                                            services.AddHttpClient("sovereign-human-review-attestation").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(humanReviewOptions.RequestTimeoutSeconds) });
+                                            services.AddScoped<IHumanReviewPolicyGate,SovereignHumanReviewPolicyGate>();
+                                            services.AddScoped<IHumanReviewTestsReceiptReader,PostgreSqlHumanReviewTestsReader>();
+                                            services.AddScoped<IHumanReviewSandboxReceiptReader,PostgreSqlHumanReviewSandboxReader>();
+                                            services.AddScoped<IHumanReviewSecurityReceiptReader,PostgreSqlHumanReviewSecurityReader>();
+                                            services.AddScoped<IHumanReviewCandidateReader,PostgreSqlHumanReviewCandidateReader>();
+                                            services.AddScoped<IHumanReviewDeliveryRunReader,PostgreSqlHumanReviewRunReader>();
+                                            services.AddScoped<IHumanReviewAttestationVerifier,SovereignHttpHumanReviewAttestationVerifier>();
+                                            services.AddScoped<IAtomicHumanReviewRepository,PostgreSqlAtomicHumanReviewRepository>();
+                                        }
                                     }
                                 }
                             }

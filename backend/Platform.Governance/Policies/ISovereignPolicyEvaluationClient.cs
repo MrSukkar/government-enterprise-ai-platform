@@ -44,7 +44,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignStaticValidationPolicyScope? StaticValidation,
     SovereignSecurityValidationPolicyScope? SecurityValidation,
     SovereignSandboxPolicyScope? Sandbox,
-    SovereignTestsPolicyScope? Tests);
+    SovereignTestsPolicyScope? Tests,
+    SovereignHumanReviewPolicyScope? HumanReview);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -153,6 +154,19 @@ public sealed record SovereignTestsPolicyScope(
     long ExecutionTimeoutTicks,
     ImmutableSortedDictionary<string, string> AllowedEnvironmentReferences,
     ImmutableArray<string> AllowedNetworkDestinations,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignHumanReviewPolicyScope(
+    string MaximumClassification,
+    string ReviewerSubjectId,
+    string InitiatorSubjectId,
+    string HumanDecision,
+    string RationaleSha256Digest,
+    string HumanAttestationReference,
+    ImmutableArray<string> ConflictingSubjectIds,
+    bool ReviewerIsHuman,
+    long ExpectedVersion,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

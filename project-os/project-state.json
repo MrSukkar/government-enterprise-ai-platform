@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 12 - Governed Tests",
+    "wave": "Wave 13 - Governed Human Review",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-013-OPERATIONALIZATION-WAVE-12.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_12_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md",
-    "executionBoundary": "Governed Tests adapters for exact immutable accepted Sandbox and Security evidence, the authoritative inert Code Generation candidate, purpose/digest-bound Sandbox-stopped delivery-run reads, action-specific OPA scope, immutable governed test manifests, exact institutional image eligibility and cryptographic supply-chain assurance, a bounded provider-neutral sovereign HTTPS test runtime with signed Firecracker-class isolation and exact manifest-coverage attestation, per-result RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 148 disconnected institutional dependencies fail closed; no production credential or data, host filesystem, unrestricted network, source mutation, workflow advancement, Human Review, external provisioning, or production action is connected; the Authorized Tests receipt reader, later stations, live infrastructure, schemas, institutional data, manifests, images, limits, keys, credentials, deployment, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-014-OPERATIONALIZATION-WAVE-13.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_13_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_12_ACCEPTANCE.md",
+    "executionBoundary": "Governed Human Review adapters for exact immutable Tests, Sandbox, Security Validation, Code Generation, and Tests-stopped delivery-run reads, action-specific OPA scope, authenticated-human separation of duties, bounded signed sovereign attestation verification, and atomic append-only PostgreSQL decision/evidence persistence with deterministic idempotency and optimistic concurrency are implemented and conditionally composed; repository defaults retain 151 disconnected institutional dependencies fail closed; AI, policy, runtime, and API cannot supply or alter the decision; no candidate or source mutation, workflow advancement, Git, external provisioning, or production action is connected; later stations, live infrastructure, schemas, institutional identity and data, endpoints, keys, credentials, bounds, quorum, deployment, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_12_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_13_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

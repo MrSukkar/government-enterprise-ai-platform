@@ -1233,10 +1233,10 @@ internal static class InternalServiceEndpoint
                         input.InitiatorSubjectId, true));
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
                     var policy = services.GetService<IHumanReviewPolicyGate>();
-                    var testsReader = services.GetService<IAuthorizedTestsExecutionReceiptReader>();
-                    var sandboxReader = services.GetService<IAuthorizedSandboxExecutionReceiptReader>();
-                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var testsReader = services.GetService<IHumanReviewTestsReceiptReader>();
+                    var sandboxReader = services.GetService<IHumanReviewSandboxReceiptReader>();
+                    var securityReader = services.GetService<IHumanReviewSecurityReceiptReader>();
+                    var candidateReader = services.GetService<IHumanReviewCandidateReader>();
                     var runReader = services.GetService<IHumanReviewDeliveryRunReader>();
                     var attestation = services.GetService<IHumanReviewAttestationVerifier>();
                     var repository = services.GetService<IAtomicHumanReviewRepository>();
