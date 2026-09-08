@@ -51,6 +51,9 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var securityValidationOptions = configuration
             .GetSection(SecurityValidationRuntimeOptions.SectionName)
             .Get<SecurityValidationRuntimeOptions>() ?? new();
+        var sandboxOptions = configuration
+            .GetSection(SandboxRuntimeOptions.SectionName)
+            .Get<SandboxRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -63,6 +66,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
             configuration.GetSection(StaticValidationRuntimeOptions.SectionName));
         services.Configure<SecurityValidationRuntimeOptions>(
             configuration.GetSection(SecurityValidationRuntimeOptions.SectionName));
+        services.Configure<SandboxRuntimeOptions>(
+            configuration.GetSection(SandboxRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -146,6 +151,15 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? SecurityValidationRuntimeConfigurationState.Configured
                     : SecurityValidationRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new SecurityValidationRuntimeReadiness(securityValidationState));
+        var sandboxState =
+            securityValidationState == SecurityValidationRuntimeConfigurationState.Invalid ||
+            sandboxOptions.ConfigurationState == SandboxRuntimeConfigurationState.Invalid
+                ? SandboxRuntimeConfigurationState.Invalid
+                : securityValidationState == SecurityValidationRuntimeConfigurationState.Configured &&
+                  sandboxOptions.IsOperationallyConfigured
+                    ? SandboxRuntimeConfigurationState.Configured
+                    : SandboxRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new SandboxRuntimeReadiness(sandboxState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -247,6 +261,24 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                     DeterministicSecurityValidationResultAuthorizer>();
                                 services.AddScoped<ISecurityValidationEvidenceRecorder,
                                     PostgreSqlSecurityValidationEvidenceRecorder>();
+                                if (sandboxOptions.IsOperationallyConfigured)
+                                {
+                                    services.AddHttpClient("sovereign-security-sandbox")
+                                        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                                        {
+                                            AllowAutoRedirect = false, UseCookies = false,
+                                            ConnectTimeout = TimeSpan.FromSeconds(sandboxOptions.RequestTimeoutSeconds)
+                                        });
+                                    services.AddScoped<ISandboxPolicyGate, SovereignSandboxPolicyGate>();
+                                    services.AddScoped<ISandboxSecurityValidationReceiptReader,
+                                        PostgreSqlSandboxSecurityValidationReceiptReader>();
+                                    services.AddScoped<ISandboxCodeGenerationCandidateReader,
+                                        PostgreSqlSandboxCodeGenerationCandidateReader>();
+                                    services.AddScoped<ISandboxDeliveryRunReader, PostgreSqlSandboxDeliveryRunReader>();
+                                    services.AddScoped<ISecuritySandboxRuntime, SovereignHttpSecuritySandboxRuntime>();
+                                    services.AddScoped<ISandboxResultAuthorizer, DeterministicSandboxResultAuthorizer>();
+                                    services.AddScoped<ISandboxEvidenceRecorder, PostgreSqlSandboxEvidenceRecorder>();
+                                }
                             }
                         }
                     }

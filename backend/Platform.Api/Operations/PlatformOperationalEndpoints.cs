@@ -19,7 +19,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.AiPlanningRuntimeReadiness aiPlanning,
             Platform.SoftwareFactory.InternalService.CodeGenerationRuntimeReadiness codeGeneration,
             Platform.SoftwareFactory.InternalService.StaticValidationRuntimeReadiness staticValidation,
-            Platform.SoftwareFactory.InternalService.SecurityValidationRuntimeReadiness securityValidation) =>
+            Platform.SoftwareFactory.InternalService.SecurityValidationRuntimeReadiness securityValidation,
+            Platform.SoftwareFactory.InternalService.SandboxRuntimeReadiness sandbox) =>
         {
             var payload = new
             {
@@ -38,7 +39,8 @@ internal static class PlatformOperationalEndpoints
                     aiPlanning = aiPlanning.State.ToString().ToLowerInvariant(),
                     codeGeneration = codeGeneration.State.ToString().ToLowerInvariant(),
                     staticValidation = staticValidation.State.ToString().ToLowerInvariant(),
-                    securityValidation = securityValidation.State.ToString().ToLowerInvariant()
+                    securityValidation = securityValidation.State.ToString().ToLowerInvariant(),
+                    sandbox = sandbox.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

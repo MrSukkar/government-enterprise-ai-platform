@@ -1108,8 +1108,8 @@ internal static class InternalServiceEndpoint
                         context.Identity.SubjectId, false));
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
                     var policy = services.GetService<ISandboxPolicyGate>();
-                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var securityReader = services.GetService<ISandboxSecurityValidationReceiptReader>();
+                    var candidateReader = services.GetService<ISandboxCodeGenerationCandidateReader>();
                     var runReader = services.GetService<ISandboxDeliveryRunReader>();
                     var registry = services.GetService<IInstitutionalPackageRegistryReader>();
                     var assurance = services.GetService<IApprovedPackageSupplyChainVerifier>();
@@ -1139,7 +1139,7 @@ internal static class InternalServiceEndpoint
             })
             .WithName("RunGovernedSandbox").WithTags("Create Internal Service")
             .WithSummary("Execute an authoritative code candidate in the governed security sandbox.")
-            .WithDescription("OPA authorizes the exact candidate, Security receipt, image, isolation, environment, and network scope before reads or execution. No production effect, Tests approval, or workflow advancement is available.")
+            .WithDescription("Verified OPA authorizes the exact immutable Security evidence chain, institutional image, Firecracker-class isolation, environment, and network scope before a signed provider-neutral sovereign Sandbox invocation. Repository defaults contain no runtime, image, limits, keys, endpoint, or institutional data. No production effect, Tests approval, or workflow advancement is available.")
             .Accepts<SandboxExecutionInput>("application/json")
             .Produces<GovernedSandboxExecutionReceipt>(200).Produces<GovernedSandboxExecutionReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)

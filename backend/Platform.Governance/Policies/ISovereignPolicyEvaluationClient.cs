@@ -42,7 +42,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignAiPlanningPolicyScope? AiPlanning,
     SovereignCodeGenerationPolicyScope? CodeGeneration,
     SovereignStaticValidationPolicyScope? StaticValidation,
-    SovereignSecurityValidationPolicyScope? SecurityValidation);
+    SovereignSecurityValidationPolicyScope? SecurityValidation,
+    SovereignSandboxPolicyScope? Sandbox);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -113,6 +114,23 @@ public sealed record SovereignStaticValidationPolicyScope(
 public sealed record SovereignSecurityValidationPolicyScope(
     string MaximumClassification,
     ImmutableArray<string> AllowedControlIds,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignSandboxPolicyScope(
+    string MaximumClassification,
+    SovereignApprovedPackageCoordinate? AllowedSandboxImage,
+    string IsolationClass,
+    bool Ephemeral,
+    bool MicroVmIsolation,
+    bool ProductionCredentialsAllowed,
+    bool HostFilesystemAccessAllowed,
+    bool NetworkDefaultDeny,
+    int CpuLimit,
+    long MemoryLimitBytes,
+    long ExecutionTimeoutTicks,
+    ImmutableSortedDictionary<string, string> AllowedEnvironmentReferences,
+    ImmutableArray<string> AllowedNetworkDestinations,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

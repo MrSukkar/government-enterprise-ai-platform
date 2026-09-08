@@ -1454,7 +1454,7 @@ if (Test-Path $increment12AcceptancePath) {
     $change=Get-Content -Raw $changePath
     @('Status: **Approved for Operational Increment 12**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 12 approval missing: $_"}}
     $engine=Get-Content -Raw $enginePath
-    @('ISandboxPolicyGate','IAuthorizedSecurityValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.SecurityValidation','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','GovernedSandboxService','ISecuritySandboxRuntime','ISandboxResultAuthorizer','ISandboxEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Tests')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Sandbox guard missing: $_"}}
+    @('ISandboxPolicyGate','ISandboxSecurityValidationReceiptReader','ISandboxCodeGenerationCandidateReader','DeliveryStage.SecurityValidation','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','GovernedSandboxService','ISecuritySandboxRuntime','ISandboxResultAuthorizer','ISandboxEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Tests')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Sandbox guard missing: $_"}}
     $isolation=Get-Content -Raw $isolationPath
     @('Firecracker-class','ProductionCredentialsAllowed','HostFilesystemAccessAllowed','NetworkDefaultDeny')|ForEach-Object{if($isolation -notmatch [regex]::Escape($_)){throw "Sandbox isolation guard missing: $_"}}
     if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('securityReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Sandbox prerequisite read occurs before OPA validation.'}
@@ -2364,6 +2364,86 @@ if (Test-Path $wave10AcceptancePath) {
     @('securityValidation','unconfigured','invalid','configured','signed Security controls','cannot invoke Sandbox') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Security OpenAPI readiness missing: $_" } }
     $acceptance = Get-Content -Raw $wave10AcceptancePath
     @('Status: **Satisfied**','all 143 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 10 acceptance missing: $_" } }
+}
+
+$wave11AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_11_ACCEPTANCE.md'
+if (Test-Path $wave11AcceptancePath) {
+    $wave11Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-012-OPERATIONALIZATION-WAVE-11.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Envelope = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\ISovereignPolicyEvaluationClient.cs'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedSandboxExecution.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignSandboxPolicyGate.cs'
+        Options = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SandboxRuntimeOptions.cs'
+        Runtime = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignHttpSecuritySandboxRuntime.cs'
+        SecurityReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSandboxSecurityValidationReceiptReader.cs'
+        Candidate = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSandboxCodeGenerationCandidateReader.cs'
+        Run = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSandboxDeliveryRunReader.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicSandboxResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlSandboxEvidenceRecorder.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\015_sandbox_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\016_sandbox_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Readiness = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        Endpoint = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_11_GOVERNED_SECURITY_SANDBOX.md'
+    }
+    $wave11Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 11 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave11Paths.Change
+    @('Status: **Approved for Operationalization Wave 11**','Decision: **Approved by the repository owner','No provider, image','provider-neutral sovereign HTTPS sandbox protocol') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Wave 11 approval missing: $_" } }
+    $master = Get-Content -Raw $wave11Paths.Master
+    @('CR-012','CR-012-OPERATIONALIZATION-WAVE-11.md','signed response must attest Firecracker-class ephemeral microVM isolation') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master CR-012 authority missing: $_" } }
+    $envelope = Get-Content -Raw $wave11Paths.Envelope
+    @('SovereignSandboxPolicyScope','AllowedSandboxImage','AllowedEnvironmentReferences','AllowedNetworkDestinations','Sandbox') | ForEach-Object { if ($envelope -notmatch [regex]::Escape($_)) { throw "Sandbox policy envelope missing: $_" } }
+    $policy = Get-Content -Raw $wave11Paths.Policy
+    @('internal-service.sandbox.execute','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','envelope.Sandbox','AllowedSandboxImage','sandbox-result','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Sandbox OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Sandbox OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave11Paths.Engine
+    if ($engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('securityReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('securityReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('candidateReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('registryReader.FindExactAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('registryReader.FindExactAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('supplyChainVerifier.VerifyAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('supplyChainVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('GovernedSandboxService(runtime).ExecuteAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('GovernedSandboxService(runtime).ExecuteAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Sandbox policy/read/image/runtime/authorization/evidence order is invalid.' }
+    @('ISandboxSecurityValidationReceiptReader','ISandboxCodeGenerationCandidateReader','DeliveryStage.SecurityValidation','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','GovernedSandboxService','ISecuritySandboxRuntime','RequiredRoles','sandbox-result','ProductionEffectOccurred','CanAdvance','Separately approved Tests') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Sandbox engine guard missing: $_" } }
+    if ($engine -match 'StageCompletion') { throw 'Operationalized Sandbox must not advance workflow.' }
+    $securityReader = Get-Content -Raw $wave11Paths.SecurityReader
+    @('ISandboxSecurityValidationReceiptReader','purpose','security_report_sha256_digest = @security_report_sha256_digest','evidence_reference = @evidence_reference','JsonSerializer.Deserialize<SecurityValidationEvidenceRecord>','SHA256.HashData','ValidationGate.Security','ValidationSeverity.Critical') | ForEach-Object { if ($securityReader -notmatch [regex]::Escape($_)) { throw "Sandbox Security-reader guard missing: $_" } }
+    $candidate = Get-Content -Raw $wave11Paths.Candidate
+    @('ISandboxCodeGenerationCandidateReader','JOIN software_factory.security_validation_evidence','security.evidence_reference = @security_evidence_reference','record.Purpose','record.Evaluation.IsAccepted','GovernedGeneratedPath.Validate','SHA256.HashData') | ForEach-Object { if ($candidate -notmatch [regex]::Escape($_)) { throw "Sandbox candidate-reader guard missing: $_" } }
+    $run = Get-Content -Raw $wave11Paths.Run
+    @('ISandboxDeliveryRunReader','purpose = @purpose','security_validation_id = @security_validation_id','security_report_sha256_digest = @security_report_sha256_digest','SHA256.HashData','DeliveryStage.SecurityValidation') | ForEach-Object { if ($run -notmatch [regex]::Escape($_)) { throw "Sandbox run-reader guard missing: $_" } }
+    foreach ($readerText in @($securityReader,$candidate,$run)) { if ($readerText -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Sandbox prerequisite reader contains mutation.' } }
+    $options = Get-Content -Raw $wave11Paths.Options
+    @('SandboxRuntimeConfigurationState.Unconfigured','Uri.UriSchemeHttps','TrustedPublicKeysPem','RequestTimeoutSeconds','MaximumRequestBytes','MaximumResponseBytes') | ForEach-Object { if ($options -notmatch [regex]::Escape($_)) { throw "Sandbox runtime configuration guard missing: $_" } }
+    $runtime = Get-Content -Raw $wave11Paths.Runtime
+    @('ISecuritySandboxRuntime','sovereign-security-sandbox','ResponseHeadersRead','ReadBoundedAsync','AiPlanningSignatureVerifier.Verify','request.IsolationPolicy.Validate','ProductionCredentialsMounted','HostFilesystemMounted','NetworkDefaultDenyEnforced','AllowedNetworkDestinations','ExitCode != 0','evidence://') | ForEach-Object { if ($runtime -notmatch [regex]::Escape($_)) { throw "Sovereign Sandbox runtime guard missing: $_" } }
+    if ($runtime -match 'Process\.Start|File\.Write|Directory\.Create|PackageReference') { throw 'Sandbox adapter exposes an API-host execution or mutation capability.' }
+    $authorization = Get-Content -Raw $wave11Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.sandbox.execute','sandbox-result.read','evidence://sandbox/result-authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Sandbox authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave11Paths.Evidence
+    @('ISandboxEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://sandbox','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Sandbox evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Sandbox evidence adapter contains mutation outside append.' }
+    $inputs = Get-Content -Raw $wave11Paths.InputsMigration
+    @('sandbox_delivery_run_snapshots','security_validation_id uuid NOT NULL','candidate_sha256_digest text NOT NULL','security_report_sha256_digest text NOT NULL','purpose text NOT NULL','COMMIT;') | ForEach-Object { if ($inputs -notmatch [regex]::Escape($_)) { throw "Sandbox input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave11Paths.EvidenceMigration
+    @('software_factory.sandbox_evidence','PRIMARY KEY (tenant_id, execution_id)','FOREIGN KEY (tenant_id, security_validation_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Sandbox evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave11Paths.Services
+    @('SandboxRuntimeReadiness','SandboxRuntimeOptions','ISandboxPolicyGate','ISandboxSecurityValidationReceiptReader','ISandboxCodeGenerationCandidateReader','ISandboxDeliveryRunReader','ISecuritySandboxRuntime','SovereignHttpSecuritySandboxRuntime','ISandboxResultAuthorizer','ISandboxEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Sandbox composition missing: $_" } }
+    $readiness = Get-Content -Raw $wave11Paths.Readiness
+    @('Sandbox OPA policy gate','Sandbox-authorized Security Validation receipt reader','Sandbox Code Generation candidate reader','Sandbox delivery-run reader','Sandbox result authorizer','Sandbox evidence recorder') | ForEach-Object { if ($readiness -notmatch [regex]::Escape($_)) { throw "Sandbox readiness dependency missing: $_" } }
+    $operations = Get-Content -Raw $wave11Paths.Operations
+    @('SandboxRuntimeReadiness','sandbox') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Sandbox readiness missing: $_" } }
+    $endpoint = Get-Content -Raw $wave11Paths.Endpoint
+    @('GetService<ISandboxSecurityValidationReceiptReader>','GetService<ISandboxCodeGenerationCandidateReader>','Governed Sandbox is not operationally ready','No production effect, Tests approval, or workflow advancement') | ForEach-Object { if ($endpoint -notmatch [regex]::Escape($_)) { throw "Sandbox endpoint composition missing: $_" } }
+    $openApi = Get-Content -Raw $wave11Paths.OpenApi
+    @('sandbox','unconfigured','invalid','configured','signed provider-neutral sovereign Sandbox invocation','No production effect, Tests approval, or workflow advancement') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Sandbox OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave11AcceptancePath
+    @('Status: **Satisfied**','CR-012','all 145 dependencies remain disconnected and fail closed','All seven Wave 11 runtime contracts','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 11 acceptance artifact missing: $_" } }
 }
 
 if (-not $NoBuild) {

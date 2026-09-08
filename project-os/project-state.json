@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 10 - Governed Security Validation",
+    "wave": "Wave 11 - Governed Security Sandbox",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-011-OPERATIONALIZATION-WAVE-10.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_10_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_09_ACCEPTANCE.md",
-    "executionBoundary": "Governed Security Validation adapters for exact immutable accepted Static evidence, the Code Generation candidate bound through that evidence chain, purpose/digest-bound StaticValidation-stopped delivery-run reads, action-specific OPA scope, signed deterministic in-process Security control profiles, exact control-set execution through CodeValidationPipeline, per-result RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 143 disconnected institutional dependencies fail closed; no source write, compiler, command, package, dynamic acquisition, external analyzer, network control, AI invocation, candidate or sandbox execution, or workflow advancement is connected; the Authorized Security Validation receipt reader, Sandbox and later stations, live infrastructure, schemas, institutional data, keys, credentials, deployment, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-012-OPERATIONALIZATION-WAVE-11.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_10_ACCEPTANCE.md",
+    "executionBoundary": "Governed Security Sandbox adapters for exact immutable accepted Security evidence, the Code Generation candidate bound through that evidence chain, purpose/digest-bound SecurityValidation-stopped delivery-run reads, action-specific OPA scope, exact institutional image eligibility and cryptographic supply-chain assurance, a bounded provider-neutral sovereign HTTPS runtime protocol with signed Firecracker-class isolation attestation, per-result RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 145 disconnected institutional dependencies fail closed; no production credential, host filesystem, unrestricted network, source mutation, workflow advancement, Tests, external provisioning, or production action is connected; the Authorized Sandbox receipt reader, later stations, live infrastructure, schemas, institutional data, images, limits, keys, credentials, deployment, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_10_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

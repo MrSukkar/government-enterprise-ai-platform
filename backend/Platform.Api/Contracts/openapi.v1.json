@@ -466,7 +466,7 @@
       "post": {
         "operationId": "runGovernedSandbox",
         "summary": "Execute an authoritative candidate in the governed security sandbox.",
-        "description": "OPA authorizes the exact candidate, Security receipt, institutional image, isolation, environment, and network scope before reads or execution. No production effect, Tests approval, or workflow advancement is available.",
+        "description": "Verified OPA authorizes the exact immutable Security evidence chain, institutional image, Firecracker-class isolation, non-secret environment, and network scope before a bounded signed provider-neutral sovereign Sandbox invocation. Readiness is unconfigured until deployment supplies the exact runtime, image, limits, trust, and endpoint. No production effect, Tests approval, or workflow advancement is available.",
         "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
         "parameters": [
           { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
@@ -486,7 +486,7 @@
           "401": { "description": "Authentication required.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
           "403": { "description": "Sandbox execution or result disclosure denied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GovernedSandboxExecutionReceipt" } } } },
           "404": { "description": "Prerequisite not found.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
-          "503": { "description": "A required governed dependency is unavailable; no image transfer or execution occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+          "503": { "description": "A required governed dependency or signed sovereign Sandbox runtime is unavailable; no image access or execution occurred.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
         }
       }
     },
@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -759,7 +759,8 @@
               "aiPlanning": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "codeGeneration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "staticValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "securityValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "securityValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "sandbox": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },
