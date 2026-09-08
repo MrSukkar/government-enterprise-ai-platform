@@ -39,7 +39,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignExistingSystemsPolicyScope? ExistingSystems,
     SovereignExistingArchitecturePolicyScope? ExistingArchitecture,
     SovereignApprovedPackagesPolicyScope? ApprovedPackages,
-    SovereignAiPlanningPolicyScope? AiPlanning);
+    SovereignAiPlanningPolicyScope? AiPlanning,
+    SovereignCodeGenerationPolicyScope? CodeGeneration);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -79,6 +80,22 @@ public sealed record SovereignAiPlanningPolicyScope(
     ImmutableArray<string> AllowedContextReferences,
     ImmutableArray<SovereignApprovedPackageCoordinate> AllowedPackages,
     ImmutableArray<string> AllowedConstraints,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind,
+    int RequestTimeoutSeconds,
+    int MaximumRequestBytes,
+    int MaximumResponseBytes);
+
+public sealed record SovereignCodeGenerationPolicyScope(
+    string MaximumClassification,
+    string AllowedPromptTemplateId,
+    string AllowedPromptTemplateVersion,
+    string AllowedPromptSha256Digest,
+    string AllowedRuntimeProfile,
+    ImmutableArray<string> AllowedContextReferences,
+    ImmutableArray<SovereignApprovedPackageCoordinate> AllowedPackages,
+    ImmutableArray<string> AllowedConstraints,
+    ImmutableArray<string> AllowedOutputPaths,
     ImmutableArray<string> RequiredRoles,
     string OutputKind,
     int RequestTimeoutSeconds,

@@ -61,7 +61,7 @@ public sealed class SovereignExistingSystemsPolicyGate(
         var scope = envelope.ExistingSystems
             ?? throw new UnauthorizedAccessException("OPA permit did not return the action-specific Existing Systems scope.");
         if (envelope.ExistingArchitecture is not null || envelope.ApprovedPackages is not null ||
-            envelope.AiPlanning is not null ||
+            envelope.AiPlanning is not null || envelope.CodeGeneration is not null ||
             !envelope.AllowedResourceIds.IsDefaultOrEmpty ||
             !envelope.AllowedModalities.IsDefaultOrEmpty ||
             !envelope.RequiredRoles.IsDefaultOrEmpty || envelope.MaximumResults != 0 ||

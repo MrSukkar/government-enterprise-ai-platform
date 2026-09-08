@@ -861,7 +861,7 @@ internal static class InternalServiceEndpoint
             })
             .WithName("CreateGovernedAiPlanningCandidate").WithTags("Create Internal Service")
             .WithSummary("Create a governed non-executable AI planning candidate.")
-            .WithDescription("OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. No generated files, tools, workflow advancement, or Code Generation is available.")
+            .WithDescription("OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. This planning endpoint cannot generate files, invoke tools, advance workflow, or invoke Code Generation.")
             .Accepts<AiPlanningInput>("application/json").Produces<GovernedAiPlanningReceipt>(200)
             .Produces<GovernedAiPlanningReceipt>(403).ProducesProblem(400).ProducesProblem(401)
             .ProducesProblem(404).ProducesProblem(503).RequireAuthorization();
@@ -893,8 +893,8 @@ internal static class InternalServiceEndpoint
                     var policyGate = services.GetService<ICodeGenerationPolicyGate>();
                     var promptReader = services.GetService<IGovernedCodeGenerationPromptTemplateReader>();
                     var contextAuthorizer = services.GetService<ICodeGenerationContextAuthorizer>();
-                    var runtime = services.GetService<IAiDevelopmentRuntime>();
-                    var evaluator = services.GetService<IAiOutputEvaluator>();
+                    var runtime = services.GetService<ICodeGenerationAiDevelopmentRuntime>();
+                    var evaluator = services.GetService<ICodeGenerationAiOutputEvaluator>();
                     var resultAuthorizer = services.GetService<ICodeGenerationResultAuthorizer>();
                     var evidenceRecorder = services.GetService<ICodeGenerationEvidenceRecorder>();
                     if (planningReader is null || packagesReader is null || runReader is null || policyGate is null ||

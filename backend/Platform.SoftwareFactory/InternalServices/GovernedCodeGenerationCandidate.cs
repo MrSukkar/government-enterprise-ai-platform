@@ -68,12 +68,16 @@ public sealed record GovernedCodeGenerationRequest(
 
 public interface IAuthorizedAiPlanningCandidateReader
 {
-    Task<GovernedAiPlanningReceipt?> LoadAsync(Guid planningId, string tenantId, CancellationToken cancellationToken);
+    Task<GovernedAiPlanningReceipt?> LoadAsync(
+        Guid planningId, string tenantId, string purpose, Guid packageSelectionId,
+        string selectionSha256Digest, string planningSha256Digest, CancellationToken cancellationToken);
 }
 
 public interface ICodeGenerationDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(
+        Guid runId, string tenantId, string purpose, Guid planningId, string planningSha256Digest,
+        Guid packageSelectionId, string selectionSha256Digest, CancellationToken cancellationToken);
 }
 
 public sealed record GovernedCodeGenerationPromptTemplate(
@@ -93,8 +97,13 @@ public sealed record GovernedCodeGenerationPromptTemplate(
 
 public interface IGovernedCodeGenerationPromptTemplateReader
 {
-    Task<GovernedCodeGenerationPromptTemplate?> LoadExactAsync(string templateId, string version, CancellationToken cancellationToken);
+    Task<GovernedCodeGenerationPromptTemplate?> LoadExactAsync(
+        string templateId, string version, string tenantId, string purpose, string environment,
+        CancellationToken cancellationToken);
 }
+
+public interface ICodeGenerationAiDevelopmentRuntime : IAiDevelopmentRuntime;
+public interface ICodeGenerationAiOutputEvaluator : IAiOutputEvaluator;
 
 public sealed record CodeGenerationPolicyInput(
     Guid DecisionRequestId, Guid GenerationId, Guid PlanningId, Guid PackageSelectionId, Guid DeliveryRunId,
@@ -114,7 +123,9 @@ public sealed record CodeGenerationPolicyDecision(
     string AllowedPromptTemplateId, string AllowedPromptTemplateVersion, string AllowedPromptSha256Digest,
     string AllowedRuntimeProfile, ImmutableHashSet<string> AllowedContextReferences,
     ImmutableHashSet<PackageCoordinate> AllowedPackages, ImmutableHashSet<string> AllowedConstraints,
-    ImmutableHashSet<string> AllowedOutputPaths, ImmutableArray<string> Reasons,
+    ImmutableHashSet<string> AllowedOutputPaths, ImmutableHashSet<string> RequiredRoles,
+    string OutputKind, int RequestTimeoutSeconds, int MaximumRequestBytes, int MaximumResponseBytes,
+    ImmutableArray<string> Reasons,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface ICodeGenerationPolicyGate
@@ -123,13 +134,16 @@ public interface ICodeGenerationPolicyGate
 }
 
 public sealed record CodeGenerationContextAuthorizationRequest(
-    Guid AuthorizationRequestId, Guid GenerationId, string TenantId, string SubjectId,
+    Guid AuthorizationRequestId, Guid GenerationId, Guid PlanningId, string TenantId, string SubjectId,
     string Purpose, DataClassification MaximumClassification, string ContextReference,
+    GovernedIdentity Identity, string Environment, ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<string> AllowedContextReferences,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record CodeGenerationContextAuthorizationDecision(
     Guid AuthorizationRequestId, Guid GenerationId, string TenantId, string ContextReference,
-    bool IsAllowed, string Code, ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
+    bool IsAllowed, string Code, AiDevelopmentContextItem? Item,
+    ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface ICodeGenerationContextAuthorizer
 {
@@ -140,6 +154,10 @@ public interface ICodeGenerationContextAuthorizer
 public sealed record CodeGenerationResultAuthorizationRequest(
     Guid AuthorizationRequestId, Guid GenerationId, Guid PlanningId, string TenantId, string SubjectId,
     string Purpose, string CandidateSha256Digest, string RuntimeProfile,
+    GovernedIdentity Identity, DataClassification MaximumClassification, string Environment,
+    string PromptSha256Digest, ImmutableHashSet<string> ContextSha256Digests,
+    ImmutableHashSet<PackageCoordinate> ApprovedPackages, ImmutableHashSet<string> Constraints,
+    ImmutableHashSet<string> AllowedOutputPaths, ImmutableHashSet<string> RequiredRoles,
     ImmutableArray<string> GeneratedFilePaths, ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record CodeGenerationResultAuthorizationDecision(
@@ -189,21 +207,25 @@ public sealed class GovernedCodeGenerationEngine
         ICodeGenerationPolicyGate policyGate,
         IGovernedCodeGenerationPromptTemplateReader promptReader,
         ICodeGenerationContextAuthorizer contextAuthorizer,
-        IAiDevelopmentRuntime runtime,
-        IAiOutputEvaluator evaluator,
+        ICodeGenerationAiDevelopmentRuntime runtime,
+        ICodeGenerationAiOutputEvaluator evaluator,
         ICodeGenerationResultAuthorizer resultAuthorizer,
         ICodeGenerationEvidenceRecorder evidenceRecorder,
         CancellationToken cancellationToken)
     {
         request.Validate();
-        var planning = await planningReader.LoadAsync(request.PlanningId, request.Identity.TenantId, cancellationToken)
+        var planning = await planningReader.LoadAsync(request.PlanningId, request.Identity.TenantId,
+            request.Purpose, request.PackageSelectionId, request.ExpectedSelectionSha256Digest,
+            request.ExpectedPlanningSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed AI Planning candidate was not found.");
         ValidatePlanning(request, planning);
         var packages = await packagesReader.LoadAsync(request.PackageSelectionId, request.Identity.TenantId,
             request.Purpose, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Approved Packages snapshot was not found.");
         ValidatePackages(request, planning, packages);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, request.Purpose,
+            planning.PlanningId, planning.CandidateSha256Digest!, packages.SelectionId,
+            packages.SelectionSha256Digest!, cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
 
@@ -231,18 +253,28 @@ public sealed class GovernedCodeGenerationEngine
                 decision.Outcome, false, false, false, false, null, null, [], [], null, policyEvidence,
                 "Policy denial requires a new governed Code Generation request", decision.DecidedAt);
 
-        var prompt = await promptReader.LoadExactAsync(request.PromptTemplateId, request.PromptTemplateVersion, cancellationToken)
+        if (!StringComparer.Ordinal.Equals(runtime.RuntimeProfile, decision.AllowedRuntimeProfile) ||
+            runtime.RequestTimeoutSeconds != decision.RequestTimeoutSeconds ||
+            runtime.MaximumRequestBytes != decision.MaximumRequestBytes ||
+            runtime.MaximumResponseBytes != decision.MaximumResponseBytes)
+            throw new UnauthorizedAccessException("Configured Code Generation runtime does not match the exact OPA safety scope.");
+
+        var prompt = await promptReader.LoadExactAsync(request.PromptTemplateId, request.PromptTemplateVersion,
+            request.Identity.TenantId, request.Purpose, request.Environment, cancellationToken)
             ?? throw new CodeGenerationDependencyUnavailableException("The exact governed Code Generation prompt is unavailable.");
         ValidatePrompt(request, decision, prompt);
 
         var contextEvidence = ImmutableArray.CreateBuilder<string>();
+        var contextItems = ImmutableArray.CreateBuilder<AiDevelopmentContextItem>();
         foreach (var reference in request.ContextReferences.Order(StringComparer.Ordinal))
         {
             var authorizationRequest = new CodeGenerationContextAuthorizationRequest(
-                Guid.NewGuid(), request.GenerationId, request.Identity.TenantId, request.Identity.SubjectId,
-                request.Purpose, decision.MaximumClassification, reference, policyEvidence, decision.DecidedAt);
+                Guid.NewGuid(), request.GenerationId, planning.PlanningId, request.Identity.TenantId, request.Identity.SubjectId,
+                request.Purpose, decision.MaximumClassification, reference, request.Identity, request.Environment,
+                decision.RequiredRoles, decision.AllowedContextReferences, policyEvidence, decision.DecidedAt);
             var authorization = await contextAuthorizer.AuthorizeAsync(authorizationRequest, cancellationToken);
             ValidateContextAuthorization(authorizationRequest, authorization);
+            contextItems.Add(authorization.Item!);
             contextEvidence.AddRange(authorization.EvidenceReferences);
         }
 
@@ -251,18 +283,24 @@ public sealed class GovernedCodeGenerationEngine
             $"{prompt.TemplateId}@{prompt.Version}:{prompt.Sha256Digest}",
             request.ContextReferences.Order(StringComparer.Ordinal).ToImmutableArray(),
             packages.Packages.Select(item => item.Coordinate).OrderBy(item => item.Name, StringComparer.Ordinal).ToImmutableArray(),
-            request.Constraints.Order(StringComparer.Ordinal).ToImmutableArray());
+            request.Constraints.Order(StringComparer.Ordinal).ToImmutableArray(), prompt.Content,
+            contextItems.OrderBy(item => item.Reference, StringComparer.Ordinal).ToImmutableArray(),
+            decision.RequestTimeoutSeconds, decision.MaximumRequestBytes, decision.MaximumResponseBytes,
+            decision.AllowedOutputPaths.Order(StringComparer.Ordinal).ToImmutableArray());
         var evaluated = await new GovernedAiDevelopmentService(runtime, evaluator)
             .ProduceCandidateAsync(aiRequest, cancellationToken);
         ValidateCandidate(request, decision, evaluated);
         var digest = Digest(packages.SelectionSha256Digest!, planning.CandidateSha256Digest!, prompt.Sha256Digest, evaluated);
 
         var evaluationEvidence = evaluated.Evaluation.Findings.Select(item => item.EvidenceReference)
-            .Concat(contextEvidence).Concat(policyEvidence).Distinct(StringComparer.Ordinal)
+            .Concat(evaluated.Candidate.EvidenceReferences).Concat(contextEvidence).Concat(policyEvidence).Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal).ToImmutableArray();
         var resultRequest = new CodeGenerationResultAuthorizationRequest(
             Guid.NewGuid(), request.GenerationId, planning.PlanningId, request.Identity.TenantId,
             request.Identity.SubjectId, request.Purpose, digest, evaluated.Candidate.RuntimeProfile,
+            request.Identity, decision.MaximumClassification, request.Environment, prompt.Sha256Digest,
+            contextItems.Select(item => item.Sha256Digest).ToImmutableHashSet(StringComparer.OrdinalIgnoreCase),
+            decision.AllowedPackages, decision.AllowedConstraints, decision.AllowedOutputPaths, decision.RequiredRoles,
             evaluated.Candidate.GeneratedFilePaths.Order(StringComparer.Ordinal).ToImmutableArray(),
             evaluationEvidence, evaluated.Evaluation.EvaluatedAt);
         var resultDecision = await resultAuthorizer.AuthorizeAsync(resultRequest, cancellationToken);
@@ -352,7 +390,11 @@ public sealed class GovernedCodeGenerationEngine
              !decision.AllowedContextReferences.SetEquals(input.ContextReferences) ||
              !decision.AllowedPackages.SetEquals(input.ApprovedPackages) ||
              !decision.AllowedConstraints.SetEquals(input.Constraints) ||
-             !decision.AllowedOutputPaths.SetEquals(input.RequestedOutputPaths)))
+             !decision.AllowedOutputPaths.SetEquals(input.RequestedOutputPaths) ||
+             decision.RequiredRoles.IsEmpty || !decision.RequiredRoles.IsSubsetOf(identity.Roles) ||
+             !StringComparer.Ordinal.Equals(decision.OutputKind, "inert-code-candidate") ||
+             decision.RequestTimeoutSeconds <= 0 || decision.MaximumRequestBytes <= 0 ||
+             decision.MaximumResponseBytes <= 0))
             throw new UnauthorizedAccessException("OPA did not authorize the exact Code Generation input.");
     }
 
@@ -378,7 +420,9 @@ public sealed class GovernedCodeGenerationEngine
         if (decision.AuthorizationRequestId != request.AuthorizationRequestId || decision.GenerationId != request.GenerationId ||
             !StringComparer.Ordinal.Equals(decision.TenantId, request.TenantId) ||
             !StringComparer.Ordinal.Equals(decision.ContextReference, request.ContextReference) || !decision.IsAllowed ||
-            string.IsNullOrWhiteSpace(decision.Code) || decision.EvidenceReferences.IsDefaultOrEmpty ||
+            string.IsNullOrWhiteSpace(decision.Code) || decision.Item is null ||
+            !StringComparer.Ordinal.Equals(decision.Item.Reference, request.ContextReference) ||
+            decision.Item.Classification > request.MaximumClassification || decision.EvidenceReferences.IsDefaultOrEmpty ||
             decision.DecidedAt < request.RequestedAt)
             throw new UnauthorizedAccessException("Code Generation context re-authorization denied or mismatched.");
     }
@@ -429,7 +473,14 @@ public sealed class GovernedCodeGenerationEngine
 internal static class GovernedGeneratedPath
 {
     private static readonly ImmutableHashSet<string> ProhibitedSegments =
-        ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase, ".git", ".vs", "bin", "obj", "secrets");
+        ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
+            ".git", ".github", ".vs", ".idea", ".codex", "bin", "obj", "artifacts",
+            "packages", "node_modules", "secrets", ".secrets");
+    private static readonly ImmutableHashSet<string> ProhibitedExtensions =
+        ImmutableHashSet.Create(StringComparer.OrdinalIgnoreCase,
+            ".dll", ".exe", ".pdb", ".so", ".dylib", ".bin", ".zip", ".nupkg",
+            ".snupkg", ".jar", ".class", ".wasm", ".pfx", ".p12", ".pem", ".key",
+            ".cer", ".user", ".suo");
 
     internal static void Validate(string path)
     {
@@ -440,7 +491,8 @@ internal static class GovernedGeneratedPath
         var segments = path.Split('/', StringSplitOptions.None);
         if (segments.Length == 0 || segments.Any(segment => string.IsNullOrWhiteSpace(segment) ||
                 segment is "." or ".." || ProhibitedSegments.Contains(segment)) ||
-            segments[^1].Equals(".env", StringComparison.OrdinalIgnoreCase))
+            segments[^1].Equals(".env", StringComparison.OrdinalIgnoreCase) ||
+            ProhibitedExtensions.Contains(Path.GetExtension(segments[^1])))
             throw new InvalidOperationException("Generated path escapes or targets a prohibited repository location.");
     }
 }

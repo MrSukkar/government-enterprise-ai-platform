@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 07 - Governed AI Planning Runtime",
+    "wave": "Wave 08 - Governed Code Generation Runtime",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-008-OPERATIONALIZATION-WAVE-07.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_07_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_06_ACCEPTANCE.md",
-    "executionBoundary": "Governed AI Planning adapters for cryptographically verified tenant/purpose-bound Approved Packages and deterministic delivery-run reads, action-specific OPA planning scope, signed PostgreSQL prompt retrieval, exact evidence-chain context loading with per-item RBAC/ABAC re-authorization, a provider-neutral tools-disabled sovereign HTTPS planning protocol, separately configured and trusted independent evaluation, per-result authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; the Authorized AI Planning candidate reader, Code Generation and later stations, tools, generated files, workflow advancement, live infrastructure, schemas, institutional data, endpoints, models, credentials, PKI, deployment, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-009-OPERATIONALIZATION-WAVE-08.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_08_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_07_ACCEPTANCE.md",
+    "executionBoundary": "Governed Code Generation adapters for cryptographically verified AI Planning and Approved Packages evidence, exact AiPlanning-stopped delivery-run reads, action-specific OPA scope, signed prompt retrieval, per-context RBAC/ABAC re-authorization, provider-neutral tools/commands/filesystem-disabled sovereign HTTPS generation, separately trusted independent evaluation, exact safe-path/result authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 142 disconnected institutional dependencies fail closed; generated content remains inert and unapplied; the Authorized Code Generation candidate reader, Static Validation and later stations, source mutation, workflow advancement, live infrastructure, schemas, institutional data, endpoints, models, credentials, PKI, deployment, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_07_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_08_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

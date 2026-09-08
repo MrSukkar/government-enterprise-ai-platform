@@ -42,12 +42,17 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var aiPlanningOptions = configuration
             .GetSection(AiPlanningRuntimeOptions.SectionName)
             .Get<AiPlanningRuntimeOptions>() ?? new();
+        var codeGenerationOptions = configuration
+            .GetSection(CodeGenerationRuntimeOptions.SectionName)
+            .Get<CodeGenerationRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
             configuration.GetSection(ApprovedPackagesTrustOptions.SectionName));
         services.Configure<AiPlanningRuntimeOptions>(
             configuration.GetSection(AiPlanningRuntimeOptions.SectionName));
+        services.Configure<CodeGenerationRuntimeOptions>(
+            configuration.GetSection(CodeGenerationRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -101,6 +106,15 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? AiPlanningRuntimeConfigurationState.Configured
                     : AiPlanningRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new AiPlanningRuntimeReadiness(aiPlanningState));
+        var codeGenerationState =
+            aiPlanningState == AiPlanningRuntimeConfigurationState.Invalid ||
+            codeGenerationOptions.ConfigurationState == CodeGenerationRuntimeConfigurationState.Invalid
+                ? CodeGenerationRuntimeConfigurationState.Invalid
+                : aiPlanningState == AiPlanningRuntimeConfigurationState.Configured &&
+                  codeGenerationOptions.IsOperationallyConfigured
+                    ? CodeGenerationRuntimeConfigurationState.Configured
+                    : CodeGenerationRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new CodeGenerationRuntimeReadiness(codeGenerationState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -148,6 +162,31 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     services.AddScoped<IAiOutputEvaluator, SovereignHttpAiOutputEvaluator>();
                     services.AddScoped<IAiPlanningResultAuthorizer, DeterministicAiPlanningResultAuthorizer>();
                     services.AddScoped<IAiPlanningEvidenceRecorder, PostgreSqlAiPlanningEvidenceRecorder>();
+                    if (codeGenerationOptions.IsOperationallyConfigured)
+                    {
+                        services.AddHttpClient("sovereign-code-generation")
+                            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                            {
+                                AllowAutoRedirect = false, UseCookies = false,
+                                ConnectTimeout = TimeSpan.FromSeconds(codeGenerationOptions.RequestTimeoutSeconds)
+                            });
+                        services.AddHttpClient("sovereign-code-generation-evaluation")
+                            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                            {
+                                AllowAutoRedirect = false, UseCookies = false,
+                                ConnectTimeout = TimeSpan.FromSeconds(codeGenerationOptions.RequestTimeoutSeconds)
+                            });
+                        services.AddScoped<IAuthorizedAiPlanningCandidateReader, PostgreSqlAuthorizedAiPlanningCandidateReader>();
+                        services.AddScoped<ICodeGenerationDeliveryRunReader, PostgreSqlCodeGenerationDeliveryRunReader>();
+                        services.AddScoped<ICodeGenerationPolicyGate, SovereignCodeGenerationPolicyGate>();
+                        services.AddScoped<IGovernedCodeGenerationPromptTemplateReader,
+                            PostgreSqlGovernedCodeGenerationPromptTemplateReader>();
+                        services.AddScoped<ICodeGenerationContextAuthorizer, PostgreSqlCodeGenerationContextAuthorizer>();
+                        services.AddScoped<ICodeGenerationAiDevelopmentRuntime, SovereignHttpCodeGenerationRuntime>();
+                        services.AddScoped<ICodeGenerationAiOutputEvaluator, SovereignHttpCodeGenerationEvaluator>();
+                        services.AddScoped<ICodeGenerationResultAuthorizer, DeterministicCodeGenerationResultAuthorizer>();
+                        services.AddScoped<ICodeGenerationEvidenceRecorder, PostgreSqlCodeGenerationEvidenceRecorder>();
+                    }
                 }
             }
             if (graphOptions.IsOperationallyConfigured)

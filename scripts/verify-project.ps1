@@ -2150,6 +2150,86 @@ if (Test-Path $wave07AcceptancePath) {
     @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 07 acceptance missing: $_" } }
 }
 
+$wave08AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_08_ACCEPTANCE.md'
+if (Test-Path $wave08AcceptancePath) {
+    $wave08Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-009-OPERATIONALIZATION-WAVE-08.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedCodeGenerationCandidate.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignCodeGenerationPolicyGate.cs'
+        PlanningReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedAiPlanningCandidateReader.cs'
+        RunReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlCodeGenerationDeliveryRunReader.cs'
+        PromptReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlGovernedCodeGenerationPromptTemplateReader.cs'
+        Context = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlCodeGenerationContextAuthorizer.cs'
+        Options = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\CodeGenerationRuntimeOptions.cs'
+        Runtime = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignHttpCodeGenerationRuntime.cs'
+        Evaluator = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignHttpCodeGenerationEvaluator.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicCodeGenerationResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlCodeGenerationEvidenceRecorder.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\009_code_generation_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\010_code_generation_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Endpoint = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_08_CODE_GENERATION.md'
+    }
+    $wave08Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 08 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave08Paths.Change
+    @('Status: **Approved for Operationalization Wave 08**','Decision: **Approved by the repository owner','No new package','Npgsql` `10.0.3','built-in .NET') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 08 approval missing: $_" } }
+    $master = Get-Content -Raw $wave08Paths.Master
+    @('CR-009','CR-009-OPERATIONALIZATION-WAVE-08.md','provider-neutral sovereign HTTPS generation protocol') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master Specification CR-009 authority missing: $_" } }
+    $planningReader = Get-Content -Raw $wave08Paths.PlanningReader
+    @('IAuthorizedAiPlanningCandidateReader','tenant_id = @tenant_id AND planning_id = @planning_id','package_selection_id = @package_selection_id','candidate_sha256_digest = @planning_sha256_digest','JsonSerializer.Deserialize<AiPlanningEvidenceRecord>','SHA256.HashData','evidence://ai-planning','record.Candidate.GeneratedFilePaths.Length != 0','record.Evaluation.IsAccepted') | ForEach-Object { if ($planningReader -notmatch [regex]::Escape($_)) { throw "Code Generation planning reader guard missing: $_" } }
+    if ($planningReader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Code Generation planning reader contains mutation.' }
+    $runReader = Get-Content -Raw $wave08Paths.RunReader
+    @('ICodeGenerationDeliveryRunReader','planning_id = @planning_id','planning_sha256_digest = @planning_sha256_digest','package_selection_id = @package_selection_id','selection_sha256_digest = @selection_sha256_digest','purpose = @purpose','SHA256.HashData','DeliveryStage.AiPlanning') | ForEach-Object { if ($runReader -notmatch [regex]::Escape($_)) { throw "Code Generation delivery-run guard missing: $_" } }
+    if ($runReader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Code Generation delivery-run reader contains mutation.' }
+    $policy = Get-Content -Raw $wave08Paths.Policy
+    @('internal-service.code-generation.create','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','envelope.CodeGeneration','AllowedPromptSha256Digest','AllowedRuntimeProfile','AllowedContextReferences','AllowedPackages','AllowedConstraints','AllowedOutputPaths','RequiredRoles','inert-code-candidate','RequestTimeoutSeconds','MaximumRequestBytes','MaximumResponseBytes','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Code Generation OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'Code Generation OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave08Paths.Engine
+    if ($engine.IndexOf('planningReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('packagesReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('packagesReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('promptReader.LoadExactAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('promptReader.LoadExactAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('contextAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('contextAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'Code Generation prerequisite, policy, prompt, context, runtime, authorization, and evidence order is invalid.' }
+    @('AiDevelopmentTaskKind.CodeGeneration','VerifiedPromptContent','AuthorizedContextItems','AuthorizedOutputPaths','runtime.RequestTimeoutSeconds','ProhibitedSegments','ProhibitedExtensions','IsExecutable: false','IsApplied: false','CanAdvance: false','Separately approved Static Validation') | ForEach-Object { if (($engine + (Get-Content -Raw (Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\AiDevelopment\AiDevelopmentRequest.cs'))) -notmatch [regex]::Escape($_)) { throw "Code Generation engine guard missing: $_" } }
+    $options = Get-Content -Raw $wave08Paths.Options
+    @('CodeGenerationRuntimeConfigurationState.Unconfigured','CodeGenerationRuntimeConfigurationState.Invalid','GenerationEndpoint','EvaluationEndpoint','GenerationOperatorId','EvaluationOperatorId','PromptTrustedPublicKeysPem','GenerationTrustedPublicKeysPem','EvaluationTrustedPublicKeysPem','RequestTimeoutSeconds','MaximumRequestBytes','MaximumResponseBytes','Uri.UriSchemeHttps') | ForEach-Object { if ($options -notmatch [regex]::Escape($_)) { throw "Code Generation runtime configuration guard missing: $_" } }
+    $prompt = Get-Content -Raw $wave08Paths.PromptReader
+    @('governed_code_generation_prompt_templates','@tenant_id = ANY(allowed_tenant_ids)','@purpose = ANY(allowed_purposes)','@environment = ANY(allowed_environments)','content_sha256_digest','SHA256.HashData','AiPlanningSignatureVerifier.Verify','PromptTrustedPublicKeysPem') | ForEach-Object { if ($prompt -notmatch [regex]::Escape($_)) { throw "Code Generation prompt guard missing: $_" } }
+    $context = Get-Content -Raw $wave08Paths.Context
+    @('enterprise_context_evidence','existing_systems_evidence','existing_architecture_evidence','approved_packages_evidence','ai_planning_evidence','planning_id = @planning_id','IAccessPolicyEvaluator','ai-context.read','developer.internal-service.code-generation.create','AiDevelopmentContextItem') | ForEach-Object { if ($context -notmatch [regex]::Escape($_)) { throw "Code Generation context guard missing: $_" } }
+    if ($context -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Code Generation context adapter contains mutation.' }
+    $runtime = Get-Content -Raw $wave08Paths.Runtime
+    @('ICodeGenerationAiDevelopmentRuntime','sovereign-code-generation','ToolsEnabled: false','FilesystemWriteEnabled: false','CommandsEnabled: false','GeneratedFilesApplied: false','AuthorizedOutputPaths','ResponseHeadersRead','ReadBoundedAsync','GenerationTrustedPublicKeysPem','AiPlanningSignatureVerifier.Verify') | ForEach-Object { if ($runtime -notmatch [regex]::Escape($_)) { throw "Sovereign Code Generation runtime guard missing: $_" } }
+    $evaluator = Get-Content -Raw $wave08Paths.Evaluator
+    @('ICodeGenerationAiOutputEvaluator','sovereign-code-generation-evaluation','EvaluationOperatorId','EvaluationRuntimeProfile','EvaluationTrustedPublicKeysPem','IsIndependentFromGenerationRuntime','Enum.GetValues<AiEvaluationCriterion>','AiPlanningSignatureVerifier.Verify') | ForEach-Object { if ($evaluator -notmatch [regex]::Escape($_)) { throw "Independent Code Generation evaluator guard missing: $_" } }
+    $authorization = Get-Content -Raw $wave08Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.code-generation.create','request.ContextSha256Digests','request.ApprovedPackages','request.AllowedOutputPaths','evidence://code-generation/result-authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "Code Generation result authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave08Paths.Evidence
+    @('ICodeGenerationEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://code-generation','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "Code Generation evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Code Generation evidence adapter contains mutation outside append.' }
+    $inputsMigration = Get-Content -Raw $wave08Paths.InputsMigration
+    @('code_generation_delivery_run_snapshots','governed_code_generation_prompt_templates','planning_sha256_digest text NOT NULL','selection_sha256_digest text NOT NULL','fk_code_generation_run_planning','signature_algorithm','COMMIT;') | ForEach-Object { if ($inputsMigration -notmatch [regex]::Escape($_)) { throw "Code Generation input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave08Paths.EvidenceMigration
+    @('software_factory.code_generation_evidence','PRIMARY KEY (tenant_id, generation_id)','FOREIGN KEY (tenant_id, planning_id)','FOREIGN KEY (tenant_id, package_selection_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Code Generation evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave08Paths.Services
+    @('CodeGenerationRuntimeReadiness','CodeGenerationRuntimeOptions','AllowAutoRedirect = false','IAuthorizedAiPlanningCandidateReader','ICodeGenerationDeliveryRunReader','ICodeGenerationPolicyGate','IGovernedCodeGenerationPromptTemplateReader','ICodeGenerationContextAuthorizer','ICodeGenerationAiDevelopmentRuntime','ICodeGenerationAiOutputEvaluator','ICodeGenerationResultAuthorizer','ICodeGenerationEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Code Generation composition missing: $_" } }
+    $endpoint = Get-Content -Raw $wave08Paths.Endpoint
+    @('GetService<ICodeGenerationAiDevelopmentRuntime>','GetService<ICodeGenerationAiOutputEvaluator>','Governed Code Generation is not operationally ready') | ForEach-Object { if ($endpoint -notmatch [regex]::Escape($_)) { throw "Code Generation endpoint composition missing: $_" } }
+    $operations = Get-Content -Raw $wave08Paths.Operations
+    @('CodeGenerationRuntimeReadiness','codeGeneration') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Code Generation readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $wave08Paths.OpenApi
+    @('codeGeneration','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Code Generation OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave08AcceptancePath
+    @('Status: **Satisfied**','all 142 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 08 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

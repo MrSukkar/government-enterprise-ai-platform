@@ -16,7 +16,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.ExistingSystemsRuntimeReadiness existingSystems,
             Platform.SoftwareFactory.InternalService.ExistingArchitectureRuntimeReadiness existingArchitecture,
             Platform.SoftwareFactory.InternalService.ApprovedPackagesRuntimeReadiness approvedPackages,
-            Platform.SoftwareFactory.InternalService.AiPlanningRuntimeReadiness aiPlanning) =>
+            Platform.SoftwareFactory.InternalService.AiPlanningRuntimeReadiness aiPlanning,
+            Platform.SoftwareFactory.InternalService.CodeGenerationRuntimeReadiness codeGeneration) =>
         {
             var payload = new
             {
@@ -32,7 +33,8 @@ internal static class PlatformOperationalEndpoints
                     existingSystems = existingSystems.State.ToString().ToLowerInvariant(),
                     existingArchitecture = existingArchitecture.State.ToString().ToLowerInvariant(),
                     approvedPackages = approvedPackages.State.ToString().ToLowerInvariant(),
-                    aiPlanning = aiPlanning.State.ToString().ToLowerInvariant()
+                    aiPlanning = aiPlanning.State.ToString().ToLowerInvariant(),
+                    codeGeneration = codeGeneration.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

@@ -359,7 +359,7 @@
       "post": {
         "operationId": "createGovernedAiPlanningCandidate",
         "summary": "Create a governed non-executable AI planning candidate.",
-        "description": "OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. No generated files, tools, workflow advancement, or Code Generation is available.",
+        "description": "OPA, verified prompt, re-authorized context, exact approved packages, independent evaluation, result authorization, and evidence are mandatory. This planning endpoint cannot generate files, invoke tools, advance workflow, or invoke Code Generation.",
         "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
         "parameters": [
           { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -756,7 +756,8 @@
               "existingSystems": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "existingArchitecture": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "approvedPackages": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "aiPlanning": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "aiPlanning": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "codeGeneration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

@@ -255,3 +255,9 @@ Change-control record: `docs/change-control/CR-007-OPERATIONALIZATION-WAVE-06.md
 Operationalization Wave 07 connects Governed AI Planning to the exact evidence-bearing Approved Packages snapshot and deterministic delivery-run snapshot stopped at `ApprovedPackages`, signed-bundle-bound exact AI Planning OPA scope, signed governed prompt and authorized context material, a provider-neutral sovereign HTTPS planning protocol, a separately configured and trusted independent evaluator, per-context and per-result RBAC/ABAC re-authorization, and immutable PostgreSQL planning evidence. Only non-executable, independently evaluated planning content can be released under complete deployment configuration. Provider or model selection, tools, generated files, workflow advancement, Code Generation and later stations, external provisioning, and production action remain outside this wave.
 
 Change-control record: `docs/change-control/CR-008-OPERATIONALIZATION-WAVE-07.md`.
+
+## Approved operationalization addendum — CR-009
+
+Operationalization Wave 08 connects Governed Code Generation to the exact immutable AI Planning and Approved Packages evidence chain and a deterministic delivery-run snapshot stopped at `AiPlanning`, signed-bundle-bound exact Code Generation OPA scope, signed governed prompt and re-authorized context, a provider-neutral sovereign HTTPS generation protocol, separately configured and trusted independent evaluation, exact safe relative-path authorization, and immutable PostgreSQL evidence. Only non-executable, unapplied, non-advancing code-candidate data can be released under complete deployment configuration. Filesystem access, tools, commands, package operations, workflow advancement, Static Validation and later stations, external provisioning, and production action remain outside this wave.
+
+Change-control record: `docs/change-control/CR-009-OPERATIONALIZATION-WAVE-08.md`.

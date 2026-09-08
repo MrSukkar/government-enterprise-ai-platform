@@ -16,7 +16,8 @@ public sealed record AiDevelopmentRequest(
     ImmutableArray<AiDevelopmentContextItem> AuthorizedContextItems = default,
     int RequestTimeoutSeconds = 0,
     int MaximumRequestBytes = 0,
-    int MaximumResponseBytes = 0)
+    int MaximumResponseBytes = 0,
+    ImmutableArray<string> AuthorizedOutputPaths = default)
 {
     public AiDevelopmentRequest Validate()
     {
@@ -36,6 +37,11 @@ public sealed record AiDevelopmentRequest(
             (string.IsNullOrWhiteSpace(VerifiedPromptContent) || AuthorizedContextItems.IsDefaultOrEmpty ||
              RequestTimeoutSeconds <= 0 || MaximumRequestBytes <= 0 || MaximumResponseBytes <= 0))
             throw new InvalidOperationException("Operational AI Planning requires verified content and deployment safety bounds.");
+        if (TaskKind == AiDevelopmentTaskKind.CodeGeneration &&
+            (string.IsNullOrWhiteSpace(VerifiedPromptContent) || AuthorizedContextItems.IsDefaultOrEmpty ||
+             AuthorizedOutputPaths.IsDefaultOrEmpty || RequestTimeoutSeconds <= 0 ||
+             MaximumRequestBytes <= 0 || MaximumResponseBytes <= 0))
+            throw new InvalidOperationException("Operational Code Generation requires verified content, authorized paths, and deployment safety bounds.");
         foreach (var package in ApprovedPackages) package.Validate();
         return this;
     }

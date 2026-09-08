@@ -57,7 +57,7 @@ public sealed class SovereignAiPlanningPolicyGate(
         var scope = envelope.AiPlanning
             ?? throw new UnauthorizedAccessException("OPA permit omitted action-specific AI Planning scope.");
         if (envelope.ExistingSystems is not null || envelope.ExistingArchitecture is not null ||
-            envelope.ApprovedPackages is not null || !envelope.AllowedResourceIds.IsDefaultOrEmpty ||
+            envelope.ApprovedPackages is not null || envelope.CodeGeneration is not null || !envelope.AllowedResourceIds.IsDefaultOrEmpty ||
             !envelope.AllowedModalities.IsDefaultOrEmpty || !envelope.RequiredRoles.IsDefaultOrEmpty ||
             envelope.MaximumResults != 0 || !string.IsNullOrWhiteSpace(envelope.MaximumClassification))
             throw new UnauthorizedAccessException("AI Planning decision mixed scopes from another action.");
