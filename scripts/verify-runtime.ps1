@@ -263,8 +263,9 @@ try {
         $readinessBody.controlPlanes.enterpriseContext -ne 'unconfigured' -or
         $readinessBody.controlPlanes.existingSystems -ne 'unconfigured' -or
         $readinessBody.controlPlanes.existingArchitecture -ne 'unconfigured' -or
-        $readinessBody.controlPlanes.approvedPackages -ne 'unconfigured') {
-        throw 'Repository-default identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, and Approved Packages control planes did not remain explicitly unconfigured.'
+        $readinessBody.controlPlanes.approvedPackages -ne 'unconfigured' -or
+        $readinessBody.controlPlanes.aiPlanning -ne 'unconfigured') {
+        throw 'Repository-default identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, Approved Packages, and AI Planning control planes did not remain explicitly unconfigured.'
     }
 
     $internalServiceBody = $internalService.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
@@ -314,7 +315,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live; identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, and Approved Packages remain safely unconfigured; 142 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
+    Write-Output 'RUNTIME VERIFIED: Development API live; identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, Approved Packages, and AI Planning remain safely unconfigured; 142 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

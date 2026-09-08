@@ -39,10 +39,15 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var packageTrustOptions = configuration
             .GetSection(ApprovedPackagesTrustOptions.SectionName)
             .Get<ApprovedPackagesTrustOptions>() ?? new();
+        var aiPlanningOptions = configuration
+            .GetSection(AiPlanningRuntimeOptions.SectionName)
+            .Get<AiPlanningRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
             configuration.GetSection(ApprovedPackagesTrustOptions.SectionName));
+        services.Configure<AiPlanningRuntimeOptions>(
+            configuration.GetSection(AiPlanningRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -85,6 +90,17 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? ApprovedPackagesRuntimeConfigurationState.Configured
                     : ApprovedPackagesRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new ApprovedPackagesRuntimeReadiness(approvedPackagesState));
+        var aiPlanningState =
+            persistenceOptions.ConfigurationState == PostgreSqlIntentRegistrationConfigurationState.Invalid ||
+            policyOptions.ConfigurationState == PolicyControlPlaneConfigurationState.Invalid ||
+            packageTrustOptions.ConfigurationState == ApprovedPackagesTrustConfigurationState.Invalid ||
+            aiPlanningOptions.ConfigurationState == AiPlanningRuntimeConfigurationState.Invalid
+                ? AiPlanningRuntimeConfigurationState.Invalid
+                : persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured &&
+                  packageTrustOptions.IsOperationallyConfigured && aiPlanningOptions.IsOperationallyConfigured
+                    ? AiPlanningRuntimeConfigurationState.Configured
+                    : AiPlanningRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new AiPlanningRuntimeReadiness(aiPlanningState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -105,6 +121,34 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     DeterministicApprovedPackageResultAuthorizer>();
                 services.AddScoped<IApprovedPackagesEvidenceRecorder,
                     PostgreSqlApprovedPackagesEvidenceRecorder>();
+                if (aiPlanningOptions.IsOperationallyConfigured)
+                {
+                    services.AddHttpClient("sovereign-ai-planning-generation")
+                        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                        {
+                            AllowAutoRedirect = false,
+                            UseCookies = false,
+                            ConnectTimeout = TimeSpan.FromSeconds(aiPlanningOptions.RequestTimeoutSeconds)
+                        });
+                    services.AddHttpClient("sovereign-ai-planning-evaluation")
+                        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+                        {
+                            AllowAutoRedirect = false,
+                            UseCookies = false,
+                            ConnectTimeout = TimeSpan.FromSeconds(aiPlanningOptions.RequestTimeoutSeconds)
+                        });
+                    services.AddScoped<IAuthorizedApprovedPackagesSnapshotReader,
+                        PostgreSqlAuthorizedApprovedPackagesSnapshotReader>();
+                    services.AddScoped<IAiPlanningDeliveryRunReader, PostgreSqlAiPlanningDeliveryRunReader>();
+                    services.AddScoped<IAiPlanningPolicyGate, SovereignAiPlanningPolicyGate>();
+                    services.AddScoped<IGovernedPlanningPromptTemplateReader,
+                        PostgreSqlGovernedPlanningPromptTemplateReader>();
+                    services.AddScoped<IAiPlanningContextAuthorizer, PostgreSqlAiPlanningContextAuthorizer>();
+                    services.AddScoped<IAiDevelopmentRuntime, SovereignHttpAiPlanningRuntime>();
+                    services.AddScoped<IAiOutputEvaluator, SovereignHttpAiOutputEvaluator>();
+                    services.AddScoped<IAiPlanningResultAuthorizer, DeterministicAiPlanningResultAuthorizer>();
+                    services.AddScoped<IAiPlanningEvidenceRecorder, PostgreSqlAiPlanningEvidenceRecorder>();
+                }
             }
             if (graphOptions.IsOperationallyConfigured)
             {

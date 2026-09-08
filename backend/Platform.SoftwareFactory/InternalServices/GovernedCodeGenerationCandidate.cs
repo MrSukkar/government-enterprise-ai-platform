@@ -199,7 +199,8 @@ public sealed class GovernedCodeGenerationEngine
         var planning = await planningReader.LoadAsync(request.PlanningId, request.Identity.TenantId, cancellationToken)
             ?? throw new KeyNotFoundException("Governed AI Planning candidate was not found.");
         ValidatePlanning(request, planning);
-        var packages = await packagesReader.LoadAsync(request.PackageSelectionId, request.Identity.TenantId, cancellationToken)
+        var packages = await packagesReader.LoadAsync(request.PackageSelectionId, request.Identity.TenantId,
+            request.Purpose, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Approved Packages snapshot was not found.");
         ValidatePackages(request, planning, packages);
         var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)

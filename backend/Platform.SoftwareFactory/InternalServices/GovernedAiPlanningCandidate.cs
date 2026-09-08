@@ -74,12 +74,15 @@ public sealed record GovernedAiPlanningRequest(
 
 public interface IAuthorizedApprovedPackagesSnapshotReader
 {
-    Task<GovernedApprovedPackagesSelectionReceipt?> LoadAsync(Guid selectionId, string tenantId, CancellationToken cancellationToken);
+    Task<GovernedApprovedPackagesSelectionReceipt?> LoadAsync(
+        Guid selectionId, string tenantId, string purpose, CancellationToken cancellationToken);
 }
 
 public interface IAiPlanningDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(
+        Guid runId, string tenantId, Guid packageSelectionId, string selectionSha256Digest,
+        string purpose, CancellationToken cancellationToken);
 }
 
 public sealed record GovernedPlanningPromptTemplate(
@@ -99,7 +102,9 @@ public sealed record GovernedPlanningPromptTemplate(
 
 public interface IGovernedPlanningPromptTemplateReader
 {
-    Task<GovernedPlanningPromptTemplate?> LoadExactAsync(string templateId, string version, CancellationToken cancellationToken);
+    Task<GovernedPlanningPromptTemplate?> LoadExactAsync(
+        string templateId, string version, string tenantId, string purpose, string environment,
+        CancellationToken cancellationToken);
 }
 
 public sealed record AiPlanningPolicyInput(
@@ -120,6 +125,8 @@ public sealed record AiPlanningPolicyDecision(
     string AllowedPromptTemplateId, string AllowedPromptTemplateVersion, string AllowedPromptSha256Digest,
     string AllowedRuntimeProfile, ImmutableHashSet<string> AllowedContextReferences,
     ImmutableHashSet<PackageCoordinate> AllowedPackages, ImmutableHashSet<string> AllowedConstraints,
+    ImmutableHashSet<string> RequiredRoles, string OutputKind,
+    int RequestTimeoutSeconds, int MaximumRequestBytes, int MaximumResponseBytes,
     ImmutableArray<string> Reasons, ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface IAiPlanningPolicyGate
@@ -130,11 +137,14 @@ public interface IAiPlanningPolicyGate
 public sealed record AiPlanningContextAuthorizationRequest(
     Guid AuthorizationRequestId, Guid PlanningId, string TenantId, string SubjectId,
     string Purpose, DataClassification MaximumClassification, string ContextReference,
+    GovernedIdentity Identity, string Environment, ImmutableHashSet<string> RequiredRoles,
+    ImmutableHashSet<string> AllowedContextReferences,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record AiPlanningContextAuthorizationDecision(
     Guid AuthorizationRequestId, Guid PlanningId, string TenantId, string ContextReference,
-    bool IsAllowed, string Code, ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
+    bool IsAllowed, string Code, AiDevelopmentContextItem? Item,
+    ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface IAiPlanningContextAuthorizer
 {
@@ -144,6 +154,9 @@ public interface IAiPlanningContextAuthorizer
 public sealed record AiPlanningResultAuthorizationRequest(
     Guid AuthorizationRequestId, Guid PlanningId, string TenantId, string SubjectId,
     string Purpose, string CandidateSha256Digest, string RuntimeProfile,
+    GovernedIdentity Identity, DataClassification MaximumClassification, string Environment,
+    string PromptSha256Digest, ImmutableHashSet<string> ContextSha256Digests,
+    ImmutableHashSet<PackageCoordinate> AllowedPackages, ImmutableHashSet<string> RequiredRoles,
     ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record AiPlanningResultAuthorizationDecision(
@@ -197,10 +210,12 @@ public sealed class GovernedAiPlanningEngine
         CancellationToken cancellationToken)
     {
         request.Validate();
-        var packages = await packagesReader.LoadAsync(request.PackageSelectionId, request.Identity.TenantId, cancellationToken)
+        var packages = await packagesReader.LoadAsync(request.PackageSelectionId, request.Identity.TenantId,
+            request.Purpose, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Approved Packages snapshot was not found.");
         ValidatePackages(request, packages);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId,
+            packages.SelectionId, packages.SelectionSha256Digest!, request.Purpose, cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
 
@@ -223,18 +238,29 @@ public sealed class GovernedAiPlanningEngine
                 decision.Outcome, false, false, false, null, null, [], null, policyEvidence,
                 "Policy denial requires a new governed AI Planning request", decision.DecidedAt);
 
-        var prompt = await promptReader.LoadExactAsync(request.PromptTemplateId, request.PromptTemplateVersion, cancellationToken)
+        if (!StringComparer.Ordinal.Equals(runtime.RuntimeProfile, decision.AllowedRuntimeProfile) ||
+            runtime.RequestTimeoutSeconds != decision.RequestTimeoutSeconds ||
+            runtime.MaximumRequestBytes != decision.MaximumRequestBytes ||
+            runtime.MaximumResponseBytes != decision.MaximumResponseBytes)
+            throw new UnauthorizedAccessException("Configured AI runtime does not match the exact OPA safety scope.");
+
+        var prompt = await promptReader.LoadExactAsync(request.PromptTemplateId, request.PromptTemplateVersion,
+            request.Identity.TenantId, request.Purpose, request.Environment, cancellationToken)
             ?? throw new AiPlanningDependencyUnavailableException("The exact governed planning prompt template is unavailable.");
         ValidatePrompt(request, decision, prompt);
 
         var contextEvidence = ImmutableArray.CreateBuilder<string>();
+        var contextItems = ImmutableArray.CreateBuilder<AiDevelopmentContextItem>();
         foreach (var reference in request.ContextReferences.Order(StringComparer.Ordinal))
         {
             var authorizationRequest = new AiPlanningContextAuthorizationRequest(
                 Guid.NewGuid(), request.PlanningId, packages.TenantId, request.Identity.SubjectId,
-                request.Purpose, decision.MaximumClassification, reference, policyEvidence, decision.DecidedAt);
+                request.Purpose, decision.MaximumClassification, reference, request.Identity,
+                request.Environment, decision.RequiredRoles, decision.AllowedContextReferences,
+                policyEvidence, decision.DecidedAt);
             var authorization = await contextAuthorizer.AuthorizeAsync(authorizationRequest, cancellationToken);
             ValidateContextAuthorization(authorizationRequest, authorization);
+            contextItems.Add(authorization.Item!);
             contextEvidence.AddRange(authorization.EvidenceReferences);
         }
 
@@ -243,17 +269,22 @@ public sealed class GovernedAiPlanningEngine
             $"{prompt.TemplateId}@{prompt.Version}:{prompt.Sha256Digest}",
             request.ContextReferences.Order(StringComparer.Ordinal).ToImmutableArray(),
             packages.Packages.Select(item => item.Coordinate).OrderBy(item => item.Name, StringComparer.Ordinal).ToImmutableArray(),
-            request.Constraints.Order(StringComparer.Ordinal).ToImmutableArray());
+            request.Constraints.Order(StringComparer.Ordinal).ToImmutableArray(), prompt.Content,
+            contextItems.OrderBy(item => item.Reference, StringComparer.Ordinal).ToImmutableArray(),
+            decision.RequestTimeoutSeconds, decision.MaximumRequestBytes, decision.MaximumResponseBytes);
         var evaluated = await new GovernedAiDevelopmentService(runtime, evaluator).ProduceCandidateAsync(aiRequest, cancellationToken);
         ValidateCandidate(request, decision, evaluated);
         var digest = Digest(packages.SelectionSha256Digest!, prompt.Sha256Digest, evaluated);
 
         var evaluationEvidence = evaluated.Evaluation.Findings.Select(item => item.EvidenceReference)
-            .Concat(contextEvidence).Concat(policyEvidence).Distinct(StringComparer.Ordinal)
+            .Concat(evaluated.Candidate.EvidenceReferences).Concat(contextEvidence).Concat(policyEvidence).Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal).ToImmutableArray();
         var resultRequest = new AiPlanningResultAuthorizationRequest(
             Guid.NewGuid(), request.PlanningId, packages.TenantId, request.Identity.SubjectId,
-            request.Purpose, digest, evaluated.Candidate.RuntimeProfile, evaluationEvidence,
+            request.Purpose, digest, evaluated.Candidate.RuntimeProfile, request.Identity,
+            decision.MaximumClassification, request.Environment, prompt.Sha256Digest,
+            contextItems.Select(item => item.Sha256Digest).ToImmutableHashSet(StringComparer.OrdinalIgnoreCase),
+            decision.AllowedPackages, decision.RequiredRoles, evaluationEvidence,
             evaluated.Evaluation.EvaluatedAt);
         var resultDecision = await resultAuthorizer.AuthorizeAsync(resultRequest, cancellationToken);
         ValidateResultAuthorization(resultRequest, resultDecision);
@@ -323,7 +354,9 @@ public sealed class GovernedAiPlanningEngine
              !StringComparer.Ordinal.Equals(decision.AllowedPromptTemplateVersion, input.PromptTemplateVersion) ||
              !StringComparer.Ordinal.Equals(decision.AllowedRuntimeProfile, input.RuntimeProfile) ||
              !decision.AllowedContextReferences.SetEquals(input.ContextReferences) ||
-             !decision.AllowedPackages.SetEquals(input.ApprovedPackages) || !decision.AllowedConstraints.SetEquals(input.Constraints)))
+             !decision.AllowedPackages.SetEquals(input.ApprovedPackages) || !decision.AllowedConstraints.SetEquals(input.Constraints) ||
+             decision.RequiredRoles.IsEmpty || !StringComparer.Ordinal.Equals(decision.OutputKind, "planning") ||
+             decision.RequestTimeoutSeconds <= 0 || decision.MaximumRequestBytes <= 0 || decision.MaximumResponseBytes <= 0))
             throw new UnauthorizedAccessException("OPA did not authorize the exact AI Planning input.");
     }
 
@@ -345,8 +378,12 @@ public sealed class GovernedAiPlanningEngine
         if (decision.AuthorizationRequestId != request.AuthorizationRequestId || decision.PlanningId != request.PlanningId ||
             !StringComparer.Ordinal.Equals(decision.TenantId, request.TenantId) ||
             !StringComparer.Ordinal.Equals(decision.ContextReference, request.ContextReference) || !decision.IsAllowed ||
-            string.IsNullOrWhiteSpace(decision.Code) || decision.EvidenceReferences.IsDefaultOrEmpty || decision.DecidedAt < request.RequestedAt)
+            string.IsNullOrWhiteSpace(decision.Code) || decision.Item is null ||
+            !StringComparer.Ordinal.Equals(decision.Item.Reference, request.ContextReference) ||
+            decision.Item.Classification > request.MaximumClassification ||
+            decision.EvidenceReferences.IsDefaultOrEmpty || decision.DecidedAt < request.RequestedAt)
             throw new UnauthorizedAccessException("AI context re-authorization denied or mismatched.");
+        decision.Item.Validate();
     }
 
     private static void ValidateCandidate(GovernedAiPlanningRequest request, AiPlanningPolicyDecision decision, EvaluatedAiCandidate evaluated)
@@ -354,7 +391,10 @@ public sealed class GovernedAiPlanningEngine
         if (!StringComparer.Ordinal.Equals(evaluated.Candidate.RuntimeProfile, decision.AllowedRuntimeProfile) ||
             evaluated.Candidate.GeneratedFilePaths.IsDefault == false && !evaluated.Candidate.GeneratedFilePaths.IsEmpty ||
             !evaluated.Candidate.ContextReferences.ToImmutableHashSet(StringComparer.Ordinal).SetEquals(request.ContextReferences) ||
+            evaluated.Candidate.CreatedAt < decision.DecidedAt ||
             !evaluated.Evaluation.IsAccepted || evaluated.IsExecutable || !evaluated.IsEligibleForWorkflowEvidence ||
+            evaluated.Evaluation.Findings.Length != Enum.GetValues<AiEvaluationCriterion>().Length ||
+            evaluated.Evaluation.Findings.Select(item => item.Criterion).Distinct().Count() != evaluated.Evaluation.Findings.Length ||
             evaluated.Evaluation.Findings.Any(item => string.IsNullOrWhiteSpace(item.Rationale) || string.IsNullOrWhiteSpace(item.EvidenceReference)))
             throw new UnauthorizedAccessException("AI Planning candidate or independent evaluation is invalid.");
     }

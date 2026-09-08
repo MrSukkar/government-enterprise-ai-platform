@@ -15,7 +15,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.EnterpriseContextRuntimeReadiness enterpriseContext,
             Platform.SoftwareFactory.InternalService.ExistingSystemsRuntimeReadiness existingSystems,
             Platform.SoftwareFactory.InternalService.ExistingArchitectureRuntimeReadiness existingArchitecture,
-            Platform.SoftwareFactory.InternalService.ApprovedPackagesRuntimeReadiness approvedPackages) =>
+            Platform.SoftwareFactory.InternalService.ApprovedPackagesRuntimeReadiness approvedPackages,
+            Platform.SoftwareFactory.InternalService.AiPlanningRuntimeReadiness aiPlanning) =>
         {
             var payload = new
             {
@@ -30,7 +31,8 @@ internal static class PlatformOperationalEndpoints
                     enterpriseContext = enterpriseContext.State.ToString().ToLowerInvariant(),
                     existingSystems = existingSystems.State.ToString().ToLowerInvariant(),
                     existingArchitecture = existingArchitecture.State.ToString().ToLowerInvariant(),
-                    approvedPackages = approvedPackages.State.ToString().ToLowerInvariant()
+                    approvedPackages = approvedPackages.State.ToString().ToLowerInvariant(),
+                    aiPlanning = aiPlanning.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

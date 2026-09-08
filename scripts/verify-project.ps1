@@ -2074,6 +2074,82 @@ if (Test-Path $wave06AcceptancePath) {
     @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 06 acceptance missing: $_" } }
 }
 
+$wave07AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_07_ACCEPTANCE.md'
+if (Test-Path $wave07AcceptancePath) {
+    $wave07Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-008-OPERATIONALIZATION-WAVE-07.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedAiPlanningCandidate.cs'
+        Policy = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignAiPlanningPolicyGate.cs'
+        PackagesReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAuthorizedApprovedPackagesSnapshotReader.cs'
+        RunReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAiPlanningDeliveryRunReader.cs'
+        PromptReader = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlGovernedPlanningPromptTemplateReader.cs'
+        Context = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAiPlanningContextAuthorizer.cs'
+        Options = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\AiPlanningRuntimeOptions.cs'
+        Runtime = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignHttpAiPlanningRuntime.cs'
+        Evaluator = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\SovereignHttpAiOutputEvaluator.cs'
+        Authorization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\DeterministicAiPlanningResultAuthorizer.cs'
+        Evidence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlAiPlanningEvidenceRecorder.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\007_ai_planning_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\008_ai_planning_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_07_AI_PLANNING.md'
+    }
+    $wave07Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 07 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave07Paths.Change
+    @('Status: **Approved for Operationalization Wave 07**','Decision: **Approved by the repository owner','No new package is requested','Npgsql` `10.0.3','built-in .NET cryptography') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 07 approval missing: $_" } }
+    $master = Get-Content -Raw $wave07Paths.Master
+    @('CR-008','CR-008-OPERATIONALIZATION-WAVE-07.md','provider-neutral sovereign HTTPS planning protocol') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master Specification CR-008 authority missing: $_" } }
+    $packagesReader = Get-Content -Raw $wave07Paths.PackagesReader
+    @('IAuthorizedApprovedPackagesSnapshotReader','packages.tenant_id = @tenant_id AND packages.selection_id = @selection_id','JOIN software_factory.existing_architecture_evidence','record_sha256_digest','JsonSerializer.Deserialize','SHA256.HashData','evidence://approved-packages','SelectionDigest(record)','AiPlanningDependencyUnavailableException') | ForEach-Object { if ($packagesReader -notmatch [regex]::Escape($_)) { throw "Approved Packages prerequisite reader guard missing: $_" } }
+    if ($packagesReader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Approved Packages snapshot reader contains a mutation.' }
+    $runReader = Get-Content -Raw $wave07Paths.RunReader
+    @('IAiPlanningDeliveryRunReader','tenant_id = @tenant_id AND run_id = @run_id','package_selection_id = @package_selection_id','selection_sha256_digest = @selection_sha256_digest','purpose = @purpose','record_sha256_digest','SHA256.HashData','evidence://delivery-runs','DeliveryStage.ApprovedPackages') | ForEach-Object { if ($runReader -notmatch [regex]::Escape($_)) { throw "AI Planning delivery-run reader guard missing: $_" } }
+    if ($runReader -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'AI Planning delivery-run reader contains a mutation.' }
+    $policy = Get-Content -Raw $wave07Paths.Policy
+    @('internal-service.ai-planning.create','policyBundleVerifier.VerifyAsync','policyClient.EvaluateAsync','envelope.AiPlanning','AllowedPromptSha256Digest','AllowedRuntimeProfile','AllowedContextReferences','AllowedPackages','AllowedConstraints','RequiredRoles','OutputKind','RequestTimeoutSeconds','MaximumRequestBytes','MaximumResponseBytes','mixed scopes from another action') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "AI Planning OPA guard missing: $_" } }
+    if ($policy.IndexOf('policyBundleVerifier.VerifyAsync',[StringComparison]::Ordinal) -ge $policy.IndexOf('policyClient.EvaluateAsync',[StringComparison]::Ordinal)) { throw 'AI Planning OPA evaluation does not follow bundle verification.' }
+    $engine = Get-Content -Raw $wave07Paths.Engine
+    if ($engine.IndexOf('packagesReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('runReader.LoadAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('policyGate.EvaluateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('promptReader.LoadExactAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('promptReader.LoadExactAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('contextAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('contextAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('ProduceCandidateAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -or
+        $engine.IndexOf('resultAuthorizer.AuthorizeAsync',[StringComparison]::Ordinal) -ge $engine.IndexOf('evidenceRecorder.RecordAsync',[StringComparison]::Ordinal)) { throw 'AI Planning prerequisite, policy, prompt, context, runtime, authorization, and evidence order is invalid.' }
+    @('AiDevelopmentTaskKind.Planning','VerifiedPromptContent','AuthorizedContextItems','runtime.RequestTimeoutSeconds','IsExecutable: false','CanAdvance: false','Separately approved Code Generation') | ForEach-Object { if (($engine + (Get-Content -Raw (Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\AiDevelopment\AiDevelopmentRequest.cs'))) -notmatch [regex]::Escape($_)) { throw "AI Planning engine guard missing: $_" } }
+    $options = Get-Content -Raw $wave07Paths.Options
+    @('AiPlanningRuntimeConfigurationState.Unconfigured','AiPlanningRuntimeConfigurationState.Invalid','GenerationEndpoint','EvaluationEndpoint','GenerationOperatorId','EvaluationOperatorId','PromptTrustedPublicKeysPem','GenerationTrustedPublicKeysPem','EvaluationTrustedPublicKeysPem','RequestTimeoutSeconds','MaximumRequestBytes','MaximumResponseBytes','Uri.UriSchemeHttps') | ForEach-Object { if ($options -notmatch [regex]::Escape($_)) { throw "AI Planning runtime configuration guard missing: $_" } }
+    $prompt = Get-Content -Raw $wave07Paths.PromptReader
+    @('governed_planning_prompt_templates','@tenant_id = ANY(allowed_tenant_ids)','@purpose = ANY(allowed_purposes)','@environment = ANY(allowed_environments)','content_sha256_digest','SHA256.HashData','AiPlanningSignatureVerifier.Verify','PromptTrustedPublicKeysPem','SignatureValid: true') | ForEach-Object { if ($prompt -notmatch [regex]::Escape($_)) { throw "Governed planning prompt guard missing: $_" } }
+    $context = Get-Content -Raw $wave07Paths.Context
+    @('enterprise_context_evidence','existing_systems_evidence','existing_architecture_evidence','approved_packages_evidence','evidence_reference = @evidence_reference','IAccessPolicyEvaluator','ai-context.read','developer.internal-service.ai-planning.create','AiDevelopmentContextItem') | ForEach-Object { if ($context -notmatch [regex]::Escape($_)) { throw "AI Planning context guard missing: $_" } }
+    if ($context -match 'UPDATE software_factory|DELETE FROM software_factory|INSERT INTO software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'AI Planning context adapter contains a mutation.' }
+    $runtime = Get-Content -Raw $wave07Paths.Runtime
+    @('IHttpClientFactory','sovereign-ai-planning-generation','ToolsEnabled: false','GeneratedFilesAllowed: false','MaximumRequestBytes','MaximumResponseBytes','ResponseHeadersRead','ReadBoundedAsync','GenerationTrustedPublicKeysPem','AiPlanningSignatureVerifier.Verify') | ForEach-Object { if ($runtime -notmatch [regex]::Escape($_)) { throw "Sovereign AI Planning runtime guard missing: $_" } }
+    $evaluator = Get-Content -Raw $wave07Paths.Evaluator
+    @('sovereign-ai-planning-evaluation','EvaluationOperatorId','EvaluationRuntimeProfile','EvaluationTrustedPublicKeysPem','IsIndependentFromGenerationRuntime','Enum.GetValues<AiEvaluationCriterion>','AiPlanningSignatureVerifier.Verify') | ForEach-Object { if ($evaluator -notmatch [regex]::Escape($_)) { throw "Independent AI evaluator guard missing: $_" } }
+    $authorization = Get-Content -Raw $wave07Paths.Authorization
+    @('IAccessPolicyEvaluator','request.Identity','request.RequiredRoles','developer.internal-service.ai-planning.create','request.ContextSha256Digests','request.AllowedPackages','evidence://ai-planning/result-authorization') | ForEach-Object { if ($authorization -notmatch [regex]::Escape($_)) { throw "AI Planning result authorization guard missing: $_" } }
+    $evidence = Get-Content -Raw $wave07Paths.Evidence
+    @('IAiPlanningEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://ai-planning','CommitAsync') | ForEach-Object { if ($evidence -notmatch [regex]::Escape($_)) { throw "AI Planning evidence guard missing: $_" } }
+    if ($evidence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'AI Planning evidence adapter contains mutation outside append.' }
+    $inputsMigration = Get-Content -Raw $wave07Paths.InputsMigration
+    @('ai_planning_delivery_run_snapshots','governed_planning_prompt_templates','PRIMARY KEY (tenant_id, run_id)','package_selection_id uuid NOT NULL','selection_sha256_digest text NOT NULL','purpose text NOT NULL','fk_ai_planning_delivery_run_packages','signature_algorithm','signature_evidence_reference','COMMIT;') | ForEach-Object { if ($inputsMigration -notmatch [regex]::Escape($_)) { throw "AI Planning input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave07Paths.EvidenceMigration
+    @('software_factory.ai_planning_evidence','PRIMARY KEY (tenant_id, planning_id)','FOREIGN KEY (tenant_id, package_selection_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "AI Planning evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave07Paths.Services
+    @('AiPlanningRuntimeReadiness','AiPlanningRuntimeOptions','AllowAutoRedirect = false','IAuthorizedApprovedPackagesSnapshotReader','IAiPlanningDeliveryRunReader','IAiPlanningPolicyGate','IGovernedPlanningPromptTemplateReader','IAiPlanningContextAuthorizer','IAiDevelopmentRuntime','IAiOutputEvaluator','IAiPlanningResultAuthorizer','IAiPlanningEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "AI Planning composition missing: $_" } }
+    $operations = Get-Content -Raw $wave07Paths.Operations
+    @('AiPlanningRuntimeReadiness','aiPlanning') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "AI Planning readiness disclosure missing: $_" } }
+    $openApi = Get-Content -Raw $wave07Paths.OpenApi
+    @('aiPlanning','unconfigured','invalid','configured') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "AI Planning OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave07AcceptancePath
+    @('Status: **Satisfied**','all 142 institutional runtime dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Operationalization Wave 07 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

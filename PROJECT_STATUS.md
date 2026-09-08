@@ -1,6 +1,6 @@
 # Project Status
 
-Status: **Operationalization Wave 06 complete — Governed Approved Packages Runtime**
+Status: **Operationalization Wave 07 complete — Governed AI Planning Runtime**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
@@ -11,8 +11,8 @@ Status: **Operationalization Wave 06 complete — Governed Approved Packages Run
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
 - Current product increment: **Governed Evidence Completion — contract complete and verified**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
-- Operationalization: **Wave 06 — Governed Approved Packages Runtime — adapter implementation complete and verified under CR-007**
-- Operationalization acceptance: `docs/operationalization/WAVE_06_ACCEPTANCE.md`
-- Execution boundary: **Governed Approved Packages now has an exact cryptographically validating tenant-scoped Existing Architecture reader, action-specific signed-bundle/OPA coordinate scope, a read-only PostgreSQL institutional package catalog, deployment-pinned RSA/ECDSA supply-chain attestation verification, per-package RBAC/ABAC re-authorization, and atomic PostgreSQL evidence. Exact adapters compose only under complete policy, PostgreSQL, and package-trust profiles. Repository defaults contain no endpoint, connection, credential, institutional data, certificate, or trust material; all 142 institutional runtime dependencies therefore remain fail closed. The Authorized Approved Packages snapshot reader, AI Planning and later stations, package transfer or execution, public registries, live infrastructure, and production action remain disconnected.**
+- Operationalization: **Wave 07 — Governed AI Planning Runtime — adapter implementation complete and verified under CR-008**
+- Operationalization acceptance: `docs/operationalization/WAVE_07_ACCEPTANCE.md`
+- Execution boundary: **Governed AI Planning now has cryptographically validating tenant/purpose-bound Approved Packages and deterministic delivery-run readers, action-specific signed-bundle/OPA planning scope, a signed PostgreSQL prompt registry, exact evidence-chain context loading with per-item RBAC/ABAC re-authorization, a provider-neutral tools-disabled sovereign HTTPS planning protocol, a separately configured and trusted independent evaluator, per-result authorization, and atomic PostgreSQL evidence. Exact adapters compose only under complete policy, PostgreSQL, package-trust, prompt-trust, generation, and evaluation profiles. Repository defaults contain no endpoint, model, connection, credential, prompt, context, certificate, trust material, or institutional data; all 142 institutional runtime dependencies therefore remain fail closed. The Authorized AI Planning candidate reader, Code Generation and later stations, tools, generated files, workflow advancement, mutation, and production action remain disconnected.**
 
-The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–06 now operationalize control planes, Governed Intent Registration, Authorized Enterprise Context, Authorized Existing Systems, Authorized Existing Architecture, and Governed Approved Packages while preserving the sovereign fail-closed default posture.
+The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–07 now operationalize control planes, Governed Intent Registration, Authorized Enterprise Context, Authorized Existing Systems, Authorized Existing Architecture, Governed Approved Packages, and Governed AI Planning while preserving the sovereign fail-closed default posture.
