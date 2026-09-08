@@ -494,7 +494,7 @@
       "post": {
         "operationId": "runGovernedTests",
         "summary": "Run deterministic governed tests after accepted Sandbox execution.",
-        "description": "OPA authorizes exact prerequisites, manifest, image, isolation, environment, and network scope before reads or test invocation. No production effect, Human Review approval, or workflow advancement is available.",
+        "description": "Verified OPA authorizes the exact immutable Sandbox chain, governed manifest, institutional image, Firecracker-class isolation, environment, and network scope before a bounded signed sovereign test invocation. No production effect, Human Review approval, or workflow advancement is available.",
         "tags": ["Create Internal Service"], "security": [ { "oidcBearer": [] } ],
         "parameters": [
           { "name": "registrationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox", "tests"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -760,7 +760,8 @@
               "codeGeneration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "staticValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "securityValidation": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "sandbox": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "sandbox": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "tests": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

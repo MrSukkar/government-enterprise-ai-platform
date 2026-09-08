@@ -1481,7 +1481,7 @@ if (Test-Path $increment13AcceptancePath) {
     $change=Get-Content -Raw $changePath
     @('Status: **Approved for Operational Increment 13**','Decision: **Approved by the repository owner')|ForEach-Object{if($change -notmatch [regex]::Escape($_)){throw "Increment 13 approval missing: $_"}}
     $engine=Get-Content -Raw $enginePath
-    @('ITestsPolicyGate','IAuthorizedSandboxExecutionReceiptReader','IAuthorizedSecurityValidationReceiptReader','IAuthorizedCodeGenerationCandidateReader','DeliveryStage.Sandbox','IGovernedTestManifestReader','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','IGovernedTestRuntime','RequiredTestIds','ManifestDigest','ITestsResultAuthorizer','ITestsEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Human Review')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Tests guard missing: $_"}}
+    @('ITestsPolicyGate','ITestsSandboxExecutionReceiptReader','ITestsSecurityValidationReceiptReader','ITestsCodeGenerationCandidateReader','DeliveryStage.Sandbox','IGovernedTestManifestReader','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','IGovernedTestRuntime','RequiredTestIds','ManifestDigest','ITestsResultAuthorizer','ITestsEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Human Review')|ForEach-Object{if($engine -notmatch [regex]::Escape($_)){throw "Tests guard missing: $_"}}
     if($engine.IndexOf('ValidateDecision(input',[StringComparison]::Ordinal) -ge $engine.IndexOf('sandboxReader.LoadAsync',[StringComparison]::Ordinal)){throw 'Tests prerequisite read occurs before OPA validation.'}
     if($engine -match 'StageCompletion'){throw 'Tests must not create a workflow stage completion.'}
     $isolation=Get-Content -Raw $isolationPath
@@ -2444,6 +2444,58 @@ if (Test-Path $wave11AcceptancePath) {
     @('sandbox','unconfigured','invalid','configured','signed provider-neutral sovereign Sandbox invocation','No production effect, Tests approval, or workflow advancement') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Sandbox OpenAPI readiness missing: $_" } }
     $acceptance = Get-Content -Raw $wave11AcceptancePath
     @('Status: **Satisfied**','CR-012','all 145 dependencies remain disconnected and fail closed','All seven Wave 11 runtime contracts','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 11 acceptance artifact missing: $_" } }
+}
+
+$wave12AcceptancePath = Join-Path $repositoryRoot 'docs\operationalization\WAVE_12_ACCEPTANCE.md'
+if (Test-Path $wave12AcceptancePath) {
+    $wave12Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-013-OPERATIONALIZATION-WAVE-12.md'
+        Master = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V2.md'
+        Envelope = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\ISovereignPolicyEvaluationClient.cs'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\GovernedTestsExecution.cs'
+        Operationalization = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\InternalServices\TestsOperationalization.cs'
+        Persistence = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlTestsOperationalization.cs'
+        InputsMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\017_tests_inputs.sql'
+        EvidenceMigration = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\Migrations\018_tests_evidence.sql'
+        Services = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\SoftwareFactoryServiceCollectionExtensions.cs'
+        Readiness = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformRuntimeReadiness.cs'
+        Operations = Join-Path $repositoryRoot 'backend\Platform.Api\Operations\PlatformOperationalEndpoints.cs'
+        Endpoint = Join-Path $repositoryRoot 'backend\Platform.Api\InternalServices\ServiceStudioEndpoint.cs'
+        OpenApi = Join-Path $repositoryRoot 'backend\Platform.Api\Contracts\openapi.v1.json'
+        Guide = Join-Path $repositoryRoot 'docs\operationalization\WAVE_12_GOVERNED_TESTS.md'
+    }
+    $wave12Paths.Values | ForEach-Object { if (-not (Test-Path $_)) { throw "Operationalization Wave 12 artifact missing: $_" } }
+    $change = Get-Content -Raw $wave12Paths.Change
+    @('Status: **Approved for Operationalization Wave 12**','Decision: **Approved by the repository owner','provider-neutral sovereign HTTPS test runtime','Human Review') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Wave 12 approval missing: $_" } }
+    $master = Get-Content -Raw $wave12Paths.Master
+    @('CR-013','CR-013-OPERATIONALIZATION-WAVE-12.md','signed response attests Firecracker-class isolation and exact manifest coverage') | ForEach-Object { if ($master -notmatch [regex]::Escape($_)) { throw "Master CR-013 authority missing: $_" } }
+    $envelope = Get-Content -Raw $wave12Paths.Envelope
+    @('SovereignTestsPolicyScope','AllowedTestImage','RequiredTestIds','AllowedTestCategories','Tests') | ForEach-Object { if ($envelope -notmatch [regex]::Escape($_)) { throw "Tests policy envelope missing: $_" } }
+    $engine = Get-Content -Raw $wave12Paths.Engine
+    @('ITestsSandboxExecutionReceiptReader','ITestsSecurityValidationReceiptReader','ITestsCodeGenerationCandidateReader','DeliveryStage.Sandbox','IGovernedTestManifestReader','IInstitutionalPackageRegistryReader','IApprovedPackageSupplyChainVerifier','IGovernedTestRuntime','RequiredRoles','tests-result','ITestsResultAuthorizer','ITestsEvidenceRecorder','ProductionEffectOccurred','CanAdvance','Separately approved Human Review') | ForEach-Object { if ($engine -notmatch [regex]::Escape($_)) { throw "Operationalized Tests engine guard missing: $_" } }
+    if ($engine -match 'StageCompletion') { throw 'Operationalized Tests must not advance workflow.' }
+    $operationalization = Get-Content -Raw $wave12Paths.Operationalization
+    @('SovereignTestsPolicyGate','internal-service.tests.execute','bundleVerifier.VerifyAsync','envelope.Tests','TestsRuntimeConfigurationState.Unconfigured','Uri.UriSchemeHttps','SovereignHttpGovernedTestRuntime','ResponseHeadersRead','ReadBoundedAsync','AiPlanningSignatureVerifier.Verify','Firecracker-class','NetworkDefaultDenyEnforced','DeterministicTestsResultAuthorizer','tests-result.read') | ForEach-Object { if ($operationalization -notmatch [regex]::Escape($_)) { throw "Tests operationalization guard missing: $_" } }
+    if ($operationalization -match 'Process\.Start|File\.Write|Directory\.Create|PackageReference') { throw 'Tests adapter exposes an API-host execution or mutation capability.' }
+    $persistence = Get-Content -Raw $wave12Paths.Persistence
+    @('ITestsSandboxExecutionReceiptReader','ITestsSecurityValidationReceiptReader','ITestsCodeGenerationCandidateReader','ITestsDeliveryRunReader','IGovernedTestManifestReader','ITestsEvidenceRecorder','BeginTransactionAsync','ON CONFLICT DO NOTHING','FOR UPDATE','NpgsqlDbType.Jsonb','SHA256.HashData','evidence://tests','CommitAsync') | ForEach-Object { if ($persistence -notmatch [regex]::Escape($_)) { throw "Tests persistence guard missing: $_" } }
+    if ($persistence -match 'UPDATE software_factory|DELETE FROM software_factory|CREATE TABLE|CREATE SCHEMA') { throw 'Tests persistence contains mutation outside append.' }
+    $inputs = Get-Content -Raw $wave12Paths.InputsMigration
+    @('tests_delivery_run_snapshots','governed_test_manifests','sandbox_execution_id uuid NOT NULL','manifest_sha256_digest text NOT NULL','purpose text NOT NULL','COMMIT;') | ForEach-Object { if ($inputs -notmatch [regex]::Escape($_)) { throw "Tests input migration guard missing: $_" } }
+    $evidenceMigration = Get-Content -Raw $wave12Paths.EvidenceMigration
+    @('software_factory.tests_evidence','PRIMARY KEY (tenant_id, execution_id)','FOREIGN KEY (tenant_id, sandbox_execution_id)','FOREIGN KEY (tenant_id, delivery_run_id)','record_json jsonb') | ForEach-Object { if ($evidenceMigration -notmatch [regex]::Escape($_)) { throw "Tests evidence migration guard missing: $_" } }
+    $services = Get-Content -Raw $wave12Paths.Services
+    @('TestsRuntimeReadiness','TestsRuntimeOptions','ITestsPolicyGate','ITestsSandboxExecutionReceiptReader','ITestsSecurityValidationReceiptReader','ITestsCodeGenerationCandidateReader','ITestsDeliveryRunReader','IGovernedTestManifestReader','SovereignHttpGovernedTestRuntime','ITestsResultAuthorizer','ITestsEvidenceRecorder') | ForEach-Object { if ($services -notmatch [regex]::Escape($_)) { throw "Tests composition missing: $_" } }
+    $readiness = Get-Content -Raw $wave12Paths.Readiness
+    @('Tests OPA policy gate','Tests-authorized Sandbox receipt reader','Tests-authorized Security receipt reader','Tests Code Generation candidate reader','Tests delivery-run reader','Governed test-manifest reader','Governed test runtime','Tests result authorizer','Tests evidence recorder') | ForEach-Object { if ($readiness -notmatch [regex]::Escape($_)) { throw "Tests readiness dependency missing: $_" } }
+    $operations = Get-Content -Raw $wave12Paths.Operations
+    @('TestsRuntimeReadiness','tests') | ForEach-Object { if ($operations -notmatch [regex]::Escape($_)) { throw "Tests readiness missing: $_" } }
+    $endpoint = Get-Content -Raw $wave12Paths.Endpoint
+    @('GetService<ITestsSandboxExecutionReceiptReader>','GetService<ITestsSecurityValidationReceiptReader>','GetService<ITestsCodeGenerationCandidateReader>','Governed Tests are not operationally ready','No production effect, Human Review approval, or workflow advancement') | ForEach-Object { if ($endpoint -notmatch [regex]::Escape($_)) { throw "Tests endpoint composition missing: $_" } }
+    $openApi = Get-Content -Raw $wave12Paths.OpenApi
+    @('tests','unconfigured','invalid','configured','bounded signed sovereign test invocation','No production effect, Human Review approval, or workflow advancement') | ForEach-Object { if ($openApi -notmatch [regex]::Escape($_)) { throw "Tests OpenAPI readiness missing: $_" } }
+    $acceptance = Get-Content -Raw $wave12AcceptancePath
+    @('Status: **Satisfied**','CR-013','all 148 dependencies remain disconnected and fail closed','All nine Tests runtime contracts','All 15 projects build with zero warnings and zero errors') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Wave 12 acceptance artifact missing: $_" } }
 }
 
 if (-not $NoBuild) {

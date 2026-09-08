@@ -99,14 +99,39 @@ public interface IAuthorizedSandboxExecutionReceiptReader
     Task<GovernedSandboxExecutionReceipt?> LoadAsync(Guid executionId, string tenantId, CancellationToken cancellationToken);
 }
 
+public interface ITestsSandboxExecutionReceiptReader
+{
+    Task<GovernedSandboxExecutionReceipt?> LoadAsync(Guid executionId, string tenantId, string purpose,
+        Guid securityValidationId, Guid generationId, Guid deliveryRunId, string candidateSha256Digest,
+        string securityReportSha256Digest, string sandboxResultSha256Digest,
+        string sandboxEvidenceReference, CancellationToken cancellationToken);
+}
+
+public interface ITestsSecurityValidationReceiptReader
+{
+    Task<GovernedSecurityValidationReceipt?> LoadAsync(Guid validationId, string tenantId, string purpose,
+        Guid sandboxExecutionId, string sandboxEvidenceReference, Guid generationId, Guid deliveryRunId,
+        string candidateSha256Digest, string securityReportSha256Digest, CancellationToken cancellationToken);
+}
+
+public interface ITestsCodeGenerationCandidateReader
+{
+    Task<AuthorizedCodeGenerationCandidateSnapshot?> LoadAsync(Guid generationId, string tenantId, string purpose,
+        Guid sandboxExecutionId, string sandboxEvidenceReference, string candidateSha256Digest,
+        CancellationToken cancellationToken);
+}
+
 public interface ITestsDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, string purpose,
+        Guid sandboxExecutionId, Guid generationId, string candidateSha256Digest,
+        string sandboxResultSha256Digest, CancellationToken cancellationToken);
 }
 
 public interface IGovernedTestManifestReader
 {
-    Task<GovernedTestManifest?> LoadAsync(string manifestReference, string tenantId, CancellationToken cancellationToken);
+    Task<GovernedTestManifest?> LoadAsync(string manifestReference, string tenantId, string purpose,
+        string manifestSha256Digest, CancellationToken cancellationToken);
 }
 
 public sealed record TestsPolicyInput(
@@ -129,7 +154,8 @@ public sealed record TestsPolicyDecision(
     ImmutableHashSet<string> AllowedNetworkDestinations, string BundleId, string BundleVersion,
     string BundleSha256Digest, bool PolicySignatureValid, string PolicyVerificationEvidenceReference,
     GovernedIntentPolicyOutcome Outcome, DataClassification MaximumClassification,
-    ImmutableArray<string> Reasons, ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
+    ImmutableHashSet<string> RequiredRoles, string OutputKind, ImmutableArray<string> Reasons,
+    ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface ITestsPolicyGate
 {
@@ -161,7 +187,8 @@ public sealed record TestsResultAuthorizationRequest(
     string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestManifestSha256Digest,
     PackageCoordinate TestImage, SandboxIsolationPolicy IsolationPolicy,
     ImmutableDictionary<string, string> EnvironmentReferences, GovernedTestRuntimeResult Result,
-    string ResultSha256Digest, ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
+    string ResultSha256Digest, GovernedIdentity Identity, ImmutableHashSet<string> RequiredRoles,
+    ImmutableArray<string> EvidenceReferences, DateTimeOffset RequestedAt);
 
 public sealed record TestsResultAuthorizationDecision(
     Guid AuthorizationRequestId, Guid ExecutionId, string TenantId, string ResultSha256Digest,
@@ -174,7 +201,10 @@ public interface ITestsResultAuthorizer
 
 public sealed record TestsEvidenceRecord(
     Guid ExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId,
-    Guid DeliveryRunId, string TenantId, Guid PolicyDecisionRequestId, string TestManifestSha256Digest,
+    Guid DeliveryRunId, string TenantId, string SubjectId, string Purpose, string Environment,
+    DataClassification MaximumClassification, Guid PolicyDecisionRequestId,
+    string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest,
+    string SandboxEvidenceReference, string TestManifestReference, string TestManifestSha256Digest,
     PackageCoordinate TestImage, SandboxIsolationPolicy IsolationPolicy, GovernedTestRuntimeResult Result,
     string ResultSha256Digest, ImmutableArray<string> EvidenceReferences, DateTimeOffset ExecutedAt);
 
@@ -203,9 +233,9 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
 {
     public async Task<GovernedTestsExecutionReceipt> ExecuteAsync(
         GovernedTestsExecutionRequest request, ITestsPolicyGate policyGate,
-        IAuthorizedSandboxExecutionReceiptReader sandboxReader,
-        IAuthorizedSecurityValidationReceiptReader securityReader,
-        IAuthorizedCodeGenerationCandidateReader candidateReader, ITestsDeliveryRunReader runReader,
+        ITestsSandboxExecutionReceiptReader sandboxReader,
+        ITestsSecurityValidationReceiptReader securityReader,
+        ITestsCodeGenerationCandidateReader candidateReader, ITestsDeliveryRunReader runReader,
         IGovernedTestManifestReader manifestReader, IInstitutionalPackageRegistryReader registryReader,
         IApprovedPackageSupplyChainVerifier supplyChainVerifier, IGovernedTestRuntime runtime,
         ITestsResultAuthorizer resultAuthorizer, ITestsEvidenceRecorder evidenceRecorder,
@@ -235,19 +265,30 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
                 request.ExpectedTestManifestSha256Digest, request.TestImage, [], null, null, policyEvidence,
                 "Policy denial requires a new governed Tests request", decision.DecidedAt);
 
-        var sandbox = await sandboxReader.LoadAsync(request.SandboxExecutionId, request.Identity.TenantId, cancellationToken)
+        var sandbox = await sandboxReader.LoadAsync(request.SandboxExecutionId, request.Identity.TenantId, request.Purpose,
+            request.SecurityValidationId, request.GenerationId, request.DeliveryRunId,
+            request.ExpectedCandidateSha256Digest, request.ExpectedSecurityReportSha256Digest,
+            request.ExpectedSandboxResultSha256Digest, request.ExpectedSandboxEvidenceReference, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Sandbox receipt was not found.");
         ValidateSandbox(request, sandbox);
-        var security = await securityReader.LoadAsync(request.SecurityValidationId, request.Identity.TenantId, cancellationToken)
+        var security = await securityReader.LoadAsync(request.SecurityValidationId, request.Identity.TenantId, request.Purpose,
+            request.SandboxExecutionId, request.ExpectedSandboxEvidenceReference, request.GenerationId,
+            request.DeliveryRunId, request.ExpectedCandidateSha256Digest,
+            request.ExpectedSecurityReportSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Security Validation receipt was not found.");
         ValidateSecurity(request, security);
-        var candidate = await candidateReader.LoadAsync(request.GenerationId, request.Identity.TenantId, cancellationToken)
+        var candidate = await candidateReader.LoadAsync(request.GenerationId, request.Identity.TenantId, request.Purpose,
+            request.SandboxExecutionId, request.ExpectedSandboxEvidenceReference,
+            request.ExpectedCandidateSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Governed Code Generation candidate was not found.");
         ValidateCandidate(request, candidate);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, request.Purpose,
+            request.SandboxExecutionId, request.GenerationId, request.ExpectedCandidateSha256Digest,
+            request.ExpectedSandboxResultSha256Digest, cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
-        var manifest = await manifestReader.LoadAsync(request.TestManifestReference, request.Identity.TenantId, cancellationToken)
+        var manifest = await manifestReader.LoadAsync(request.TestManifestReference, request.Identity.TenantId,
+            request.Purpose, request.ExpectedTestManifestSha256Digest, cancellationToken)
             ?? throw new TestsDependencyUnavailableException("The governed test manifest is unavailable.");
         ValidateManifest(request, manifest);
 
@@ -282,7 +323,7 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
             request.ExpectedCandidateSha256Digest, request.ExpectedSecurityReportSha256Digest,
             request.ExpectedSandboxResultSha256Digest, request.ExpectedTestManifestSha256Digest,
             request.TestImage, request.IsolationPolicy, request.NonSecretEnvironmentReferences,
-            result, resultDigest, resultEvidence, assurance.DecidedAt);
+            result, resultDigest, request.Identity, decision.RequiredRoles, resultEvidence, assurance.DecidedAt);
         var authorization = await resultAuthorizer.AuthorizeAsync(authorizationRequest, cancellationToken);
         ValidateAuthorization(authorizationRequest, authorization);
         var allEvidence = resultEvidence.Concat(authorization.EvidenceReferences)
@@ -290,7 +331,11 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
         var record = new TestsEvidenceRecord(
             request.ExecutionId, request.SandboxExecutionId, request.SecurityValidationId,
             request.GenerationId, request.DeliveryRunId, request.Identity.TenantId,
-            decision.DecisionRequestId, request.ExpectedTestManifestSha256Digest, request.TestImage,
+            request.Identity.SubjectId, request.Purpose, request.Environment, request.MaximumClassification,
+            decision.DecisionRequestId, request.ExpectedCandidateSha256Digest,
+            request.ExpectedSecurityReportSha256Digest, request.ExpectedSandboxResultSha256Digest,
+            request.ExpectedSandboxEvidenceReference, request.TestManifestReference,
+            request.ExpectedTestManifestSha256Digest, request.TestImage,
             request.IsolationPolicy, result, resultDigest, allEvidence, authorization.DecidedAt);
         var evidence = await evidenceRecorder.RecordAsync(record, cancellationToken);
         ValidateEvidence(record, evidence);
@@ -322,10 +367,6 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
             !value.RequiredTestIds.SetEquals(input.RequiredTestIds) ||
             !value.AllowedTestCategories.SetEquals(input.AllowedTestCategories) || value.TestImage != input.TestImage ||
             !IsolationMatches(value.IsolationPolicy, input.IsolationPolicy) ||
-            value.AllowedEnvironmentReferences.Count != input.NonSecretEnvironmentReferences.Count ||
-            value.AllowedEnvironmentReferences.Any(item => !input.NonSecretEnvironmentReferences.TryGetValue(item.Key, out var expected) ||
-                !StringComparer.Ordinal.Equals(item.Value, expected)) ||
-            !value.AllowedNetworkDestinations.SetEquals(input.IsolationPolicy.AllowedNetworkDestinations) ||
             !StringComparer.Ordinal.Equals(value.BundleId, input.PolicyBundle.BundleId) ||
             !StringComparer.Ordinal.Equals(value.BundleVersion, input.PolicyBundle.Version) ||
             !StringComparer.OrdinalIgnoreCase.Equals(value.BundleSha256Digest, input.PolicyBundle.Sha256Digest))
@@ -334,6 +375,17 @@ public sealed class GovernedTestsExecutionEngine(IPackageEligibilityEvaluator el
             value.MaximumClassification > input.MaximumClassification || value.MaximumClassification > identity.Clearance ||
             value.Reasons.IsDefaultOrEmpty || value.EvidenceReferences.IsDefaultOrEmpty || value.DecidedAt < input.EvaluatedAt)
             throw new UnauthorizedAccessException("Tests OPA decision is invalid.");
+        if (value.Outcome == GovernedIntentPolicyOutcome.Permit &&
+            (value.RequiredRoles.IsEmpty || !StringComparer.Ordinal.Equals(value.OutputKind, "tests-result") ||
+             value.AllowedEnvironmentReferences.Count != input.NonSecretEnvironmentReferences.Count ||
+             value.AllowedEnvironmentReferences.Any(item => !input.NonSecretEnvironmentReferences.TryGetValue(item.Key, out var expected) ||
+                 !StringComparer.Ordinal.Equals(item.Value, expected)) ||
+             !value.AllowedNetworkDestinations.SetEquals(input.IsolationPolicy.AllowedNetworkDestinations)))
+            throw new UnauthorizedAccessException("Tests OPA permit scope is incomplete.");
+        if (value.Outcome != GovernedIntentPolicyOutcome.Permit &&
+            (value.RequiredRoles.Count != 0 || value.AllowedEnvironmentReferences.Count != 0 ||
+             value.AllowedNetworkDestinations.Count != 0 || !string.IsNullOrEmpty(value.OutputKind)))
+            throw new UnauthorizedAccessException("Tests OPA denial returned scope.");
     }
 
     private static bool IsolationMatches(SandboxIsolationPolicy left, SandboxIsolationPolicy right) =>

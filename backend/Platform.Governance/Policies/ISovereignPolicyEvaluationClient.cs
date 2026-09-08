@@ -43,7 +43,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignCodeGenerationPolicyScope? CodeGeneration,
     SovereignStaticValidationPolicyScope? StaticValidation,
     SovereignSecurityValidationPolicyScope? SecurityValidation,
-    SovereignSandboxPolicyScope? Sandbox);
+    SovereignSandboxPolicyScope? Sandbox,
+    SovereignTestsPolicyScope? Tests);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -120,6 +121,27 @@ public sealed record SovereignSecurityValidationPolicyScope(
 public sealed record SovereignSandboxPolicyScope(
     string MaximumClassification,
     SovereignApprovedPackageCoordinate? AllowedSandboxImage,
+    string IsolationClass,
+    bool Ephemeral,
+    bool MicroVmIsolation,
+    bool ProductionCredentialsAllowed,
+    bool HostFilesystemAccessAllowed,
+    bool NetworkDefaultDeny,
+    int CpuLimit,
+    long MemoryLimitBytes,
+    long ExecutionTimeoutTicks,
+    ImmutableSortedDictionary<string, string> AllowedEnvironmentReferences,
+    ImmutableArray<string> AllowedNetworkDestinations,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignTestsPolicyScope(
+    string MaximumClassification,
+    string TestManifestReference,
+    string TestManifestSha256Digest,
+    ImmutableArray<string> RequiredTestIds,
+    ImmutableArray<string> AllowedTestCategories,
+    SovereignApprovedPackageCoordinate? AllowedTestImage,
     string IsolationClass,
     bool Ephemeral,
     bool MicroVmIsolation,

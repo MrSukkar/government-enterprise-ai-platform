@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 11 - Governed Security Sandbox",
+    "wave": "Wave 12 - Governed Tests",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-012-OPERATIONALIZATION-WAVE-11.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_10_ACCEPTANCE.md",
-    "executionBoundary": "Governed Security Sandbox adapters for exact immutable accepted Security evidence, the Code Generation candidate bound through that evidence chain, purpose/digest-bound SecurityValidation-stopped delivery-run reads, action-specific OPA scope, exact institutional image eligibility and cryptographic supply-chain assurance, a bounded provider-neutral sovereign HTTPS runtime protocol with signed Firecracker-class isolation attestation, per-result RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 145 disconnected institutional dependencies fail closed; no production credential, host filesystem, unrestricted network, source mutation, workflow advancement, Tests, external provisioning, or production action is connected; the Authorized Sandbox receipt reader, later stations, live infrastructure, schemas, institutional data, images, limits, keys, credentials, deployment, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-013-OPERATIONALIZATION-WAVE-12.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_12_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md",
+    "executionBoundary": "Governed Tests adapters for exact immutable accepted Sandbox and Security evidence, the authoritative inert Code Generation candidate, purpose/digest-bound Sandbox-stopped delivery-run reads, action-specific OPA scope, immutable governed test manifests, exact institutional image eligibility and cryptographic supply-chain assurance, a bounded provider-neutral sovereign HTTPS test runtime with signed Firecracker-class isolation and exact manifest-coverage attestation, per-result RBAC/ABAC authorization, and atomic PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 148 disconnected institutional dependencies fail closed; no production credential or data, host filesystem, unrestricted network, source mutation, workflow advancement, Human Review, external provisioning, or production action is connected; the Authorized Tests receipt reader, later stations, live infrastructure, schemas, institutional data, manifests, images, limits, keys, credentials, deployment, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_11_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_12_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

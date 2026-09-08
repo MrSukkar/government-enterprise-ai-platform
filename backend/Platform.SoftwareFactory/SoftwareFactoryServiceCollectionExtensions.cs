@@ -54,6 +54,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var sandboxOptions = configuration
             .GetSection(SandboxRuntimeOptions.SectionName)
             .Get<SandboxRuntimeOptions>() ?? new();
+        var testsOptions = configuration.GetSection(TestsRuntimeOptions.SectionName).Get<TestsRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -68,6 +69,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
             configuration.GetSection(SecurityValidationRuntimeOptions.SectionName));
         services.Configure<SandboxRuntimeOptions>(
             configuration.GetSection(SandboxRuntimeOptions.SectionName));
+        services.Configure<TestsRuntimeOptions>(configuration.GetSection(TestsRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -160,6 +162,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
                     ? SandboxRuntimeConfigurationState.Configured
                     : SandboxRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new SandboxRuntimeReadiness(sandboxState));
+        var testsState=sandboxState==SandboxRuntimeConfigurationState.Invalid||testsOptions.ConfigurationState==TestsRuntimeConfigurationState.Invalid?TestsRuntimeConfigurationState.Invalid:sandboxState==SandboxRuntimeConfigurationState.Configured&&testsOptions.IsOperationallyConfigured?TestsRuntimeConfigurationState.Configured:TestsRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new TestsRuntimeReadiness(testsState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -278,6 +282,19 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                     services.AddScoped<ISecuritySandboxRuntime, SovereignHttpSecuritySandboxRuntime>();
                                     services.AddScoped<ISandboxResultAuthorizer, DeterministicSandboxResultAuthorizer>();
                                     services.AddScoped<ISandboxEvidenceRecorder, PostgreSqlSandboxEvidenceRecorder>();
+                                    if (testsOptions.IsOperationallyConfigured)
+                                    {
+                                        services.AddHttpClient("sovereign-governed-tests").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(testsOptions.RequestTimeoutSeconds) });
+                                        services.AddScoped<ITestsPolicyGate,SovereignTestsPolicyGate>();
+                                        services.AddScoped<ITestsSandboxExecutionReceiptReader,PostgreSqlTestsSandboxReceiptReader>();
+                                        services.AddScoped<ITestsSecurityValidationReceiptReader,PostgreSqlTestsSecurityReader>();
+                                        services.AddScoped<ITestsCodeGenerationCandidateReader,PostgreSqlTestsCandidateReader>();
+                                        services.AddScoped<ITestsDeliveryRunReader,PostgreSqlTestsRunReader>();
+                                        services.AddScoped<IGovernedTestManifestReader,PostgreSqlTestManifestReader>();
+                                        services.AddScoped<IGovernedTestRuntime,SovereignHttpGovernedTestRuntime>();
+                                        services.AddScoped<ITestsResultAuthorizer,DeterministicTestsResultAuthorizer>();
+                                        services.AddScoped<ITestsEvidenceRecorder,PostgreSqlTestsEvidenceRecorder>();
+                                    }
                                 }
                             }
                         }

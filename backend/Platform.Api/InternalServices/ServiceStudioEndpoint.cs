@@ -1167,9 +1167,9 @@ internal static class InternalServiceEndpoint
                         context.Identity.SubjectId, false));
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
                     var policy = services.GetService<ITestsPolicyGate>();
-                    var sandboxReader = services.GetService<IAuthorizedSandboxExecutionReceiptReader>();
-                    var securityReader = services.GetService<IAuthorizedSecurityValidationReceiptReader>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var sandboxReader = services.GetService<ITestsSandboxExecutionReceiptReader>();
+                    var securityReader = services.GetService<ITestsSecurityValidationReceiptReader>();
+                    var candidateReader = services.GetService<ITestsCodeGenerationCandidateReader>();
                     var runReader = services.GetService<ITestsDeliveryRunReader>();
                     var manifestReader = services.GetService<IGovernedTestManifestReader>();
                     var registry = services.GetService<IInstitutionalPackageRegistryReader>();
@@ -1205,7 +1205,7 @@ internal static class InternalServiceEndpoint
             })
             .WithName("RunGovernedTests").WithTags("Create Internal Service")
             .WithSummary("Run deterministic governed tests after accepted Sandbox execution.")
-            .WithDescription("OPA authorizes exact prerequisites, manifest, image, isolation, environment, and network scope before reads or test invocation. No production effect, Human Review approval, or workflow advancement is available.")
+            .WithDescription("Verified OPA authorizes the exact immutable Sandbox chain, governed manifest, institutional image, Firecracker-class isolation, environment, and network scope before a bounded signed sovereign test invocation. No production effect, Human Review approval, or workflow advancement is available.")
             .Accepts<TestsExecutionInput>("application/json")
             .Produces<GovernedTestsExecutionReceipt>(200).Produces<GovernedTestsExecutionReceipt>(403)
             .ProducesProblem(400).ProducesProblem(401).ProducesProblem(404).ProducesProblem(503)

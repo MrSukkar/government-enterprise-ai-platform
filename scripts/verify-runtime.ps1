@@ -253,8 +253,8 @@ try {
     $readinessBody = $readiness.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json
     if ($readinessBody.status -ne 'not-ready' -or
         $readinessBody.failClosed -ne $true -or
-        [int]$readinessBody.missingDependencyCount -ne 145) {
-        throw 'Readiness response did not disclose the expected 145 fail-closed runtime dependencies.'
+        [int]$readinessBody.missingDependencyCount -ne 148) {
+        throw 'Readiness response did not disclose the expected 148 fail-closed runtime dependencies.'
     }
     if ($readinessBody.controlPlanes.identity -ne 'unconfigured' -or
         $readinessBody.controlPlanes.policy -ne 'unconfigured' -or
@@ -268,7 +268,7 @@ try {
         $readinessBody.controlPlanes.codeGeneration -ne 'unconfigured' -or
         $readinessBody.controlPlanes.staticValidation -ne 'unconfigured' -or
         $readinessBody.controlPlanes.securityValidation -ne 'unconfigured' -or
-        $readinessBody.controlPlanes.sandbox -ne 'unconfigured') {
+        $readinessBody.controlPlanes.sandbox -ne 'unconfigured' -or $readinessBody.controlPlanes.tests -ne 'unconfigured') {
         throw 'Repository-default identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, Approved Packages, AI Planning, Code Generation, Static Validation, Security Validation, and Sandbox control planes did not remain explicitly unconfigured.'
     }
 
@@ -319,7 +319,7 @@ try {
         }
     }
 
-    Write-Output 'RUNTIME VERIFIED: Development API live; identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, Approved Packages, AI Planning, Code Generation, Static Validation, Security Validation, and Sandbox remain safely unconfigured; 145 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
+    Write-Output 'RUNTIME VERIFIED: Development API live; all control planes through Tests remain safely unconfigured; 148 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

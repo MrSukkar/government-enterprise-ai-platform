@@ -20,7 +20,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.CodeGenerationRuntimeReadiness codeGeneration,
             Platform.SoftwareFactory.InternalService.StaticValidationRuntimeReadiness staticValidation,
             Platform.SoftwareFactory.InternalService.SecurityValidationRuntimeReadiness securityValidation,
-            Platform.SoftwareFactory.InternalService.SandboxRuntimeReadiness sandbox) =>
+            Platform.SoftwareFactory.InternalService.SandboxRuntimeReadiness sandbox,
+            Platform.SoftwareFactory.InternalService.TestsRuntimeReadiness tests) =>
         {
             var payload = new
             {
@@ -40,7 +41,8 @@ internal static class PlatformOperationalEndpoints
                     codeGeneration = codeGeneration.State.ToString().ToLowerInvariant(),
                     staticValidation = staticValidation.State.ToString().ToLowerInvariant(),
                     securityValidation = securityValidation.State.ToString().ToLowerInvariant(),
-                    sandbox = sandbox.State.ToString().ToLowerInvariant()
+                    sandbox = sandbox.State.ToString().ToLowerInvariant(),
+                    tests = tests.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new
