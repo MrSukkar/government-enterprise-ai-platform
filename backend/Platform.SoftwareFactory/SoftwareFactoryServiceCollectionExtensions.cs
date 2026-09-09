@@ -57,6 +57,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var testsOptions = configuration.GetSection(TestsRuntimeOptions.SectionName).Get<TestsRuntimeOptions>() ?? new();
         var humanReviewOptions = configuration.GetSection(HumanReviewRuntimeOptions.SectionName).Get<HumanReviewRuntimeOptions>() ?? new();
         var gitOptions = configuration.GetSection(GitRuntimeOptions.SectionName).Get<GitRuntimeOptions>() ?? new();
+        var ciCdOptions = configuration.GetSection(CiCdRuntimeOptions.SectionName).Get<CiCdRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -74,6 +75,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<TestsRuntimeOptions>(configuration.GetSection(TestsRuntimeOptions.SectionName));
         services.Configure<HumanReviewRuntimeOptions>(configuration.GetSection(HumanReviewRuntimeOptions.SectionName));
         services.Configure<GitRuntimeOptions>(configuration.GetSection(GitRuntimeOptions.SectionName));
+        services.Configure<CiCdRuntimeOptions>(configuration.GetSection(CiCdRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -172,6 +174,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new HumanReviewRuntimeReadiness(humanReviewState));
         var gitState=humanReviewState==HumanReviewRuntimeConfigurationState.Invalid||gitOptions.ConfigurationState==GitRuntimeConfigurationState.Invalid?GitRuntimeConfigurationState.Invalid:humanReviewState==HumanReviewRuntimeConfigurationState.Configured&&gitOptions.IsOperationallyConfigured?GitRuntimeConfigurationState.Configured:GitRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new GitRuntimeReadiness(gitState));
+        var ciCdState=gitState==GitRuntimeConfigurationState.Invalid||ciCdOptions.ConfigurationState==CiCdRuntimeConfigurationState.Invalid?CiCdRuntimeConfigurationState.Invalid:gitState==GitRuntimeConfigurationState.Configured&&ciCdOptions.IsOperationallyConfigured?CiCdRuntimeConfigurationState.Configured:CiCdRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new CiCdRuntimeReadiness(ciCdState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -327,6 +331,19 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                 services.AddScoped<IInstitutionalGitGateway>(p=>p.GetRequiredService<SovereignHttpInstitutionalGitGateway>());
                                                 services.AddScoped<IGitResultAuthorizer,DeterministicGitResultAuthorizer>();
                                                 services.AddScoped<IGitEvidenceRecorder,PostgreSqlGitEvidenceRecorder>();
+                                                if (ciCdOptions.IsOperationallyConfigured)
+                                                {
+                                                    services.AddHttpClient("sovereign-institutional-cicd").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(ciCdOptions.RequestTimeoutSeconds) });
+                                                    services.AddScoped<ICiCdPolicyGate,SovereignCiCdPolicyGate>();
+                                                    services.AddScoped<IAuthorizedGitSourceCommitReceiptReader,PostgreSqlAuthorizedGitReceiptReader>();
+                                                    services.AddScoped<ICiCdDeliveryRunReader,PostgreSqlCiCdRunReader>();
+                                                    services.AddScoped<IGovernedCiCdWorkflowDefinitionReader,PostgreSqlCiCdWorkflowReader>();
+                                                    services.AddScoped<SovereignHttpCiCdGateway>();
+                                                    services.AddScoped<ICiCdWorkflowValidator>(p=>p.GetRequiredService<SovereignHttpCiCdGateway>());
+                                                    services.AddScoped<IInstitutionalCiCdGateway>(p=>p.GetRequiredService<SovereignHttpCiCdGateway>());
+                                                    services.AddScoped<ICiCdResultAuthorizer,DeterministicCiCdResultAuthorizer>();
+                                                    services.AddScoped<ICiCdEvidenceRecorder,PostgreSqlCiCdEvidenceRecorder>();
+                                                }
                                             }
                                         }
                                     }

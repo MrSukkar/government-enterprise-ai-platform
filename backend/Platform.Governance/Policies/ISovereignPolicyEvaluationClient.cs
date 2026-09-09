@@ -46,7 +46,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignSandboxPolicyScope? Sandbox,
     SovereignTestsPolicyScope? Tests,
     SovereignHumanReviewPolicyScope? HumanReview,
-    SovereignGitPolicyScope? Git);
+    SovereignGitPolicyScope? Git,
+    SovereignCiCdPolicyScope? CiCd);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -184,6 +185,14 @@ public sealed record SovereignGitPolicyScope(
     bool CiCdTriggerAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
+
+public sealed record SovereignCiCdPolicyScope(
+    string MaximumClassification,string RepositoryId,string CommitId,string TreeSha256Digest,
+    string ChangeSetSha256Digest,string WorkflowDefinitionId,string WorkflowDefinitionVersion,
+    string WorkflowSha256Digest,string PipelineProfile,string RunnerPoolId,
+    ImmutableArray<string> AllowedStageIds,ImmutableArray<string> AllowedControlIds,
+    bool SourceMutationAllowed,bool ArtifactPublicationAllowed,bool DeploymentAllowed,
+    ImmutableArray<string> RequiredRoles,string OutputKind);
 
 public interface ISovereignPolicyEvaluationClient
 {

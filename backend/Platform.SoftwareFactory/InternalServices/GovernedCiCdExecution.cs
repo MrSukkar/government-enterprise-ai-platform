@@ -192,6 +192,8 @@ public interface ICiCdEvidenceRecorder
     Task<CiCdEvidenceReceipt> RecordAsync(CiCdEvidenceRecord record, CancellationToken cancellationToken);
 }
 
+public sealed class CiCdDependencyUnavailableException(string message) : Exception(message);
+
 public sealed record GovernedCiCdExecutionReceipt(
     Guid ExecutionId, Guid GitOperationId, Guid DeliveryRunId, string TenantId,
     GovernedIntentPolicyOutcome PolicyOutcome, bool IsAccepted, bool CiCdTriggered,

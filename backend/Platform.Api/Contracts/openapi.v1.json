@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox", "tests", "humanReview", "git"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox", "tests", "humanReview", "git", "ciCd"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -763,7 +763,8 @@
               "sandbox": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "tests": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "humanReview": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "git": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "git": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "ciCd": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

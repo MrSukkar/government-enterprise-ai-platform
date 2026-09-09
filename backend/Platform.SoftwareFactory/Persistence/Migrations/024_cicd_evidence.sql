@@ -1,0 +1,3 @@
+BEGIN;
+CREATE TABLE IF NOT EXISTS software_factory.cicd_evidence(tenant_id text NOT NULL,execution_id uuid NOT NULL,git_operation_id uuid NOT NULL,delivery_run_id uuid NOT NULL,manifest_sha256_digest text NOT NULL CHECK(manifest_sha256_digest ~ '^[0-9a-f]{64}$'),record_sha256_digest text NOT NULL CHECK(record_sha256_digest ~ '^[0-9a-f]{64}$'),record_json jsonb NOT NULL,evidence_reference text NOT NULL UNIQUE,evidence_references text[] NOT NULL,recorded_at timestamptz NOT NULL,PRIMARY KEY(tenant_id,execution_id),FOREIGN KEY(tenant_id,git_operation_id) REFERENCES software_factory.git_evidence(tenant_id,operation_id),FOREIGN KEY(tenant_id,delivery_run_id) REFERENCES software_factory.cicd_delivery_run_snapshots(tenant_id,run_id));
+COMMIT;

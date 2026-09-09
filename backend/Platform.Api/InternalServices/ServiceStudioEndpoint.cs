@@ -1379,6 +1379,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed CI/CD denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "CI/CD prerequisite was not found."); }
+                catch (CiCdDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A CI/CD dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "CI/CD request or boundary result is invalid."); }
             })

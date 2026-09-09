@@ -23,7 +23,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.SandboxRuntimeReadiness sandbox,
             Platform.SoftwareFactory.InternalService.TestsRuntimeReadiness tests,
             Platform.SoftwareFactory.InternalService.HumanReviewRuntimeReadiness humanReview,
-            Platform.SoftwareFactory.InternalService.GitRuntimeReadiness git) =>
+            Platform.SoftwareFactory.InternalService.GitRuntimeReadiness git,
+            Platform.SoftwareFactory.InternalService.CiCdRuntimeReadiness ciCd) =>
         {
             var payload = new
             {
@@ -46,7 +47,8 @@ internal static class PlatformOperationalEndpoints
                     sandbox = sandbox.State.ToString().ToLowerInvariant(),
                     tests = tests.State.ToString().ToLowerInvariant(),
                     humanReview = humanReview.State.ToString().ToLowerInvariant(),
-                    git = git.State.ToString().ToLowerInvariant()
+                    git = git.State.ToString().ToLowerInvariant(),
+                    ciCd = ciCd.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new
