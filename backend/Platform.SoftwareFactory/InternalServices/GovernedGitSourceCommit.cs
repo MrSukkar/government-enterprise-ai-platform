@@ -143,9 +143,32 @@ public interface IAuthorizedHumanReviewReceiptReader
     Task<GovernedHumanReviewReceipt?> LoadAsync(Guid reviewId, string tenantId, CancellationToken cancellationToken);
 }
 
+public interface IGitHumanReviewReceiptReader
+{
+    Task<GovernedHumanReviewReceipt?> LoadAsync(Guid reviewId,string tenantId,string purpose,
+        Guid testsExecutionId,Guid generationId,Guid deliveryRunId,string candidateSha256Digest,
+        string reviewPackageSha256Digest,string reviewEvidenceReference,string testsResultSha256Digest,
+        CancellationToken cancellationToken);
+}
+
+public interface IGitTestsReceiptReader
+{
+    Task<GovernedTestsExecutionReceipt?> LoadAsync(Guid executionId,string tenantId,string purpose,
+        Guid generationId,Guid deliveryRunId,string candidateSha256Digest,string resultSha256Digest,
+        CancellationToken cancellationToken);
+}
+
+public interface IGitCandidateReader
+{
+    Task<AuthorizedCodeGenerationCandidateSnapshot?> LoadAsync(Guid generationId,string tenantId,string purpose,
+        Guid deliveryRunId,string candidateSha256Digest,CancellationToken cancellationToken);
+}
+
 public interface IGitDeliveryRunReader
 {
-    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId, string tenantId, CancellationToken cancellationToken);
+    Task<SoftwareDeliveryRun?> LoadAsync(Guid runId,string tenantId,string purpose,Guid reviewId,
+        Guid testsExecutionId,Guid generationId,string candidateSha256Digest,
+        string reviewPackageSha256Digest,CancellationToken cancellationToken);
 }
 
 public interface IGovernedGitChangeSetMaterializer
@@ -175,6 +198,7 @@ public sealed record GitPolicyDecision(
     bool ForceUpdateAllowed, bool CiCdTriggerAllowed, string BundleId, string BundleVersion,
     string BundleSha256Digest, bool PolicySignatureValid, string PolicyVerificationEvidenceReference,
     GovernedIntentPolicyOutcome Outcome, DataClassification MaximumClassification,
+    ImmutableHashSet<string> RequiredRoles, string OutputKind,
     ImmutableArray<string> Reasons, ImmutableArray<string> EvidenceReferences, DateTimeOffset DecidedAt);
 
 public interface IGitPolicyGate
@@ -220,6 +244,7 @@ public interface IInstitutionalGitGateway
 
 public sealed record GitResultAuthorizationRequest(
     Guid AuthorizationRequestId, Guid OperationId, string TenantId, string SubjectId,
+    GovernedIdentity Identity, ImmutableHashSet<string> RequiredRoles,
     string Purpose, string Environment, DataClassification MaximumClassification,
     string CandidateSha256Digest, string ReviewPackageSha256Digest,
     string ChangeSetSha256Digest, InstitutionalGitCommitResult Commit,
@@ -265,8 +290,8 @@ public sealed class GovernedGitSourceCommitEngine
 {
     public async Task<GovernedGitSourceCommitReceipt> CommitAsync(
         GovernedGitSourceCommitRequest request, IGitPolicyGate policyGate,
-        IAuthorizedHumanReviewReceiptReader reviewReader, IAuthorizedTestsExecutionReceiptReader testsReader,
-        IAuthorizedCodeGenerationCandidateReader candidateReader, IGitDeliveryRunReader runReader,
+        IGitHumanReviewReceiptReader reviewReader, IGitTestsReceiptReader testsReader,
+        IGitCandidateReader candidateReader, IGitDeliveryRunReader runReader,
         IGovernedGitChangeSetMaterializer materializer, IGitChangePolicyValidator changeValidator,
         IInstitutionalGitGateway gitGateway, IGitResultAuthorizer resultAuthorizer,
         IGitEvidenceRecorder evidenceRecorder, CancellationToken cancellationToken)
@@ -296,16 +321,24 @@ public sealed class GovernedGitSourceCommitEngine
                 request.RepositoryId, request.ChangeBranch, null, null, null, false, [], null,
                 policyEvidence, "Policy denial requires a new governed Git request", policy.DecidedAt);
 
-        var review = await reviewReader.LoadAsync(request.ReviewId, request.Identity.TenantId, cancellationToken)
+        var review = await reviewReader.LoadAsync(request.ReviewId,request.Identity.TenantId,request.Purpose,
+            request.TestsExecutionId,request.GenerationId,request.DeliveryRunId,request.ExpectedCandidateSha256Digest,
+            request.ExpectedReviewPackageSha256Digest,request.ExpectedReviewEvidenceReference,
+            request.ExpectedTestsResultSha256Digest,cancellationToken)
             ?? throw new KeyNotFoundException("Approving Human Review receipt was not found.");
         ValidateReview(request, review);
-        var tests = await testsReader.LoadAsync(request.TestsExecutionId, request.Identity.TenantId, cancellationToken)
+        var tests = await testsReader.LoadAsync(request.TestsExecutionId,request.Identity.TenantId,request.Purpose,
+            request.GenerationId,request.DeliveryRunId,request.ExpectedCandidateSha256Digest,
+            request.ExpectedTestsResultSha256Digest,cancellationToken)
             ?? throw new KeyNotFoundException("Governed Tests receipt was not found.");
         ValidateTests(request, tests);
-        var candidate = await candidateReader.LoadAsync(request.GenerationId, request.Identity.TenantId, cancellationToken)
+        var candidate = await candidateReader.LoadAsync(request.GenerationId,request.Identity.TenantId,request.Purpose,
+            request.DeliveryRunId,request.ExpectedCandidateSha256Digest,cancellationToken)
             ?? throw new KeyNotFoundException("Governed Code Generation candidate was not found.");
         ValidateCandidate(request, candidate);
-        var run = await runReader.LoadAsync(request.DeliveryRunId, request.Identity.TenantId, cancellationToken)
+        var run = await runReader.LoadAsync(request.DeliveryRunId,request.Identity.TenantId,request.Purpose,
+            request.ReviewId,request.TestsExecutionId,request.GenerationId,request.ExpectedCandidateSha256Digest,
+            request.ExpectedReviewPackageSha256Digest,cancellationToken)
             ?? throw new KeyNotFoundException("Software Delivery Run was not found.");
         ValidateRun(request, run);
 
@@ -337,6 +370,7 @@ public sealed class GovernedGitSourceCommitEngine
             .Order(StringComparer.Ordinal).ToImmutableArray();
         var authorizationRequest = new GitResultAuthorizationRequest(
             Guid.NewGuid(), request.OperationId, request.Identity.TenantId, request.Identity.SubjectId,
+            request.Identity, policy.RequiredRoles,
             request.Purpose, request.Environment, request.MaximumClassification,
             request.ExpectedCandidateSha256Digest, request.ExpectedReviewPackageSha256Digest,
             request.ExpectedChangeSetSha256Digest, commit, commitEvidence, commit.CommittedAt);
@@ -387,6 +421,7 @@ public sealed class GovernedGitSourceCommitEngine
             !StringComparer.OrdinalIgnoreCase.Equals(value.BundleSha256Digest, input.PolicyBundle.Sha256Digest))
             throw new InvalidOperationException("OPA returned a mismatched Git decision.");
         if (!value.PolicySignatureValid || value.ProtectedBranch || value.ForceUpdateAllowed || value.CiCdTriggerAllowed ||
+            value.RequiredRoles.IsEmpty || value.OutputKind != "git-commit-result" ||
             string.IsNullOrWhiteSpace(value.PolicyVerificationEvidenceReference) || value.MaximumClassification > input.MaximumClassification ||
             value.MaximumClassification > identity.Clearance || value.Reasons.IsDefaultOrEmpty ||
             value.EvidenceReferences.IsDefaultOrEmpty || value.DecidedAt < input.EvaluatedAt)

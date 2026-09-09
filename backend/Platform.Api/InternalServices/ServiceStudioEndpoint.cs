@@ -1292,9 +1292,9 @@ internal static class InternalServiceEndpoint
                         [], ["developer.internal-service.git.commit"], context.Identity.SubjectId, false));
                     if (!access.IsAllowed) throw new UnauthorizedAccessException();
                     var policy = services.GetService<IGitPolicyGate>();
-                    var reviewReader = services.GetService<IAuthorizedHumanReviewReceiptReader>();
-                    var testsReader = services.GetService<IAuthorizedTestsExecutionReceiptReader>();
-                    var candidateReader = services.GetService<IAuthorizedCodeGenerationCandidateReader>();
+                    var reviewReader = services.GetService<IGitHumanReviewReceiptReader>();
+                    var testsReader = services.GetService<IGitTestsReceiptReader>();
+                    var candidateReader = services.GetService<IGitCandidateReader>();
                     var runReader = services.GetService<IGitDeliveryRunReader>();
                     var materializer = services.GetService<IGovernedGitChangeSetMaterializer>();
                     var changeValidator = services.GetService<IGitChangePolicyValidator>();

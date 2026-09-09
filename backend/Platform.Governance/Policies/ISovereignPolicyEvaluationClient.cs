@@ -45,7 +45,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignSecurityValidationPolicyScope? SecurityValidation,
     SovereignSandboxPolicyScope? Sandbox,
     SovereignTestsPolicyScope? Tests,
-    SovereignHumanReviewPolicyScope? HumanReview);
+    SovereignHumanReviewPolicyScope? HumanReview,
+    SovereignGitPolicyScope? Git);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -167,6 +168,20 @@ public sealed record SovereignHumanReviewPolicyScope(
     ImmutableArray<string> ConflictingSubjectIds,
     bool ReviewerIsHuman,
     long ExpectedVersion,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignGitPolicyScope(
+    string MaximumClassification,
+    ImmutableArray<string> AllowedRelativePaths,
+    string RepositoryId,
+    string ExpectedBaseCommitId,
+    string ChangeBranch,
+    string CommitMessage,
+    string SigningPolicyReference,
+    bool ProtectedBranch,
+    bool ForceUpdateAllowed,
+    bool CiCdTriggerAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

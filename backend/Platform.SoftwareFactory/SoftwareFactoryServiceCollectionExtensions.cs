@@ -56,6 +56,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
             .Get<SandboxRuntimeOptions>() ?? new();
         var testsOptions = configuration.GetSection(TestsRuntimeOptions.SectionName).Get<TestsRuntimeOptions>() ?? new();
         var humanReviewOptions = configuration.GetSection(HumanReviewRuntimeOptions.SectionName).Get<HumanReviewRuntimeOptions>() ?? new();
+        var gitOptions = configuration.GetSection(GitRuntimeOptions.SectionName).Get<GitRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -72,6 +73,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
             configuration.GetSection(SandboxRuntimeOptions.SectionName));
         services.Configure<TestsRuntimeOptions>(configuration.GetSection(TestsRuntimeOptions.SectionName));
         services.Configure<HumanReviewRuntimeOptions>(configuration.GetSection(HumanReviewRuntimeOptions.SectionName));
+        services.Configure<GitRuntimeOptions>(configuration.GetSection(GitRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -168,6 +170,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new TestsRuntimeReadiness(testsState));
         var humanReviewState=testsState==TestsRuntimeConfigurationState.Invalid||humanReviewOptions.ConfigurationState==HumanReviewRuntimeConfigurationState.Invalid?HumanReviewRuntimeConfigurationState.Invalid:testsState==TestsRuntimeConfigurationState.Configured&&humanReviewOptions.IsOperationallyConfigured?HumanReviewRuntimeConfigurationState.Configured:HumanReviewRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new HumanReviewRuntimeReadiness(humanReviewState));
+        var gitState=humanReviewState==HumanReviewRuntimeConfigurationState.Invalid||gitOptions.ConfigurationState==GitRuntimeConfigurationState.Invalid?GitRuntimeConfigurationState.Invalid:humanReviewState==HumanReviewRuntimeConfigurationState.Configured&&gitOptions.IsOperationallyConfigured?GitRuntimeConfigurationState.Configured:GitRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new GitRuntimeReadiness(gitState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -309,6 +313,21 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                             services.AddScoped<IHumanReviewDeliveryRunReader,PostgreSqlHumanReviewRunReader>();
                                             services.AddScoped<IHumanReviewAttestationVerifier,SovereignHttpHumanReviewAttestationVerifier>();
                                             services.AddScoped<IAtomicHumanReviewRepository,PostgreSqlAtomicHumanReviewRepository>();
+                                            if (gitOptions.IsOperationallyConfigured)
+                                            {
+                                                services.AddHttpClient("sovereign-institutional-git").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(gitOptions.RequestTimeoutSeconds) });
+                                                services.AddScoped<IGitPolicyGate,SovereignGitPolicyGate>();
+                                                services.AddScoped<IGitHumanReviewReceiptReader,PostgreSqlGitHumanReviewReader>();
+                                                services.AddScoped<IGitTestsReceiptReader,PostgreSqlGitTestsReader>();
+                                                services.AddScoped<IGitCandidateReader,PostgreSqlGitCandidateReader>();
+                                                services.AddScoped<IGitDeliveryRunReader,PostgreSqlGitRunReader>();
+                                                services.AddScoped<SovereignHttpInstitutionalGitGateway>();
+                                                services.AddScoped<IGovernedGitChangeSetMaterializer>(p=>p.GetRequiredService<SovereignHttpInstitutionalGitGateway>());
+                                                services.AddScoped<IGitChangePolicyValidator>(p=>p.GetRequiredService<SovereignHttpInstitutionalGitGateway>());
+                                                services.AddScoped<IInstitutionalGitGateway>(p=>p.GetRequiredService<SovereignHttpInstitutionalGitGateway>());
+                                                services.AddScoped<IGitResultAuthorizer,DeterministicGitResultAuthorizer>();
+                                                services.AddScoped<IGitEvidenceRecorder,PostgreSqlGitEvidenceRecorder>();
+                                            }
                                         }
                                     }
                                 }

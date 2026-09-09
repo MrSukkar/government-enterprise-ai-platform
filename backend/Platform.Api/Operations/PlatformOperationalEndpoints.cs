@@ -22,7 +22,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.SecurityValidationRuntimeReadiness securityValidation,
             Platform.SoftwareFactory.InternalService.SandboxRuntimeReadiness sandbox,
             Platform.SoftwareFactory.InternalService.TestsRuntimeReadiness tests,
-            Platform.SoftwareFactory.InternalService.HumanReviewRuntimeReadiness humanReview) =>
+            Platform.SoftwareFactory.InternalService.HumanReviewRuntimeReadiness humanReview,
+            Platform.SoftwareFactory.InternalService.GitRuntimeReadiness git) =>
         {
             var payload = new
             {
@@ -44,7 +45,8 @@ internal static class PlatformOperationalEndpoints
                     securityValidation = securityValidation.State.ToString().ToLowerInvariant(),
                     sandbox = sandbox.State.ToString().ToLowerInvariant(),
                     tests = tests.State.ToString().ToLowerInvariant(),
-                    humanReview = humanReview.State.ToString().ToLowerInvariant()
+                    humanReview = humanReview.State.ToString().ToLowerInvariant(),
+                    git = git.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new
