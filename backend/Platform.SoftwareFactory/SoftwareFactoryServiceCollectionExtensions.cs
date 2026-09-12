@@ -58,6 +58,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var humanReviewOptions = configuration.GetSection(HumanReviewRuntimeOptions.SectionName).Get<HumanReviewRuntimeOptions>() ?? new();
         var gitOptions = configuration.GetSection(GitRuntimeOptions.SectionName).Get<GitRuntimeOptions>() ?? new();
         var ciCdOptions = configuration.GetSection(CiCdRuntimeOptions.SectionName).Get<CiCdRuntimeOptions>() ?? new();
+        var artifactOptions = configuration.GetSection(ArtifactRuntimeOptions.SectionName).Get<ArtifactRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -76,6 +77,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<HumanReviewRuntimeOptions>(configuration.GetSection(HumanReviewRuntimeOptions.SectionName));
         services.Configure<GitRuntimeOptions>(configuration.GetSection(GitRuntimeOptions.SectionName));
         services.Configure<CiCdRuntimeOptions>(configuration.GetSection(CiCdRuntimeOptions.SectionName));
+        services.Configure<ArtifactRuntimeOptions>(configuration.GetSection(ArtifactRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -176,6 +178,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new GitRuntimeReadiness(gitState));
         var ciCdState=gitState==GitRuntimeConfigurationState.Invalid||ciCdOptions.ConfigurationState==CiCdRuntimeConfigurationState.Invalid?CiCdRuntimeConfigurationState.Invalid:gitState==GitRuntimeConfigurationState.Configured&&ciCdOptions.IsOperationallyConfigured?CiCdRuntimeConfigurationState.Configured:CiCdRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new CiCdRuntimeReadiness(ciCdState));
+        var artifactState=ciCdState==CiCdRuntimeConfigurationState.Invalid||artifactOptions.ConfigurationState==ArtifactRuntimeConfigurationState.Invalid?ArtifactRuntimeConfigurationState.Invalid:ciCdState==CiCdRuntimeConfigurationState.Configured&&artifactOptions.IsOperationallyConfigured?ArtifactRuntimeConfigurationState.Configured:ArtifactRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new ArtifactRuntimeReadiness(artifactState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -343,6 +347,21 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                     services.AddScoped<IInstitutionalCiCdGateway>(p=>p.GetRequiredService<SovereignHttpCiCdGateway>());
                                                     services.AddScoped<ICiCdResultAuthorizer,DeterministicCiCdResultAuthorizer>();
                                                     services.AddScoped<ICiCdEvidenceRecorder,PostgreSqlCiCdEvidenceRecorder>();
+                                                    if (artifactOptions.IsOperationallyConfigured)
+                                                    {
+                                                        services.AddHttpClient("sovereign-institutional-artifact").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(artifactOptions.RequestTimeoutSeconds) });
+                                                        services.AddScoped<IArtifactPolicyGate,SovereignArtifactPolicyGate>();
+                                                        services.AddScoped<IAuthorizedCiCdExecutionReceiptReader,PostgreSqlAuthorizedCiCdReceiptReader>();
+                                                        services.AddScoped<IAuthorizedPipelineOutputManifestReader,PostgreSqlAuthorizedPipelineOutputManifestReader>();
+                                                        services.AddScoped<IArtifactDeliveryRunReader,PostgreSqlArtifactRunReader>();
+                                                        services.AddScoped<SovereignHttpArtifactGateway>();
+                                                        services.AddScoped<IArtifactPackageValidator>(p=>p.GetRequiredService<SovereignHttpArtifactGateway>());
+                                                        services.AddScoped<IInstitutionalArtifactRegistryGateway>(p=>p.GetRequiredService<SovereignHttpArtifactGateway>());
+                                                        foreach (var control in Enum.GetValues<SupplyChainControl>())
+                                                            services.AddScoped<ISupplyChainControlVerifier>(p=>new InstitutionalArtifactSupplyChainVerifier(control,p.GetRequiredService<SovereignHttpArtifactGateway>()));
+                                                        services.AddScoped<IArtifactResultAuthorizer,DeterministicArtifactResultAuthorizer>();
+                                                        services.AddScoped<IArtifactEvidenceRecorder,PostgreSqlArtifactEvidenceRecorder>();
+                                                    }
                                                 }
                                             }
                                         }

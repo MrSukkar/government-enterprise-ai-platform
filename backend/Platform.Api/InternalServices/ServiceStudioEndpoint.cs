@@ -1436,6 +1436,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Artifact publication denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Artifact prerequisite was not found."); }
+                catch (ArtifactDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An Artifact dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "Artifact request or boundary result is invalid."); }
             })

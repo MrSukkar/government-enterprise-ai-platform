@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 15 - Governed CI/CD",
+    "wave": "Wave 16 - Governed Artifact Publication",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-016-OPERATIONALIZATION-WAVE-15.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_15_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_14_ACCEPTANCE.md",
-    "executionBoundary": "Governed CI/CD adapters for immutable signed Git evidence, Git-stopped delivery-run reads, action-specific OPA scope, immutable signed workflow reads, bounded signed provider-neutral institutional validation/execution, isolated runner and locked-dependency proof, exact stage/control results, a signed non-released pipeline-output manifest, result authorization, and immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, workflow, runner, endpoint, key, credential, institutional data, numeric bound, or SLO is selected; source mutation, PR, merge, tag, Artifact publication, registry mutation, deployment, workflow advancement, and production action remain separately controlled"
+    "changeControl": "docs/change-control/CR-017-OPERATIONALIZATION-WAVE-16.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_16_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_15_ACCEPTANCE.md",
+    "executionBoundary": "Governed Artifact Publication adapters for exact accepted CI/CD evidence, signed non-released manifest and CiCd-stopped delivery-run reads, action-specific OPA scope, bounded signed provider-neutral institutional package validation and immutable registry publication, exact mandatory supply-chain verification, result authorization, and immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, registry, repository, artifact, coordinate, signing policy, endpoint, key, credential, institutional data, numeric bound, or SLO is selected; mutable tags, overwrite, partial output, source mutation, Deployment, workflow advancement, and production action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_15_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_16_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

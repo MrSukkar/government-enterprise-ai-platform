@@ -47,7 +47,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignTestsPolicyScope? Tests,
     SovereignHumanReviewPolicyScope? HumanReview,
     SovereignGitPolicyScope? Git,
-    SovereignCiCdPolicyScope? CiCd);
+    SovereignCiCdPolicyScope? CiCd,
+    SovereignArtifactPolicyScope? Artifact);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -193,6 +194,24 @@ public sealed record SovereignCiCdPolicyScope(
     ImmutableArray<string> AllowedStageIds,ImmutableArray<string> AllowedControlIds,
     bool SourceMutationAllowed,bool ArtifactPublicationAllowed,bool DeploymentAllowed,
     ImmutableArray<string> RequiredRoles,string OutputKind);
+
+public sealed record SovereignArtifactPolicyScope(
+    string MaximumClassification,
+    string PipelineManifestSha256Digest,
+    string SourceCommitId,
+    string WorkflowSha256Digest,
+    string ArtifactName,
+    string ArtifactVersion,
+    string ArtifactKind,
+    string ContentSha256Digest,
+    string RegistryId,
+    string RegistryRepository,
+    string SigningPolicyReference,
+    ImmutableArray<string> AllowedControls,
+    bool OverwriteAllowed,
+    bool DeploymentAllowed,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
 
 public interface ISovereignPolicyEvaluationClient
 {
