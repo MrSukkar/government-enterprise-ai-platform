@@ -1718,6 +1718,7 @@ internal static class InternalServiceEndpoint
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Evidence completion denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Evidence completion prerequisite was not found."); }
                 catch (System.Security.Cryptography.CryptographicException) { return Results.Problem(statusCode: 409, title: "Evidence chain cryptographic verification failed."); }
+                catch (EvidenceCompletionDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An Evidence completion dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "Evidence completion request or boundary result is invalid."); }
             })

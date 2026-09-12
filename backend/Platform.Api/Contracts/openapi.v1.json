@@ -746,7 +746,7 @@
           "failClosed": { "type": "boolean", "const": true },
           "controlPlanes": {
             "type": "object",
-            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox", "tests", "humanReview", "git", "ciCd", "artifact", "deployment", "openTelemetry", "automaticRegistration", "enterpriseModel"],
+            "required": ["identity", "policy", "postgresqlIntentRegistration", "neo4jEnterpriseGraph", "enterpriseContext", "existingSystems", "existingArchitecture", "approvedPackages", "aiPlanning", "codeGeneration", "staticValidation", "securityValidation", "sandbox", "tests", "humanReview", "git", "ciCd", "artifact", "deployment", "openTelemetry", "automaticRegistration", "enterpriseModel", "evidenceCompletion"],
             "properties": {
               "identity": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "policy": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
@@ -769,7 +769,8 @@
               "deployment": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "openTelemetry": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
               "automaticRegistration": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
-              "enterpriseModel": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
+              "enterpriseModel": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] },
+              "evidenceCompletion": { "type": "string", "enum": ["unconfigured", "invalid", "configured"] }
             }
           },
           "missingDependencyCount": { "type": "integer", "minimum": 0 },

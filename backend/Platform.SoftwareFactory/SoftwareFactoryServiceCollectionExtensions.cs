@@ -17,6 +17,7 @@ using Platform.SoftwareFactory.Persistence;
 using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
 using Platform.EnterpriseModel.Registration;
+using Platform.Evidence.Chain;
 
 namespace Platform.SoftwareFactory;
 
@@ -63,6 +64,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var deploymentOptions = configuration.GetSection(DeploymentRuntimeOptions.SectionName).Get<DeploymentRuntimeOptions>() ?? new();
         var openTelemetryOptions = configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName).Get<OpenTelemetryRuntimeOptions>() ?? new();
         var automaticRegistrationOptions = configuration.GetSection(AutomaticRegistrationRuntimeOptions.SectionName).Get<AutomaticRegistrationRuntimeOptions>() ?? new();
+        var evidenceCompletionOptions = configuration.GetSection(EvidenceCompletionRuntimeOptions.SectionName).Get<EvidenceCompletionRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -85,6 +87,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<DeploymentRuntimeOptions>(configuration.GetSection(DeploymentRuntimeOptions.SectionName));
         services.Configure<OpenTelemetryRuntimeOptions>(configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName));
         services.Configure<AutomaticRegistrationRuntimeOptions>(configuration.GetSection(AutomaticRegistrationRuntimeOptions.SectionName));
+        services.Configure<EvidenceCompletionRuntimeOptions>(configuration.GetSection(EvidenceCompletionRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -195,6 +198,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new AutomaticRegistrationRuntimeReadiness(automaticRegistrationState));
         var enterpriseModelState=automaticRegistrationState==AutomaticRegistrationRuntimeConfigurationState.Invalid?EnterpriseModelRuntimeConfigurationState.Invalid:automaticRegistrationState==AutomaticRegistrationRuntimeConfigurationState.Configured?EnterpriseModelRuntimeConfigurationState.Configured:EnterpriseModelRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new EnterpriseModelRuntimeReadiness(enterpriseModelState));
+        var evidenceCompletionState=enterpriseModelState==EnterpriseModelRuntimeConfigurationState.Invalid||evidenceCompletionOptions.ConfigurationState==EvidenceCompletionRuntimeConfigurationState.Invalid?EvidenceCompletionRuntimeConfigurationState.Invalid:enterpriseModelState==EnterpriseModelRuntimeConfigurationState.Configured&&evidenceCompletionOptions.IsOperationallyConfigured?EvidenceCompletionRuntimeConfigurationState.Configured:EvidenceCompletionRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new EvidenceCompletionRuntimeReadiness(evidenceCompletionState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -416,6 +421,18 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                                     services.AddScoped<IAuthorizedRegisteredEnterpriseObjectReader,PostgreSqlAuthorizedRegisteredEnterpriseObjectReader>();
                                                                     services.AddScoped<IEnterpriseModelContextResultAuthorizer,DeterministicEnterpriseModelContextResultAuthorizer>();
                                                                     services.AddScoped<IEnterpriseModelContextEvidenceRecorder,PostgreSqlEnterpriseModelContextEvidenceRecorder>();
+                                                                    if(evidenceCompletionOptions.IsOperationallyConfigured)
+                                                                    {
+                                                                        services.AddScoped<IEvidenceCompletionPolicyGate,SovereignEvidenceCompletionPolicyGate>();
+                                                                        services.AddScoped<IAuthorizedEnterpriseModelContextualizationReceiptReader,PostgreSqlAuthorizedEnterpriseModelContextualizationReceiptReader>();
+                                                                        services.AddScoped<IEvidenceCompletionDeliveryRunReader,PostgreSqlEvidenceCompletionRunReader>();
+                                                                        services.AddScoped<IEvidenceChainStore,PostgreSqlEvidenceChainStore>();
+                                                                        services.AddScoped<IEvidenceAccessAuthorizer,DeterministicEvidenceAccessAuthorizer>();
+                                                                        services.AddScoped<EvidenceCompletionRuntimeOptionsAccessor>();
+                                                                        services.AddScoped<IEvidenceSigner,SovereignEvidenceSigner>();
+                                                                        services.AddScoped<IEvidenceSignatureVerifier,SovereignEvidenceSignatureVerifier>();
+                                                                        services.AddScoped<IEvidenceCompletionResultAuthorizer,DeterministicEvidenceCompletionResultAuthorizer>();
+                                                                    }
                                                                 }
                                                             }
                                                         }

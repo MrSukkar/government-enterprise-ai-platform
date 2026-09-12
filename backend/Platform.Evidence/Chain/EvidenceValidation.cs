@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace Platform.Evidence.Chain;
 
-internal static class EvidenceValidation
+public static class EvidenceValidation
 {
     public const string GenesisSha256Digest = "0000000000000000000000000000000000000000000000000000000000000000";
 

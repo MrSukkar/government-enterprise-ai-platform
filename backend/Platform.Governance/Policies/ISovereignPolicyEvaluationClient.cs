@@ -52,7 +52,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignDeploymentPolicyScope? Deployment,
     SovereignOpenTelemetryPolicyScope? OpenTelemetry,
     SovereignAutomaticRegistrationPolicyScope? AutomaticRegistration,
-    SovereignEnterpriseModelContextPolicyScope? EnterpriseModel);
+    SovereignEnterpriseModelContextPolicyScope? EnterpriseModel,
+    SovereignEvidenceCompletionPolicyScope? EvidenceCompletion);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -279,6 +280,21 @@ public sealed record SovereignEnterpriseModelContextPolicyScope(
     string RegistrationEvidenceReference,
     bool ObjectReadAllowed,
     bool MutationAllowed,
+    bool WorkflowAdvancementAllowed,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignEvidenceCompletionPolicyScope(
+    string MaximumClassification,
+    Guid ContextualizationId,
+    Guid DeliveryRunId,
+    Guid ChainId,
+    string CorrelationId,
+    string ContextualizationEvidenceReference,
+    string PayloadSha256Digest,
+    ImmutableArray<string> TraceReferences,
+    bool AppendFinalEvidenceAllowed,
+    bool VerificationAllowed,
     bool WorkflowAdvancementAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);

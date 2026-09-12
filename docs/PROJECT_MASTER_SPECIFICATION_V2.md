@@ -333,3 +333,9 @@ Change-control record: `docs/change-control/CR-020-OPERATIONALIZATION-WAVE-19.md
 Operationalization Wave 20 connects read-only Governed Enterprise Model Contextualization to exact accepted Automatic Registration evidence and an `AutomaticRegistration`-stopped run, exact signed OPA scope, exact authorized Enterprise Object reads, deterministic result authorization, and append-only immutable PostgreSQL evidence. No model mutation, traversal, analysis, simulation, inference, action, workflow advancement, or Evidence completion is available; defaults remain unconfigured and fail closed.
 
 Change-control record: `docs/change-control/CR-021-OPERATIONALIZATION-WAVE-20.md`.
+
+## Approved operationalization addendum — CR-022
+
+Operationalization Wave 21 completes the governed Create Internal Service path by connecting exact accepted Enterprise Model contextualization and an `EnterpriseModel`-stopped run to signed exact OPA, independent Evidence access authorization, the existing Phase 30 canonical hash/sign/verify engine, an append-only atomic PostgreSQL chain store, deployment-configured sovereign signing and pinned verification, complete ten-stage proof, and independent final result authorization. Defaults choose no signing or trust material and fail closed. No workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists.
+
+Change-control record: `docs/change-control/CR-022-OPERATIONALIZATION-WAVE-21.md`.
