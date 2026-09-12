@@ -272,7 +272,8 @@ try {
         $readinessBody.controlPlanes.humanReview -ne 'unconfigured' -or $readinessBody.controlPlanes.git -ne 'unconfigured' -or
         $readinessBody.controlPlanes.ciCd -ne 'unconfigured' -or
         $readinessBody.controlPlanes.artifact -ne 'unconfigured' -or
-        $readinessBody.controlPlanes.deployment -ne 'unconfigured') {
+        $readinessBody.controlPlanes.deployment -ne 'unconfigured' -or
+        $readinessBody.controlPlanes.openTelemetry -ne 'unconfigured') {
         throw 'Repository-default identity, policy, PostgreSQL, Neo4j, Enterprise Context, Existing Systems, Existing Architecture, Approved Packages, AI Planning, Code Generation, Static Validation, Security Validation, and Sandbox control planes did not remain explicitly unconfigured.'
     }
 
@@ -323,7 +324,7 @@ try {
         }
     }
 
-Write-Output 'RUNTIME VERIFIED: Development API live; all control planes through Deployment remain safely unconfigured; 153 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
+Write-Output 'RUNTIME VERIFIED: Development API live; all control planes through OpenTelemetry remain safely unconfigured; 153 runtime dependencies fail closed; the approved Create Internal Service contract remains complete through Evidence.'
 }
 finally {
     [Environment]::SetEnvironmentVariable('ASPNETCORE_ENVIRONMENT', $previousEnvironment, 'Process')

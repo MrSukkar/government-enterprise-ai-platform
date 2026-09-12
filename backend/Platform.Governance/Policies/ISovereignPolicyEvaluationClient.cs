@@ -49,7 +49,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignGitPolicyScope? Git,
     SovereignCiCdPolicyScope? CiCd,
     SovereignArtifactPolicyScope? Artifact,
-    SovereignDeploymentPolicyScope? Deployment);
+    SovereignDeploymentPolicyScope? Deployment,
+    SovereignOpenTelemetryPolicyScope? OpenTelemetry);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -229,6 +230,24 @@ public sealed record SovereignDeploymentPolicyScope(
     string RollbackPolicyReference,
     bool HumanApprovalValid,
     bool AiAuthorityDetected,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignOpenTelemetryPolicyScope(
+    string MaximumClassification,
+    string RuntimeIdentity,
+    string ArtifactContentSha256Digest,
+    bool ProductionEffectOccurred,
+    Guid TelemetryProfileId,
+    string TelemetryProfileVersion,
+    string TelemetryProfileSha256Digest,
+    string ServiceName,
+    string ServiceVersion,
+    ImmutableArray<string> AllowedSignals,
+    string RedactionPolicyReference,
+    string RedactionPolicySha256Digest,
+    bool RegistrationAllowed,
+    bool EnterpriseModelMutationAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

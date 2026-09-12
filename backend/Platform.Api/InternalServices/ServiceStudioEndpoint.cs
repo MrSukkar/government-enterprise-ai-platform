@@ -1557,6 +1557,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed OpenTelemetry denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "OpenTelemetry prerequisite was not found."); }
+                catch (OpenTelemetryDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An OpenTelemetry dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "OpenTelemetry request or boundary result is invalid."); }
             })

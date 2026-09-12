@@ -60,6 +60,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var ciCdOptions = configuration.GetSection(CiCdRuntimeOptions.SectionName).Get<CiCdRuntimeOptions>() ?? new();
         var artifactOptions = configuration.GetSection(ArtifactRuntimeOptions.SectionName).Get<ArtifactRuntimeOptions>() ?? new();
         var deploymentOptions = configuration.GetSection(DeploymentRuntimeOptions.SectionName).Get<DeploymentRuntimeOptions>() ?? new();
+        var openTelemetryOptions = configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName).Get<OpenTelemetryRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -80,6 +81,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<CiCdRuntimeOptions>(configuration.GetSection(CiCdRuntimeOptions.SectionName));
         services.Configure<ArtifactRuntimeOptions>(configuration.GetSection(ArtifactRuntimeOptions.SectionName));
         services.Configure<DeploymentRuntimeOptions>(configuration.GetSection(DeploymentRuntimeOptions.SectionName));
+        services.Configure<OpenTelemetryRuntimeOptions>(configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -184,6 +186,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new ArtifactRuntimeReadiness(artifactState));
         var deploymentState=artifactState==ArtifactRuntimeConfigurationState.Invalid||deploymentOptions.ConfigurationState==DeploymentRuntimeConfigurationState.Invalid?DeploymentRuntimeConfigurationState.Invalid:artifactState==ArtifactRuntimeConfigurationState.Configured&&deploymentOptions.IsOperationallyConfigured?DeploymentRuntimeConfigurationState.Configured:DeploymentRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new DeploymentRuntimeReadiness(deploymentState));
+        var openTelemetryState=deploymentState==DeploymentRuntimeConfigurationState.Invalid||openTelemetryOptions.ConfigurationState==OpenTelemetryRuntimeConfigurationState.Invalid?OpenTelemetryRuntimeConfigurationState.Invalid:deploymentState==DeploymentRuntimeConfigurationState.Configured&&openTelemetryOptions.IsOperationallyConfigured?OpenTelemetryRuntimeConfigurationState.Configured:OpenTelemetryRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new OpenTelemetryRuntimeReadiness(openTelemetryState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -378,6 +382,19 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                             services.AddScoped<IInstitutionalSovereignDeploymentGateway>(p=>p.GetRequiredService<SovereignHttpDeploymentGateway>());
                                                             services.AddScoped<IDeploymentResultAuthorizer,DeterministicDeploymentResultAuthorizer>();
                                                             services.AddScoped<IDeploymentEvidenceRecorder,PostgreSqlDeploymentEvidenceRecorder>();
+                                                            if (openTelemetryOptions.IsOperationallyConfigured)
+                                                            {
+                                                                services.AddHttpClient("sovereign-institutional-opentelemetry").ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect=false,UseCookies=false,ConnectTimeout=TimeSpan.FromSeconds(openTelemetryOptions.RequestTimeoutSeconds) });
+                                                                services.AddScoped<IOpenTelemetryPolicyGate,SovereignOpenTelemetryPolicyGate>();
+                                                                services.AddScoped<IAuthorizedSovereignDeploymentReceiptReader,PostgreSqlAuthorizedDeploymentReceiptReader>();
+                                                                services.AddScoped<IOpenTelemetryDeliveryRunReader,PostgreSqlOpenTelemetryRunReader>();
+                                                                services.AddScoped<IGovernedOpenTelemetryProfileReader,PostgreSqlOpenTelemetryProfileReader>();
+                                                                services.AddScoped<SovereignHttpOpenTelemetryGateway>();
+                                                                services.AddScoped<IOpenTelemetryRedactionPolicyVerifier>(p=>p.GetRequiredService<SovereignHttpOpenTelemetryGateway>());
+                                                                services.AddScoped<IInstitutionalOpenTelemetryGateway>(p=>p.GetRequiredService<SovereignHttpOpenTelemetryGateway>());
+                                                                services.AddScoped<IOpenTelemetryResultAuthorizer,DeterministicOpenTelemetryResultAuthorizer>();
+                                                                services.AddScoped<IOpenTelemetryEvidenceRecorder,PostgreSqlOpenTelemetryEvidenceRecorder>();
+                                                            }
                                                         }
                                                     }
                                                 }

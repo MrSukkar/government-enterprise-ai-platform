@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 17 - Governed Sovereign Deployment",
+    "wave": "Wave 18 - Governed OpenTelemetry Activation",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-018-OPERATIONALIZATION-WAVE-17.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_17_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_16_ACCEPTANCE.md",
-    "executionBoundary": "Governed Sovereign Deployment adapters for exact accepted Artifact evidence, verified deployment-artifact and Artifact-stopped delivery-run reads, action-specific OPA scope, immutable signed sovereign-profile reads, bounded signed provider-neutral institutional preflight and idempotent deployment, exact runtime activation rollback and effect proof, result authorization, and immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, runtime, profile, topology, target, endpoint, key, credential, secret, institutional data, capacity value, numeric bound, or SLO is selected; AI authority, OpenTelemetry configuration, Automatic Registration, Enterprise Model mutation, workflow advancement, and public deployment remain separately controlled"
+    "changeControl": "docs/change-control/CR-019-OPERATIONALIZATION-WAVE-18.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_17_ACCEPTANCE.md",
+    "executionBoundary": "Governed OpenTelemetry Activation adapters for exact accepted Deployment evidence and Deployment-stopped delivery-run reads, action-specific OPA scope, immutable signed telemetry-profile reads, bounded signed independent strict-redaction verification and institutional collector activation, exact runtime resource profile and signal proof, result authorization, and immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, collector, profile, service identity, exporter, endpoint, key, credential, institutional data, sampling value, retention value, numeric bound, or SLO is selected; AI authority, Automatic Registration, Enterprise Model mutation, workflow advancement, and external activation remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_17_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

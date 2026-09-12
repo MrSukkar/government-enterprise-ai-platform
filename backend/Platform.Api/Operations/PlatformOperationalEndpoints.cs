@@ -26,7 +26,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.GitRuntimeReadiness git,
             Platform.SoftwareFactory.InternalService.CiCdRuntimeReadiness ciCd,
             Platform.SoftwareFactory.InternalService.ArtifactRuntimeReadiness artifact,
-            Platform.SoftwareFactory.InternalService.DeploymentRuntimeReadiness deployment) =>
+            Platform.SoftwareFactory.InternalService.DeploymentRuntimeReadiness deployment,
+            Platform.SoftwareFactory.InternalService.OpenTelemetryRuntimeReadiness openTelemetry) =>
         {
             var payload = new
             {
@@ -52,7 +53,8 @@ internal static class PlatformOperationalEndpoints
                     git = git.State.ToString().ToLowerInvariant(),
                     ciCd = ciCd.State.ToString().ToLowerInvariant(),
                     artifact = artifact.State.ToString().ToLowerInvariant(),
-                    deployment = deployment.State.ToString().ToLowerInvariant()
+                    deployment = deployment.State.ToString().ToLowerInvariant(),
+                    openTelemetry = openTelemetry.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new
