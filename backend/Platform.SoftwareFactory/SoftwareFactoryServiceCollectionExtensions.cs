@@ -16,6 +16,7 @@ using Platform.SoftwareFactory.InternalService;
 using Platform.SoftwareFactory.Persistence;
 using Platform.Integrations.ExistingSystems;
 using Platform.Integrations.ExistingArchitecture;
+using Platform.EnterpriseModel.Registration;
 
 namespace Platform.SoftwareFactory;
 
@@ -61,6 +62,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         var artifactOptions = configuration.GetSection(ArtifactRuntimeOptions.SectionName).Get<ArtifactRuntimeOptions>() ?? new();
         var deploymentOptions = configuration.GetSection(DeploymentRuntimeOptions.SectionName).Get<DeploymentRuntimeOptions>() ?? new();
         var openTelemetryOptions = configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName).Get<OpenTelemetryRuntimeOptions>() ?? new();
+        var automaticRegistrationOptions = configuration.GetSection(AutomaticRegistrationRuntimeOptions.SectionName).Get<AutomaticRegistrationRuntimeOptions>() ?? new();
         services.Configure<PostgreSqlIntentRegistrationOptions>(
             configuration.GetSection(PostgreSqlIntentRegistrationOptions.SectionName));
         services.Configure<ApprovedPackagesTrustOptions>(
@@ -82,6 +84,7 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.Configure<ArtifactRuntimeOptions>(configuration.GetSection(ArtifactRuntimeOptions.SectionName));
         services.Configure<DeploymentRuntimeOptions>(configuration.GetSection(DeploymentRuntimeOptions.SectionName));
         services.Configure<OpenTelemetryRuntimeOptions>(configuration.GetSection(OpenTelemetryRuntimeOptions.SectionName));
+        services.Configure<AutomaticRegistrationRuntimeOptions>(configuration.GetSection(AutomaticRegistrationRuntimeOptions.SectionName));
         services.AddSingleton(new PostgreSqlIntentRegistrationReadiness(
             persistenceOptions.ConfigurationState));
         var enterpriseContextState =
@@ -188,6 +191,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new DeploymentRuntimeReadiness(deploymentState));
         var openTelemetryState=deploymentState==DeploymentRuntimeConfigurationState.Invalid||openTelemetryOptions.ConfigurationState==OpenTelemetryRuntimeConfigurationState.Invalid?OpenTelemetryRuntimeConfigurationState.Invalid:deploymentState==DeploymentRuntimeConfigurationState.Configured&&openTelemetryOptions.IsOperationallyConfigured?OpenTelemetryRuntimeConfigurationState.Configured:OpenTelemetryRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new OpenTelemetryRuntimeReadiness(openTelemetryState));
+        var automaticRegistrationState=openTelemetryState==OpenTelemetryRuntimeConfigurationState.Invalid||automaticRegistrationOptions.ConfigurationState==AutomaticRegistrationRuntimeConfigurationState.Invalid?AutomaticRegistrationRuntimeConfigurationState.Invalid:openTelemetryState==OpenTelemetryRuntimeConfigurationState.Configured&&automaticRegistrationOptions.IsOperationallyConfigured?AutomaticRegistrationRuntimeConfigurationState.Configured:AutomaticRegistrationRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new AutomaticRegistrationRuntimeReadiness(automaticRegistrationState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -394,6 +399,16 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                                 services.AddScoped<IInstitutionalOpenTelemetryGateway>(p=>p.GetRequiredService<SovereignHttpOpenTelemetryGateway>());
                                                                 services.AddScoped<IOpenTelemetryResultAuthorizer,DeterministicOpenTelemetryResultAuthorizer>();
                                                                 services.AddScoped<IOpenTelemetryEvidenceRecorder,PostgreSqlOpenTelemetryEvidenceRecorder>();
+                                                                if (automaticRegistrationOptions.IsOperationallyConfigured)
+                                                                {
+                                                                    services.AddScoped<IAutomaticRegistrationPolicyGate,SovereignAutomaticRegistrationPolicyGate>();
+                                                                    services.AddScoped<IAuthorizedOpenTelemetryActivationReceiptReader,PostgreSqlAuthorizedOpenTelemetryActivationReceiptReader>();
+                                                                    services.AddScoped<IAutomaticRegistrationDeliveryRunReader,PostgreSqlAutomaticRegistrationRunReader>();
+                                                                    services.AddScoped<IGovernedAutomaticRegistrationManifestReader,PostgreSqlAutomaticRegistrationManifestReader>();
+                                                                    services.AddScoped<IAutomaticRegistrationRepository,PostgreSqlAutomaticRegistrationRepository>();
+                                                                    services.AddScoped<IAutomaticRegistrationResultAuthorizer,DeterministicAutomaticRegistrationResultAuthorizer>();
+                                                                    services.AddScoped<IAutomaticRegistrationEvidenceRecorder,PostgreSqlAutomaticRegistrationEvidenceRecorder>();
+                                                                }
                                                             }
                                                         }
                                                     }

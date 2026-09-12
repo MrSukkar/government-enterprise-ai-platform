@@ -50,7 +50,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignCiCdPolicyScope? CiCd,
     SovereignArtifactPolicyScope? Artifact,
     SovereignDeploymentPolicyScope? Deployment,
-    SovereignOpenTelemetryPolicyScope? OpenTelemetry);
+    SovereignOpenTelemetryPolicyScope? OpenTelemetry,
+    SovereignAutomaticRegistrationPolicyScope? AutomaticRegistration);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -248,6 +249,23 @@ public sealed record SovereignOpenTelemetryPolicyScope(
     string RedactionPolicySha256Digest,
     bool RegistrationAllowed,
     bool EnterpriseModelMutationAllowed,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignAutomaticRegistrationPolicyScope(
+    string MaximumClassification,
+    Guid ActivationId,
+    Guid DeliveryRunId,
+    Guid ManifestId,
+    string ManifestVersion,
+    string ManifestSha256Digest,
+    string RuntimeIdentity,
+    string ServiceIdentity,
+    string ServiceVersion,
+    string ArtifactDigest,
+    string OpenTelemetryEvidenceReference,
+    bool RegistrationAllowed,
+    bool WorkflowAdvancementAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

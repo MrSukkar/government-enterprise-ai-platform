@@ -1611,6 +1611,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Automatic Registration denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Automatic Registration prerequisite was not found."); }
+                catch (AutomaticRegistrationDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An Automatic Registration dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "Automatic Registration request or boundary result is invalid."); }
             })

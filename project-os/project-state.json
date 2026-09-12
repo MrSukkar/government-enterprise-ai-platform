@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 18 - Governed OpenTelemetry Activation",
+    "wave": "Wave 19 - Governed Automatic Registration",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-019-OPERATIONALIZATION-WAVE-18.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_17_ACCEPTANCE.md",
-    "executionBoundary": "Governed OpenTelemetry Activation adapters for exact accepted Deployment evidence and Deployment-stopped delivery-run reads, action-specific OPA scope, immutable signed telemetry-profile reads, bounded signed independent strict-redaction verification and institutional collector activation, exact runtime resource profile and signal proof, result authorization, and immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, collector, profile, service identity, exporter, endpoint, key, credential, institutional data, sampling value, retention value, numeric bound, or SLO is selected; AI authority, Automatic Registration, Enterprise Model mutation, workflow advancement, and external activation remain separately controlled"
+    "changeControl": "docs/change-control/CR-020-OPERATIONALIZATION-WAVE-19.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_19_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md",
+    "executionBoundary": "Governed Automatic Registration adapters for exact accepted OpenTelemetry evidence and OpenTelemetry-stopped delivery-run reads, action-specific OPA scope, immutable signed deployment-controlled registration-manifest reads, the existing Phase 17 deterministic engine, one atomic PostgreSQL registration repository, result authorization, and append-only immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, manifest, service identity, runtime, Artifact, owner, policy, action, relationship, endpoint, key, credential, or institutional data is selected; AI authority, workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, and autonomous action remain separately controlled"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_19_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
