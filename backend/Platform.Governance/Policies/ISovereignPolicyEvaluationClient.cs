@@ -48,7 +48,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignHumanReviewPolicyScope? HumanReview,
     SovereignGitPolicyScope? Git,
     SovereignCiCdPolicyScope? CiCd,
-    SovereignArtifactPolicyScope? Artifact);
+    SovereignArtifactPolicyScope? Artifact,
+    SovereignDeploymentPolicyScope? Deployment);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -210,6 +211,24 @@ public sealed record SovereignArtifactPolicyScope(
     ImmutableArray<string> AllowedControls,
     bool OverwriteAllowed,
     bool DeploymentAllowed,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignDeploymentPolicyScope(
+    string MaximumClassification,
+    string ArtifactContentSha256Digest,
+    string ImmutableRegistryReference,
+    Guid DeploymentProfileId,
+    string DeploymentProfileVersion,
+    string DeploymentProfileSha256Digest,
+    string TargetEnvironment,
+    bool ProductionDeploymentAllowed,
+    string HumanApprovalReference,
+    string WorkloadIdentityReference,
+    string SecretsPolicyReference,
+    string RollbackPolicyReference,
+    bool HumanApprovalValid,
+    bool AiAuthorityDetected,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);
 

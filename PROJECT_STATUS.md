@@ -1,6 +1,6 @@
 # Project Status
 
-Status: **Operationalization Wave 16 complete — Governed Artifact Publication**
+Status: **Operationalization Wave 17 complete — Governed Sovereign Deployment**
 
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
@@ -11,8 +11,8 @@ Status: **Operationalization Wave 16 complete — Governed Artifact Publication*
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
 - Current product increment: **Governed Evidence Completion — contract complete and verified**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
-- Operationalization: **Wave 16 — Governed Artifact Publication — adapter implementation complete and verified under CR-017**
-- Operationalization acceptance: `docs/operationalization/WAVE_16_ACCEPTANCE.md`
-- Execution boundary: **Governed Artifact Publication now has immutable accepted CI/CD, non-released manifest, and `CiCd`-stopped run readers; exact signed OPA scope; bounded signed institutional package validation and immutable registry publication; exact source-provenance, SBOM, dependency-validation, build-attestation, artifact-signature, and registry-verification controls; result authorization; and immutable PostgreSQL evidence. Repository defaults select no provider, registry, repository, artifact, coordinate, signing policy, endpoint, key, credential, institutional data, numeric bound, or SLO; all 153 dependencies remain fail closed. Mutable tags, overwrite, partial output, source mutation, Deployment, workflow advancement, and production action remain disconnected.**
+- Operationalization: **Wave 17 — Governed Sovereign Deployment — adapter implementation complete and verified under CR-018**
+- Operationalization acceptance: `docs/operationalization/WAVE_17_ACCEPTANCE.md`
+- Execution boundary: **Governed Sovereign Deployment now has immutable accepted Artifact and `Artifact`-stopped run readers; exact signed OPA scope; immutable signed sovereign-profile reads with complete trust bindings and air-gap validation; bounded signed institutional preflight and idempotent deployment; exact runtime, activation, rollback, external-effect, and production-effect proof; result authorization; and immutable PostgreSQL evidence. Repository defaults select no provider, runtime, profile, topology, target, endpoint, key, credential, secret, institutional data, capacity value, numeric bound, or SLO; all 153 dependencies remain fail closed. AI authority, OpenTelemetry configuration, Automatic Registration, Enterprise Model mutation, workflow advancement, and public deployment remain disconnected.**
 
-The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–16 now operationalize control planes through Governed Artifact Publication while preserving sovereign fail-closed operation and the absence of any AI-to-production path.
+The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–17 now operationalize control planes through Governed Sovereign Deployment while preserving sovereign fail-closed operation and the absence of any AI-to-production path.

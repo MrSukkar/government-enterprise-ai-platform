@@ -25,7 +25,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.HumanReviewRuntimeReadiness humanReview,
             Platform.SoftwareFactory.InternalService.GitRuntimeReadiness git,
             Platform.SoftwareFactory.InternalService.CiCdRuntimeReadiness ciCd,
-            Platform.SoftwareFactory.InternalService.ArtifactRuntimeReadiness artifact) =>
+            Platform.SoftwareFactory.InternalService.ArtifactRuntimeReadiness artifact,
+            Platform.SoftwareFactory.InternalService.DeploymentRuntimeReadiness deployment) =>
         {
             var payload = new
             {
@@ -50,7 +51,8 @@ internal static class PlatformOperationalEndpoints
                     humanReview = humanReview.State.ToString().ToLowerInvariant(),
                     git = git.State.ToString().ToLowerInvariant(),
                     ciCd = ciCd.State.ToString().ToLowerInvariant(),
-                    artifact = artifact.State.ToString().ToLowerInvariant()
+                    artifact = artifact.State.ToString().ToLowerInvariant(),
+                    deployment = deployment.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

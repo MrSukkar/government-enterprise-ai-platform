@@ -1497,6 +1497,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Deployment denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Deployment prerequisite was not found."); }
+                catch (DeploymentDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "A Deployment dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "Deployment request or boundary result is invalid."); }
             })
