@@ -163,7 +163,7 @@ public sealed class PostgreSqlAutomaticRegistrationRepository(
                 UpdatedAt = proposal.ProposedAt
             };
             var evidenceReference = $"evidence://automatic-registration/commit/{proposal.RequestId:D}/sha256/{proposal.RequestFingerprint[7..]}";
-            const string sql = "INSERT INTO software_factory.automatic_registrations(tenant_id,environment_name,service_identity,request_id,request_fingerprint,enterprise_object_json,evidence_reference,committed_at) VALUES(@tenant,@environment,@service,@request,@fingerprint,@json,@evidence,@at) ON CONFLICT(tenant_id,environment_name,service_identity) DO UPDATE SET request_id=EXCLUDED.request_id,request_fingerprint=EXCLUDED.request_fingerprint,enterprise_object_json=EXCLUDED.enterprise_object_json,evidence_reference=EXCLUDED.evidence_reference,committed_at=EXCLUDED.committed_at";
+            const string sql = "INSERT INTO software_factory.automatic_registrations(tenant_id,environment_name,service_identity,request_id,request_fingerprint,enterprise_object_id,enterprise_object_json,evidence_reference,committed_at) VALUES(@tenant,@environment,@service,@request,@fingerprint,@object,@json,@evidence,@at) ON CONFLICT(tenant_id,environment_name,service_identity) DO UPDATE SET request_id=EXCLUDED.request_id,request_fingerprint=EXCLUDED.request_fingerprint,enterprise_object_id=EXCLUDED.enterprise_object_id,enterprise_object_json=EXCLUDED.enterprise_object_json,evidence_reference=EXCLUDED.evidence_reference,committed_at=EXCLUDED.committed_at";
             await using var command = new NpgsqlCommand(sql, connection, transaction) { CommandTimeout = options.CommandTimeoutSeconds };
             foreach (var value in new[]
             {
@@ -172,6 +172,7 @@ public sealed class PostgreSqlAutomaticRegistrationRepository(
                 ("service", NpgsqlDbType.Text, proposal.Key.ServiceIdentity),
                 ("request", NpgsqlDbType.Uuid, proposal.RequestId),
                 ("fingerprint", NpgsqlDbType.Text, proposal.RequestFingerprint),
+                ("object", NpgsqlDbType.Uuid, candidate.Id.Value),
                 ("json", NpgsqlDbType.Jsonb, JsonSerializer.Serialize(candidate)),
                 ("evidence", NpgsqlDbType.Text, evidenceReference),
                 ("at", NpgsqlDbType.TimestampTz, proposal.ProposedAt)

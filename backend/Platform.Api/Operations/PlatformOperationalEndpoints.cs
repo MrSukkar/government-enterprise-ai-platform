@@ -28,7 +28,8 @@ internal static class PlatformOperationalEndpoints
             Platform.SoftwareFactory.InternalService.ArtifactRuntimeReadiness artifact,
             Platform.SoftwareFactory.InternalService.DeploymentRuntimeReadiness deployment,
             Platform.SoftwareFactory.InternalService.OpenTelemetryRuntimeReadiness openTelemetry,
-            Platform.SoftwareFactory.InternalService.AutomaticRegistrationRuntimeReadiness automaticRegistration) =>
+            Platform.SoftwareFactory.InternalService.AutomaticRegistrationRuntimeReadiness automaticRegistration,
+            Platform.SoftwareFactory.InternalService.EnterpriseModelRuntimeReadiness enterpriseModel) =>
         {
             var payload = new
             {
@@ -56,7 +57,8 @@ internal static class PlatformOperationalEndpoints
                     artifact = artifact.State.ToString().ToLowerInvariant(),
                     deployment = deployment.State.ToString().ToLowerInvariant(),
                     openTelemetry = openTelemetry.State.ToString().ToLowerInvariant(),
-                    automaticRegistration = automaticRegistration.State.ToString().ToLowerInvariant()
+                    automaticRegistration = automaticRegistration.State.ToString().ToLowerInvariant(),
+                    enterpriseModel = enterpriseModel.State.ToString().ToLowerInvariant()
                 },
                 missingDependencyCount = readiness.MissingDependencies.Count,
                 dependencies = readiness.Dependencies.Select(dependency => new

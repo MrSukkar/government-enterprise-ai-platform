@@ -51,7 +51,8 @@ public sealed record SovereignPolicyEvaluationScope(
     SovereignArtifactPolicyScope? Artifact,
     SovereignDeploymentPolicyScope? Deployment,
     SovereignOpenTelemetryPolicyScope? OpenTelemetry,
-    SovereignAutomaticRegistrationPolicyScope? AutomaticRegistration);
+    SovereignAutomaticRegistrationPolicyScope? AutomaticRegistration,
+    SovereignEnterpriseModelContextPolicyScope? EnterpriseModel);
 
 public sealed record SovereignExistingSystemsPolicyScope(
     string MaximumClassification,
@@ -265,6 +266,19 @@ public sealed record SovereignAutomaticRegistrationPolicyScope(
     string ArtifactDigest,
     string OpenTelemetryEvidenceReference,
     bool RegistrationAllowed,
+    bool WorkflowAdvancementAllowed,
+    ImmutableArray<string> RequiredRoles,
+    string OutputKind);
+
+public sealed record SovereignEnterpriseModelContextPolicyScope(
+    string MaximumClassification,
+    Guid RegistrationId,
+    Guid DeliveryRunId,
+    Guid EnterpriseObjectId,
+    string RequestFingerprint,
+    string RegistrationEvidenceReference,
+    bool ObjectReadAllowed,
+    bool MutationAllowed,
     bool WorkflowAdvancementAllowed,
     ImmutableArray<string> RequiredRoles,
     string OutputKind);

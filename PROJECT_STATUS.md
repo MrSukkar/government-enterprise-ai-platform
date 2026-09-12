@@ -1,7 +1,7 @@
 # Project Status
 
 
-Status: **Operationalization Wave 19 complete — Governed Automatic Registration**
+Status: **Operationalization Wave 20 complete — Governed Enterprise Model Contextualization**
 - Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
 - Current implementation phase: **Phase 30 complete**
@@ -11,8 +11,8 @@ Status: **Operationalization Wave 19 complete — Governed Automatic Registratio
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete under CR-001 and Amendments 01–19**
 - Current product increment: **Governed Evidence Completion — contract complete and verified**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
-- Operationalization: **Wave 19 — Governed Automatic Registration — adapter implementation complete and verified under CR-020**
-- Operationalization acceptance: `docs/operationalization/WAVE_19_ACCEPTANCE.md`
-- Execution boundary: **Governed Automatic Registration now has immutable accepted OpenTelemetry and `OpenTelemetry`-stopped run readers; exact signed OPA scope; immutable signed deployment-controlled manifest reads; the existing Phase 17 deterministic engine; one atomic PostgreSQL repository with Created, Updated, and Unchanged outcomes; result authorization; and append-only immutable PostgreSQL evidence. Repository defaults select no provider, manifest, service identity, runtime, Artifact, owner, policy, action, relationship, endpoint, key, credential, or institutional data; all 153 dependencies remain fail closed. AI authority, workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, and autonomous action remain disconnected.**
+- Operationalization: **Wave 20 — Governed Enterprise Model Contextualization — adapter implementation complete and verified under CR-021**
+- Operationalization acceptance: `docs/operationalization/WAVE_20_ACCEPTANCE.md`
+- Execution boundary: **Governed Enterprise Model Contextualization now revalidates exact accepted Automatic Registration evidence, an `AutomaticRegistration`-stopped run, signed OPA scope, and the exact registered Enterprise Object before result authorization and append-only evidence. All 153 dependencies remain fail closed by default. No model mutation, traversal, analysis, simulation, inference, action, workflow advancement, or Evidence completion is connected.**
 
-The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–19 now operationalize control planes through Governed Automatic Registration while preserving sovereign fail-closed operation and the absence of any AI-to-production path.
+The approved platform foundation is complete through Phase 30 and the Create Internal Service contract is complete through Evidence. Waves 01–20 now operationalize control planes through Governed Enterprise Model Contextualization while preserving sovereign fail-closed operation and the absence of any AI-to-production path.

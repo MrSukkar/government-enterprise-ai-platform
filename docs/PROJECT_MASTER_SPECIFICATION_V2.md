@@ -327,3 +327,9 @@ Change-control record: `docs/change-control/CR-019-OPERATIONALIZATION-WAVE-18.md
 Operationalization Wave 19 connects Governed Automatic Registration to the exact immutable accepted OpenTelemetry evidence and a delivery-run snapshot stopped at `OpenTelemetry`; signed-bundle-bound exact Automatic Registration OPA scope; an immutable signed deployment-controlled manifest binding the service key, runtime, Artifact, owner, classification, policies, permitted actions, relationships, and evidence; and the existing Phase 17 deterministic engine backed by one atomic PostgreSQL registration repository with Created, Updated, and Unchanged outcomes. Result authorization and append-only immutable PostgreSQL evidence are mandatory. Deployment must supply every manifest and binding; repository defaults select none and fail closed. AI authority, workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, and autonomous action remain disconnected.
 
 Change-control record: `docs/change-control/CR-020-OPERATIONALIZATION-WAVE-19.md`.
+
+## Approved operationalization addendum — CR-021
+
+Operationalization Wave 20 connects read-only Governed Enterprise Model Contextualization to exact accepted Automatic Registration evidence and an `AutomaticRegistration`-stopped run, exact signed OPA scope, exact authorized Enterprise Object reads, deterministic result authorization, and append-only immutable PostgreSQL evidence. No model mutation, traversal, analysis, simulation, inference, action, workflow advancement, or Evidence completion is available; defaults remain unconfigured and fail closed.
+
+Change-control record: `docs/change-control/CR-021-OPERATIONALIZATION-WAVE-20.md`.

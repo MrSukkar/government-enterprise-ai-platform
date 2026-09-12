@@ -193,6 +193,8 @@ public static class SoftwareFactoryServiceCollectionExtensions
         services.AddSingleton(new OpenTelemetryRuntimeReadiness(openTelemetryState));
         var automaticRegistrationState=openTelemetryState==OpenTelemetryRuntimeConfigurationState.Invalid||automaticRegistrationOptions.ConfigurationState==AutomaticRegistrationRuntimeConfigurationState.Invalid?AutomaticRegistrationRuntimeConfigurationState.Invalid:openTelemetryState==OpenTelemetryRuntimeConfigurationState.Configured&&automaticRegistrationOptions.IsOperationallyConfigured?AutomaticRegistrationRuntimeConfigurationState.Configured:AutomaticRegistrationRuntimeConfigurationState.Unconfigured;
         services.AddSingleton(new AutomaticRegistrationRuntimeReadiness(automaticRegistrationState));
+        var enterpriseModelState=automaticRegistrationState==AutomaticRegistrationRuntimeConfigurationState.Invalid?EnterpriseModelRuntimeConfigurationState.Invalid:automaticRegistrationState==AutomaticRegistrationRuntimeConfigurationState.Configured?EnterpriseModelRuntimeConfigurationState.Configured:EnterpriseModelRuntimeConfigurationState.Unconfigured;
+        services.AddSingleton(new EnterpriseModelRuntimeReadiness(enterpriseModelState));
         if (persistenceOptions.IsOperationallyConfigured && policyOptions.IsOperationallyConfigured)
         {
             services.AddSingleton(_ => NpgsqlDataSource.Create(persistenceOptions.ConnectionString));
@@ -408,6 +410,12 @@ public static class SoftwareFactoryServiceCollectionExtensions
                                                                     services.AddScoped<IAutomaticRegistrationRepository,PostgreSqlAutomaticRegistrationRepository>();
                                                                     services.AddScoped<IAutomaticRegistrationResultAuthorizer,DeterministicAutomaticRegistrationResultAuthorizer>();
                                                                     services.AddScoped<IAutomaticRegistrationEvidenceRecorder,PostgreSqlAutomaticRegistrationEvidenceRecorder>();
+                                                                    services.AddScoped<IEnterpriseModelContextPolicyGate,SovereignEnterpriseModelContextPolicyGate>();
+                                                                    services.AddScoped<IAuthorizedAutomaticRegistrationReceiptReader,PostgreSqlAuthorizedAutomaticRegistrationReceiptReader>();
+                                                                    services.AddScoped<IEnterpriseModelDeliveryRunReader,PostgreSqlEnterpriseModelRunReader>();
+                                                                    services.AddScoped<IAuthorizedRegisteredEnterpriseObjectReader,PostgreSqlAuthorizedRegisteredEnterpriseObjectReader>();
+                                                                    services.AddScoped<IEnterpriseModelContextResultAuthorizer,DeterministicEnterpriseModelContextResultAuthorizer>();
+                                                                    services.AddScoped<IEnterpriseModelContextEvidenceRecorder,PostgreSqlEnterpriseModelContextEvidenceRecorder>();
                                                                 }
                                                             }
                                                         }

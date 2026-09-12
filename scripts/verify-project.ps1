@@ -2618,6 +2618,14 @@ if(Test-Path $wave19AcceptancePath){
  $acceptance=Get-Content -Raw $wave19AcceptancePath;@('Status: **Satisfied**','CR-020','all 153 dependencies remain disconnected and fail closed','All 15 projects build with zero warnings and zero errors')|ForEach-Object{if($acceptance-notmatch[regex]::Escape($_)){throw "Wave 19 acceptance missing: $_"}}
 }
 
+$wave20AcceptancePath=Join-Path $repositoryRoot 'docs\operationalization\WAVE_20_ACCEPTANCE.md'
+if(Test-Path $wave20AcceptancePath){
+ $files=@('docs\change-control\CR-021-OPERATIONALIZATION-WAVE-20.md','backend\Platform.SoftwareFactory\InternalServices\EnterpriseModelOperationalization.cs','backend\Platform.SoftwareFactory\Persistence\PostgreSqlEnterpriseModelOperationalization.cs','backend\Platform.SoftwareFactory\Persistence\Migrations\033_enterprise_model_inputs.sql','backend\Platform.SoftwareFactory\Persistence\Migrations\034_enterprise_model_evidence.sql')|ForEach-Object{Join-Path $repositoryRoot $_};$files|ForEach-Object{if(-not(Test-Path $_)){throw "Wave 20 artifact missing: $_"}}
+ $ops=Get-Content -Raw $files[1];@('SovereignEnterpriseModelContextPolicyGate','internal-service.enterprise-model.contextualize','envelope.EnterpriseModel','Denied Enterprise Model decision returned scope','DeterministicEnterpriseModelContextResultAuthorizer')|ForEach-Object{if($ops-notmatch[regex]::Escape($_)){throw "Wave 20 operationalization missing: $_"}}
+ $p=Get-Content -Raw $files[2];@('IAuthorizedAutomaticRegistrationReceiptReader','IEnterpriseModelDeliveryRunReader','IAuthorizedRegisteredEnterpriseObjectReader','IEnterpriseModelContextEvidenceRecorder','IsolationLevel.Serializable','ON CONFLICT DO NOTHING','FOR UPDATE')|ForEach-Object{if($p-notmatch[regex]::Escape($_)){throw "Wave 20 persistence missing: $_"}};if($p-match'DELETE FROM|UPDATE software_factory'){throw 'Wave 20 read/evidence adapters expose mutation.'}
+ $acceptance=Get-Content -Raw $wave20AcceptancePath;@('Status: **Satisfied**','CR-021','All 153 dependencies remain disconnected','All 15 projects build with zero warnings and zero errors')|ForEach-Object{if($acceptance-notmatch[regex]::Escape($_)){throw "Wave 20 acceptance missing: $_"}}
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

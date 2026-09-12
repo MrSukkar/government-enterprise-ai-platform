@@ -1662,6 +1662,7 @@ internal static class InternalServiceEndpoint
                 }
                 catch (UnauthorizedAccessException) { return Results.Problem(statusCode: 403, title: "Governed Enterprise Model contextualization denied."); }
                 catch (KeyNotFoundException) { return Results.Problem(statusCode: 404, title: "Enterprise Model prerequisite was not found."); }
+                catch (EnterpriseModelDependencyUnavailableException) { return Results.Problem(statusCode: 503, title: "An Enterprise Model dependency is unavailable."); }
                 catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
                 { return Results.Problem(statusCode: 400, title: "Enterprise Model request or boundary result is invalid."); }
             })

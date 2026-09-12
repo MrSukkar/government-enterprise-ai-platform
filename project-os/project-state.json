@@ -17,18 +17,18 @@
     "executionBoundary": "Create Internal Service vertical-slice contract complete from Intent through Evidence; final proof adapters remain unavailable and fail closed; no post-Evidence station, workflow advancement, evidence update/deletion, model mutation, or action"
   },
   "operationalization": {
-    "wave": "Wave 19 - Governed Automatic Registration",
+    "wave": "Wave 20 - Governed Enterprise Model Contextualization",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-020-OPERATIONALIZATION-WAVE-19.md",
-    "acceptanceArtifact": "docs/operationalization/WAVE_19_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_18_ACCEPTANCE.md",
-    "executionBoundary": "Governed Automatic Registration adapters for exact accepted OpenTelemetry evidence and OpenTelemetry-stopped delivery-run reads, action-specific OPA scope, immutable signed deployment-controlled registration-manifest reads, the existing Phase 17 deterministic engine, one atomic PostgreSQL registration repository, result authorization, and append-only immutable PostgreSQL evidence are implemented and conditionally composed; repository defaults retain 153 disconnected institutional dependencies fail closed; no provider, manifest, service identity, runtime, Artifact, owner, policy, action, relationship, endpoint, key, credential, or institutional data is selected; AI authority, workflow advancement, Enterprise Model contextualization, Evidence completion, understanding, inference, and autonomous action remain separately controlled"
+    "changeControl": "docs/change-control/CR-021-OPERATIONALIZATION-WAVE-20.md",
+    "acceptanceArtifact": "docs/operationalization/WAVE_20_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/operationalization/WAVE_19_ACCEPTANCE.md",
+    "executionBoundary": "Governed Enterprise Model Contextualization adapters revalidate exact accepted Automatic Registration evidence, an AutomaticRegistration-stopped run, action-specific signed OPA scope, and the exact registered Enterprise Object before result authorization and append-only evidence; repository defaults retain 153 disconnected institutional dependencies fail closed; no model mutation, traversal, analysis, simulation, inference, action, workflow advancement, or Evidence completion is connected"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/operationalization/WAVE_19_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/operationalization/WAVE_20_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
