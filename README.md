@@ -10,9 +10,11 @@ Government Enterprise AI Platform is the approved sovereign platform foundation 
 - Phase 30 acceptance is **Satisfied**.
 - The solution contains 15 .NET 10 projects and uses an ASP.NET Core modular-monolith backend with a Blazor WebAssembly frontend.
 - No Phase 31 is approved. Any new phase or architectural deviation requires the approved Change Control process.
-- The first business implementation, **Create Internal Service Workspace**, is authorized under CR-001 and Amendments 01–02 through Operational Increment 05. Authorized Existing Systems discovery is protected, bound to an evidence-bearing Enterprise Context snapshot, OPA-scoped before inventory access, per-system and per-relationship re-authorized, deterministic, and evidence-bearing. Deployment-controlled context-read, OPA, inventory-source, result-authorization, and evidence adapters remain unavailable, so live connectivity, source access, institutional mutation, advancement, AI, and material execution fail closed.
+- The first business implementation, **Create Internal Service Workspace**, is complete through Operational Increment 22 and operationalized through Wave 21. The governed contract spans Intent through final Evidence completion. All 153 deployment-controlled dependencies remain unconfigured and fail closed by default, so no live institutional access or production effect is implied.
 
 The implementation authority is [`docs/PROJECT_MASTER_SPECIFICATION_V2.md`](docs/PROJECT_MASTER_SPECIFICATION_V2.md). Current delivery state is recorded in [`PROJECT_STATUS.md`](PROJECT_STATUS.md), and the fixed roadmap is recorded in [`docs/30_PHASE_ROADMAP.md`](docs/30_PHASE_ROADMAP.md).
+
+The repeatable synthetic government demonstration starts with the [`National Permit Renewal demonstration pack`](docs/demo/README.md).
 
 ## Architecture baseline
 

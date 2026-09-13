@@ -1,0 +1,13 @@
+{
+  "submissionId": "10000000-0000-4000-8000-000000000001",
+  "tenantId": "demo-permit-authority",
+  "purpose": "internal-service-delivery-demonstration",
+  "classification": "Internal",
+  "serviceName": "National Permit Renewal",
+  "mission": "Reduce renewal handling effort while preserving eligibility rules, policy controls, auditability, and human decision authority.",
+  "primaryUsers": "Permit officers and service operations staff",
+  "authorizationEvidenceReference": "evidence://demo/permit-renewal/authorization/001",
+  "intentEvidenceReferences": [
+    "evidence://demo/permit-renewal/intent/001"
+  ]
+}
