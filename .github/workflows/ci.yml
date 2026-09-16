@@ -59,7 +59,22 @@ jobs:
           $after.dependencies.'net10.0'.'Microsoft.AspNetCore.App.Internal.Assets'.contentHash = '<verified-sdk-generated-hash>'
           $before.dependencies.'net10.0'.'Microsoft.NET.Sdk.WebAssembly.Pack'.contentHash = '<verified-sdk-generated-hash>'
           $after.dependencies.'net10.0'.'Microsoft.NET.Sdk.WebAssembly.Pack'.contentHash = '<verified-sdk-generated-hash>'
-          if (($before | ConvertTo-Json -Depth 100 -Compress) -ne ($after | ConvertTo-Json -Depth 100 -Compress)) {
+          function ConvertTo-CanonicalObject($value) {
+            if ($value -is [System.Collections.IDictionary]) {
+              $ordered = [ordered]@{}
+              foreach ($key in ($value.Keys | Sort-Object)) {
+                $ordered[$key] = ConvertTo-CanonicalObject $value[$key]
+              }
+              return $ordered
+            }
+            if ($value -is [System.Collections.IEnumerable] -and $value -isnot [string]) {
+              return @($value | ForEach-Object { ConvertTo-CanonicalObject $_ })
+            }
+            return $value
+          }
+          $canonicalBefore = ConvertTo-CanonicalObject $before | ConvertTo-Json -Depth 100 -Compress
+          $canonicalAfter = ConvertTo-CanonicalObject $after | ConvertTo-Json -Depth 100 -Compress
+          if ($canonicalBefore -ne $canonicalAfter) {
             throw 'Frontend dependency lock changed beyond the verified WebAssembly SDK content hash.'
           }
 
