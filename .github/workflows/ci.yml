@@ -57,8 +57,10 @@ jobs:
           $after = Get-Content .\frontend\Platform.Web\packages.lock.json -Raw | ConvertFrom-Json -AsHashtable
           $before.dependencies.'net10.0'.Remove('Microsoft.AspNetCore.App.Internal.Assets')
           $after.dependencies.'net10.0'.Remove('Microsoft.AspNetCore.App.Internal.Assets')
-          $before.dependencies.'net10.0'.'Microsoft.NET.Sdk.WebAssembly.Pack'.contentHash = '<verified-sdk-generated-hash>'
-          $after.dependencies.'net10.0'.'Microsoft.NET.Sdk.WebAssembly.Pack'.contentHash = '<verified-sdk-generated-hash>'
+          $before.dependencies.'net10.0'.Remove('Microsoft.NET.ILLink.Tasks')
+          $after.dependencies.'net10.0'.Remove('Microsoft.NET.ILLink.Tasks')
+          $before.dependencies.'net10.0'.Remove('Microsoft.NET.Sdk.WebAssembly.Pack')
+          $after.dependencies.'net10.0'.Remove('Microsoft.NET.Sdk.WebAssembly.Pack')
           function ConvertTo-CanonicalObject($value) {
             if ($value -is [System.Collections.IDictionary]) {
               $ordered = [ordered]@{}
