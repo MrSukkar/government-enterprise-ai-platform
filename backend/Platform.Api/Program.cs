@@ -4,6 +4,7 @@ using Platform.AgenticWork;
 using Platform.Api.Composition;
 using Platform.Api.Contracts;
 using Platform.Api.Developers;
+using Platform.Api.Identity;
 using Platform.Api.Operations;
 using Platform.Api.InternalService;
 using Platform.EnterpriseModel;
@@ -18,11 +19,27 @@ using Platform.Observability;
 using Platform.SoftwareFactory;
 
 var builder = WebApplication.CreateBuilder(args);
+var isLocalEnvironment = builder.Environment.IsDevelopment() ||
+    builder.Environment.IsEnvironment("IntegrationDemo");
+const string integrationDemoCorsPolicy = "IntegrationDemoFrontend";
+var integrationDemoFrontendOrigin = builder.Configuration["IntegrationDemo:FrontendOrigin"];
 
 builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHealthChecks();
+if (!string.IsNullOrWhiteSpace(integrationDemoFrontendOrigin))
+{
+    var origin = new Uri(integrationDemoFrontendOrigin, UriKind.Absolute);
+    if (!origin.IsLoopback || !StringComparer.Ordinal.Equals(origin.Scheme, Uri.UriSchemeHttps) ||
+        origin.AbsolutePath != "/" || !string.IsNullOrEmpty(origin.Query) || !string.IsNullOrEmpty(origin.Fragment))
+        throw new InvalidOperationException("The Integration Demo frontend origin must be an exact localhost HTTPS origin.");
+
+    builder.Services.AddCors(options => options.AddPolicy(integrationDemoCorsPolicy, policy =>
+        policy.WithOrigins(origin.GetLeftPart(UriPartial.Authority))
+            .WithMethods("GET", "POST")
+            .WithHeaders("Authorization", "Content-Type")));
+}
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
@@ -54,7 +71,7 @@ builder.Services.AddPlatformModules(
 var runtimeReadiness = PlatformRuntimeReadiness.Inspect(builder.Services);
 builder.Services.AddSingleton(runtimeReadiness);
 
-if (builder.Environment.IsDevelopment())
+if (isLocalEnvironment)
 {
     // The development smoke-test host writes only to its captured console stream;
     // governed deployments retain their configured observability providers.
@@ -80,15 +97,18 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
-if (app.Environment.IsDevelopment())
+if (isLocalEnvironment)
 {
     app.UseStaticFiles();
 }
+if (!string.IsNullOrWhiteSpace(integrationDemoFrontendOrigin))
+    app.UseCors(integrationDemoCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapPlatformOperationalReadiness();
 app.MapApprovedOpenApiContract();
+app.MapGovernedExperienceContext();
 app.MapInternalServiceFoundation();
 app.MapInternalServiceIntentSubmission();
 app.MapInternalServiceIntentRegistration();
@@ -112,7 +132,7 @@ app.MapInternalServiceAutomaticRegistration();
 app.MapInternalServiceEnterpriseModel();
 app.MapInternalServiceEvidenceCompletion();
 
-if (app.Environment.IsDevelopment())
+if (isLocalEnvironment)
 {
     app.MapDeveloperPortal();
 }

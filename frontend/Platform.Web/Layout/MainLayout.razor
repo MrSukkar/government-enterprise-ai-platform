@@ -1,13 +1,39 @@
 @inherits LayoutComponentBase
 @inject ExperienceContext ExperienceContext
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <div class="page">
     <aside class="sidebar"><NavMenu /></aside>
     <main>
         <header class="top-row" aria-label="Active governed context">
-            <div><span class="context-label">Active context</span><strong>@ExperienceContext.Persona</strong></div>
-            <div class="phase-chip">Foundation v2 / Product 01</div>
+            <div>
+                <span class="context-label">Active governed context</span>
+                <strong>@ExperienceContext.Persona</strong>
+                <AuthorizeView>
+                    <Authorized><GovernedContextInitializer /></Authorized>
+                </AuthorizeView>
+            </div>
+            <div class="top-actions">
+                <AuthorizeView>
+                    <Authorized>
+                        <button type="button" class="auth-action" @onclick="BeginLogout">Sign out</button>
+                    </Authorized>
+                    <NotAuthorized><a class="auth-action" href="authentication/login">Sign in</a></NotAuthorized>
+                </AuthorizeView>
+                <div class="phase-chip">Foundation v2 / Product 01</div>
+            </div>
         </header>
         <article class="content">@Body</article>
     </main>
 </div>
+
+@code {
+    protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
+
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+
+    private void BeginLogout() => Navigation.NavigateToLogout("authentication/logout");
+
+    public void Dispose() => ExperienceContext.Changed -= Refresh;
+}

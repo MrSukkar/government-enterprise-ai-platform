@@ -79,19 +79,25 @@ Use separate synthetic identities for Developer and Approver even in a non-produ
 | Enterprise Model | Read-only contextualized service and relationships | The Enterprise Model remains the contextual source of truth |
 | Evidence | Ordered signed chain and independent verification result | The complete outcome is tamper-evident and auditable |
 
-## 6. Presenter flow for the current local build
+## 6. Presenter flow for Integration Demo Stage 01
 
-1. Open the frontend at `http://localhost:5130/build/internal-services`.
-2. Explain that the populated permit-renewal example is synthetic.
-3. Enter `evidence://demo/permit-renewal/intent/001` as the intent evidence reference.
-4. Select **Evaluate intent** and show the completeness result.
-5. Explain why **Submit governed intent** remains locked without governed identity, tenant, authorization evidence, and deployment adapters.
-6. Walk through the approved execution path and emphasize that no station can be skipped.
-7. Open the developer console at `http://localhost:5171/developers`.
-8. Open `/health` and show that liveness proves the API process is running.
-9. Open `/health/ready` and explain that `503` is the correct fail-closed result while institutional dependencies are absent.
-10. Open `/openapi/v1.json` and show that the protected REST contract exists through final Evidence completion.
-11. Close with the Pilot plan: connect approved institutional dependencies in controlled groups, test negative paths, then promote using evidence rather than verbal assurance.
+1. Open the HTTPS frontend at `https://localhost:7071/build/internal-services`.
+2. Point to **Sign-in required** and the disabled **Submit governed intent** action; explain that navigation never grants API authority.
+3. Select **Sign in** and authenticate as the synthetic Developer through the local Keycloak realm using Authorization Code with PKCE.
+4. Confirm that the header now shows **Demo Developer** and that the authorized-context panel exposes only tenant, purpose, classification, permission, and authorization evidence returned by the protected API.
+5. Explain that the populated permit-renewal example is synthetic.
+6. Enter `evidence://demo/permit-renewal/intent/001` as the intent evidence reference.
+7. Select **Evaluate intent** and show that both draft completeness and governed identity are required.
+8. Select **Submit governed intent** and show the deterministic validation receipt: submission identifier, digest, status `validated-not-persisted`, and `Persisted: No`.
+9. Explain that Stage 01 validates only; it does not call OPA, persist an Intent, advance workflow, invoke AI, or reach production.
+10. Sign out and show that submission locks again.
+11. Open the developer console at `https://localhost:7200/developers`.
+12. Open `/health` and show that liveness proves the API process is running.
+13. Open `/health/ready` and explain that `503` is the correct fail-closed result while institutional dependencies are absent.
+14. Open `/openapi/v1.json` and show the protected identity-context and Intent validation contracts.
+15. Close with Stage 02: connect a signed OPA policy bundle and PostgreSQL atomic Intent registration, then demonstrate permit, deny, idempotency, and no-persistence-on-failure paths.
+
+The earlier HTTP ports `5130` and `5171` remain suitable only for the unauthenticated static preview. The Integration Demo uses trusted localhost HTTPS on `7071`, `7200`, and `8443`.
 
 ## 7. Required negative demonstrations
 
@@ -113,4 +119,3 @@ A government demonstration should show at least one denied path; only showing su
 - Human approval, Git, CI/CD, artifact verification, deployment, telemetry, registration, and evidence remain distinct gates.
 - The presenter accurately distinguishes local contract readiness from institutional runtime readiness.
 - No real data, secret, key, credential, or unsupported production claim is used.
-

@@ -5,6 +5,7 @@ namespace Platform.Web.Foundation;
 
 public sealed class ExperienceContext
 {
+    public event Action? Changed;
     public const string UnauthenticatedPersona = "Sign-in required";
     public string Persona { get; private set; } = UnauthenticatedPersona;
     public string Purpose { get; private set; } = "No governed purpose established";
@@ -25,6 +26,7 @@ public sealed class ExperienceContext
         AuthorizationEvidenceReference = context.AuthorizationEvidenceReference;
         ExpiresAt = context.ExpiresAt;
         IsGovernedIdentityEstablished = true;
+        Changed?.Invoke();
     }
 
     public bool CanAccess(FrontDoorDestination destination) =>
@@ -33,8 +35,11 @@ public sealed class ExperienceContext
     public bool HasPermission(string permission) =>
         IsGovernedIdentityEstablished && Permissions.Contains(permission);
 
-    public void Clear() =>
+    public void Clear()
+    {
         (Persona, Purpose, TenantId, Permissions, AuthorizationEvidenceReference, ExpiresAt,
             IsGovernedIdentityEstablished) =
         (UnauthenticatedPersona, "No governed purpose established", null, [], null, null, false);
+        Changed?.Invoke();
+    }
 }

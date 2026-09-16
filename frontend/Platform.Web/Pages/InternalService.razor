@@ -1,6 +1,7 @@
 @page "/build/internal-services"
 @inject ExperienceContext ExperienceContext
 @inject HttpClient Http
+@implements IDisposable
 
 <PageTitle>Create Internal Service | Government Enterprise AI Platform</PageTitle>
 
@@ -35,6 +36,15 @@
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
+        @if (LastReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed intent validation receipt">
+                <div><dt>Submission</dt><dd>@LastReceipt.SubmissionId</dd></div>
+                <div><dt>Status</dt><dd>@LastReceipt.Status</dd></div>
+                <div><dt>Intent digest</dt><dd>@LastReceipt.IntentDigest</dd></div>
+                <div><dt>Persisted</dt><dd>@(LastReceipt.IsPersisted ? "Yes" : "No — validation only")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -145,6 +155,7 @@
     private int DraftScore { get; set; } = 100;
     private string EvaluationMessage { get; set; } = "Draft is complete enough for governed intent submission. Submission remains locked.";
     private bool IsSubmitting { get; set; }
+    private IntentValidationReceipt? LastReceipt { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -184,8 +195,10 @@
     {
         var values = new[] { ServiceName, Mission, PrimaryUsers, Classification, IntentEvidenceReference };
         DraftScore = values.Count(value => !string.IsNullOrWhiteSpace(value)) * 20;
-        EvaluationMessage = DraftScore == 100
-            ? "Draft is complete enough for governed intent submission. Submission remains locked."
+       EvaluationMessage = DraftScore == 100
+            ? CanSubmit
+                ? "Draft and governed identity are ready for server validation."
+                : "Draft is complete. Sign in and establish governed identity before submission."
             : $"Complete the missing fields before governed submission. Current completeness: {DraftScore}%.";
     }
 
@@ -211,9 +224,16 @@
                 ExperienceContext.AuthorizationEvidenceReference!,
                 [IntentEvidenceReference]);
             var response = await Http.PostAsJsonAsync("api/v1/internal-services/intents", request);
-            EvaluationMessage = response.IsSuccessStatusCode
-                ? "Intent validated by the server. It is ready for OPA-gated registration when the sovereign policy and atomic repository adapters are connected."
-                : "Server validation denied the submission. Verify governed identity, tenant, permission, classification, and evidence.";
+            if (response.IsSuccessStatusCode)
+            {
+                LastReceipt = await response.Content.ReadFromJsonAsync<IntentValidationReceipt>();
+                EvaluationMessage = "Intent validated by the server. No state was persisted; OPA-gated registration remains the next step.";
+            }
+            else
+            {
+                LastReceipt = null;
+                EvaluationMessage = "Server validation denied the submission. Verify governed identity, tenant, permission, classification, and evidence.";
+            }
         }
         catch (HttpRequestException)
         {
@@ -236,4 +256,16 @@
         string PrimaryUsers,
         string AuthorizationEvidenceReference,
         IReadOnlyList<string> IntentEvidenceReferences);
+
+    private sealed record IntentValidationReceipt(
+        Guid SubmissionId,
+        string IntentDigest,
+        string Status,
+        bool IsPersisted);
+
+    protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
+
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ExperienceContext.Changed -= Refresh;
 }

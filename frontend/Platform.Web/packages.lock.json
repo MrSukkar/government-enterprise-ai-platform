@@ -21,6 +21,16 @@
           "Microsoft.JSInterop.WebAssembly": "10.0.11"
         }
       },
+      "Microsoft.AspNetCore.Components.WebAssembly.Authentication": {
+        "type": "Direct",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "n2gOJsnbxuOdQY3iVVnxGd4XOHe0BHUo0XuQODXgo51JQ0gXzPb+vJOdjUucBHGRoqBe2F+tw+GH1fv8LiP7zw==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Authorization": "10.0.11",
+          "Microsoft.AspNetCore.Components.Web": "10.0.11"
+        }
+      },
       "Microsoft.AspNetCore.Components.WebAssembly.DevServer": {
         "type": "Direct",
         "requested": "[10.0.11, )",
@@ -63,6 +73,15 @@
         "type": "Transitive",
         "resolved": "10.0.11",
         "contentHash": "cxDPBP03OCNlTX7epfd9+GWYASkLsZRnlv2PygHqCxvK4zYVEPfgQZob40vwc46msoLNwO+ejC8Ho1r7otaH7g=="
+      },
+      "Microsoft.AspNetCore.Components.Authorization": {
+        "type": "Transitive",
+        "resolved": "10.0.11",
+        "contentHash": "Ga+CXGPX2bV8qiu4jUO5mg8v5ixGmdCdEiOqPbZ/Rx7xbv5Kjkkm4XxF5ytJmTEj+BZW0lsVS/jBaaOYbtBaiA==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Authorization": "10.0.11",
+          "Microsoft.AspNetCore.Components": "10.0.11"
+        }
       },
       "Microsoft.AspNetCore.Components.Forms": {
         "type": "Transitive",

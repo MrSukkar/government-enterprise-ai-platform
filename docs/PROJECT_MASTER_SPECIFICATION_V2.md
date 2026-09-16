@@ -339,3 +339,11 @@ Change-control record: `docs/change-control/CR-021-OPERATIONALIZATION-WAVE-20.md
 Operationalization Wave 21 completes the governed Create Internal Service path by connecting exact accepted Enterprise Model contextualization and an `EnterpriseModel`-stopped run to signed exact OPA, independent Evidence access authorization, the existing Phase 30 canonical hash/sign/verify engine, an append-only atomic PostgreSQL chain store, deployment-configured sovereign signing and pinned verification, complete ten-stage proof, and independent final result authorization. Defaults choose no signing or trust material and fail closed. No workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists.
 
 Change-control record: `docs/change-control/CR-022-OPERATIONALIZATION-WAVE-21.md`.
+
+## Approved Integration Demo addendum — CR-023
+
+Integration Demo Stage 01 connects the existing protected Governed Intent validation contract to a synthetic localhost-only Developer experience using Keycloak 26.7.3 as the demo OIDC authority, Authorization Code with PKCE, the official Microsoft Blazor WebAssembly authentication client at 10.0.11, trusted localhost HTTPS, and exact-origin CORS. A protected read-only identity-context endpoint may release only the already validated subject, tenant, persona, purpose, permissions, authorization-evidence reference, and token time bounds into the existing frontend `GovernedExperienceContext`.
+
+This selection is limited to the local Integration Demo and does not choose a production identity provider. Repository defaults remain unconfigured and fail closed. No credential, token, private key, exported certificate, trust material, or institutional data is committed. This stage performs Intent validation only: it introduces no OPA decision, persistence, workflow advancement, external access, AI invocation, material action, or production effect. OPA-gated PostgreSQL Intent registration remains the next separately verified step within the existing Governed Intent station; no Phase 31, new station, service boundary, policy authority, or architectural deviation is introduced.
+
+Change-control record: `docs/change-control/CR-023-INTEGRATION-DEMO-GOVERNED-INTENT.md`.

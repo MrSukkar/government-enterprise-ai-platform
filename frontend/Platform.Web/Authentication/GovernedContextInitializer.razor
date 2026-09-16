@@ -1,0 +1,32 @@
+@inject GovernedExperienceContextClient ContextClient
+@inject ExperienceContext ExperienceContext
+
+@if (IsLoading)
+{
+    <span class="context-load-state">Establishing governed context…</span>
+}
+else if (ErrorMessage is not null)
+{
+    <span class="context-load-state denied" role="alert">@ErrorMessage</span>
+}
+@code {
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!ExperienceContext.IsGovernedIdentityEstablished)
+                await ContextClient.LoadAsync();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            ErrorMessage = "Governed context unavailable. Sign in again or verify the API.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

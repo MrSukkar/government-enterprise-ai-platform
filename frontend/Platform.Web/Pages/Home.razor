@@ -1,5 +1,6 @@
 @page "/"
 @inject ExperienceContext ExperienceContext
+@implements IDisposable
 
 <PageTitle>Front Door | Government Enterprise AI Platform</PageTitle>
 
@@ -61,3 +62,11 @@
     <div><p class="eyebrow">Always enforced</p><h2 id="trust-heading">Experience is not authorization</h2></div>
     <ul><li>Active identity and purpose</li><li>Tenant and classification scope</li><li>Policy and approval boundaries</li><li>Traceable evidence</li></ul>
 </section>
+
+@code {
+    protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
+
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ExperienceContext.Changed -= Refresh;
+}
