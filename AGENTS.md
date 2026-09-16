@@ -10,6 +10,31 @@ This file is the persistent operating contract for every Codex session working i
 4. Do not use or restore any previous unapproved package.
 5. Do not introduce an architectural deviation without the approved Change Control path.
 
+## Product north star
+
+The platform unifies one governed institutional cycle:
+
+`BUILD <-> UNDERSTAND <-> OPERATE <-> ACT`, with Governance providing `CONTROL` and Evidence providing `PROVE` across the entire cycle.
+
+Every implementation and demo increment must make this cycle clearer or more executable without weakening authorization, sovereignty, human approval, or cryptographic evidence.
+
+## Engineering operating model
+
+This repository uses **Governed AI-Assisted Software Engineering**. Software-engineering discipline is authoritative; AI accelerates analysis, implementation, testing, and documentation inside that discipline.
+
+1. Define scope and acceptance before implementation.
+2. Keep changes small, reviewable, and limited to the active gate.
+3. Use Change Control for architecture or authority changes.
+4. Verify both permitted and denied/fail-closed behavior.
+5. Local success is insufficient: required CI must be green before a gate is complete.
+6. Never commit secrets, credentials, tokens, private keys, or local runtime state.
+7. Finish and record the current gate before starting the next gate.
+8. Every completed gate requires acceptance evidence, synchronized status, an immutable commit, GitHub synchronization, and green CI.
+9. Use a `codex/` branch and pull request for material changes; do not force-push or mutate protected history.
+10. Resume work from the repository contract, status, acceptance evidence, and Git historyâ€”never from conversational memory alone.
+
+Vibe coding is allowed only for disposable exploration or non-authoritative visual prototypes. It is prohibited for identity, authorization, policy, persistence, evidence, API contracts, supply chain, CI/CD, deployment, and pilot or production paths.
+
 ## Mandatory working sequence
 
 Before changing files:
