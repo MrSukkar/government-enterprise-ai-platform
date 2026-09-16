@@ -75,6 +75,8 @@ jobs:
           $canonicalBefore = ConvertTo-CanonicalObject $before | ConvertTo-Json -Depth 100 -Compress
           $canonicalAfter = ConvertTo-CanonicalObject $after | ConvertTo-Json -Depth 100 -Compress
           if ($canonicalBefore -ne $canonicalAfter) {
+            Compare-Object ($canonicalBefore -split ',') ($canonicalAfter -split ',') |
+              ForEach-Object { Write-Error "Frontend lock difference [$($_.SideIndicator)]: $($_.InputObject)" }
             throw 'Frontend dependency lock changed beyond the verified WebAssembly SDK content hash.'
           }
 
