@@ -37,6 +37,7 @@
             <button type="button" class="primary-action" disabled="@(!CanRegister || IsRegistering)" @onclick="RegisterIntentAsync">@(IsRegistering ? "Registering..." : "Register with OPA + PostgreSQL")</button>
             <button type="button" class="primary-action" disabled="@(!CanDiscoverContext || IsDiscoveringContext)" @onclick="DiscoverEnterpriseContextAsync">@(IsDiscoveringContext ? "Discovering..." : "Discover authorized context")</button>
             <button type="button" class="primary-action" disabled="@(!CanDiscoverSystems || IsDiscoveringSystems)" @onclick="DiscoverExistingSystemsAsync">@(IsDiscoveringSystems ? "Discovering..." : "Discover existing systems")</button>
+            <button type="button" class="primary-action" disabled="@(!CanDiscoverArchitecture || IsDiscoveringArchitecture)" @onclick="DiscoverExistingArchitectureAsync">@(IsDiscoveringArchitecture ? "Discovering..." : "Discover existing architecture")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -76,6 +77,15 @@
                 <div><dt>Released systems</dt><dd>@SystemsReceipt.Systems.Count</dd></div>
                 <div><dt>Inventory digest</dt><dd>@SystemsReceipt.InventorySha256Digest</dd></div>
                 <div><dt>Can advance</dt><dd>@(SystemsReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
+            </dl>
+        }
+        @if (ArchitectureReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Authorized Existing Architecture receipt">
+                <div><dt>Discovery</dt><dd>@ArchitectureReceipt.DiscoveryId</dd></div>
+                <div><dt>Released items</dt><dd>@ArchitectureReceipt.Items.Count</dd></div>
+                <div><dt>Architecture digest</dt><dd>@ArchitectureReceipt.ArchitectureSha256Digest</dd></div>
+                <div><dt>Can advance</dt><dd>@(ArchitectureReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -191,14 +201,17 @@
     private bool IsRegistering { get; set; }
     private bool IsDiscoveringContext { get; set; }
     private bool IsDiscoveringSystems { get; set; }
+    private bool IsDiscoveringArchitecture { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
     private EnterpriseContextReceipt? ContextReceipt { get; set; }
     private ExistingSystemsReceipt? SystemsReceipt { get; set; }
+    private ExistingArchitectureReceipt? ArchitectureReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
+    private Guid ArchitectureDiscoveryId { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -222,6 +235,10 @@
     private bool CanDiscoverSystems =>
         ContextReceipt is { IsContextReleased: true, CanAdvance: false, ContextSha256Digest: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.systems.discover");
+
+    private bool CanDiscoverArchitecture =>
+        SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false, InventorySha256Digest: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.architecture.discover");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -287,9 +304,11 @@
                 RegistrationReceipt = null;
                 ContextReceipt = null;
                 SystemsReceipt = null;
+                ArchitectureReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
+                ArchitectureDiscoveryId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
             else
@@ -320,9 +339,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-04",
-                    "2026.09.18",
-                    "39bc32b9113da01093a764ff50969c8c70682c2f543b07de9609b4362ea76484",
+                    "geaip-demo-stage-05",
+                    "2026.09.19",
+                    "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -333,6 +352,7 @@
                 RegistrationReceipt = await response.Content.ReadFromJsonAsync<IntentRegistrationReceipt>();
                 ContextReceipt = null;
                 SystemsReceipt = null;
+                ArchitectureReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -369,9 +389,9 @@
                 Classification,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-04",
-                    "2026.09.18",
-                    "39bc32b9113da01093a764ff50969c8c70682c2f543b07de9609b4362ea76484",
+                    "geaip-demo-stage-05",
+                    "2026.09.19",
+                    "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
@@ -411,6 +431,7 @@
             var request = new ExistingSystemsRequest(SystemsDiscoveryId, RegistrationReceipt.Version!.Value, RegistrationReceipt.IntentSha256Digest, ContextReceipt.ContextSha256Digest, ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems", request);
             SystemsReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ExistingSystemsReceipt>() : null;
+            ArchitectureReceipt = null;
             EvaluationMessage = SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Systems released {SystemsReceipt.Systems.Count} synthetic scoped systems with immutable evidence. Advancement remains locked."
                 : $"Existing Systems failed closed ({(int)response.StatusCode}). No inventory was released.";
@@ -419,7 +440,24 @@
         finally { IsDiscoveringSystems = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-04", "2026.09.18", "39bc32b9113da01093a764ff50969c8c70682c2f543b07de9609b4362ea76484", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero));
+    private async Task DiscoverExistingArchitectureAsync()
+    {
+        if (!CanDiscoverArchitecture || RegistrationReceipt is null || ContextReceipt?.ContextSha256Digest is null || SystemsReceipt?.InventorySha256Digest is null) return;
+        IsDiscoveringArchitecture = true;
+        try
+        {
+            var request = new ExistingArchitectureRequest(ArchitectureDiscoveryId, RegistrationReceipt.Version!.Value, RegistrationReceipt.IntentSha256Digest, ContextReceipt.ContextSha256Digest, SystemsReceipt.InventorySha256Digest, ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture", request);
+            ArchitectureReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ExistingArchitectureReceipt>() : null;
+            EvaluationMessage = ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false }
+                ? $"Authorized Existing Architecture released {ArchitectureReceipt.Items.Count} approved synthetic items with immutable evidence. Advancement remains locked."
+                : $"Existing Architecture failed closed ({(int)response.StatusCode}). No architecture was released.";
+        }
+        catch (HttpRequestException) { ArchitectureReceipt = null; EvaluationMessage = "OPA, PostgreSQL, or Neo4j is unavailable. Existing Architecture failed closed."; }
+        finally { IsDiscoveringArchitecture = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-05", "2026.09.19", "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -506,6 +544,9 @@
     private sealed record ExistingSystemsRequest(Guid DiscoveryId, long ExpectedRegistrationVersion, string ExpectedIntentSha256Digest, string ExpectedContextSha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record ExistingSystem(string SystemId, string Type, string State);
     private sealed record ExistingSystemsReceipt(Guid DiscoveryId, Guid ContextDiscoveryId, Guid RegistrationId, long RegistrationVersion, string TenantId, string IntentSha256Digest, string ContextSha256Digest, string PolicyOutcome, bool IsInventoryReleased, bool CanAdvance, string? InventorySha256Digest, IReadOnlyList<ExistingSystem> Systems, string? DiscoveryEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record ExistingArchitectureRequest(Guid DiscoveryId, long ExpectedRegistrationVersion, string ExpectedIntentSha256Digest, string ExpectedContextSha256Digest, string ExpectedInventorySha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record ExistingArchitectureItem(Guid ArchitectureItemId, Guid SystemId, string Kind, string Name);
+    private sealed record ExistingArchitectureReceipt(Guid DiscoveryId, Guid SystemsDiscoveryId, Guid ContextDiscoveryId, Guid RegistrationId, long RegistrationVersion, string TenantId, string IntentSha256Digest, string ContextSha256Digest, string InventorySha256Digest, string PolicyOutcome, bool IsArchitectureReleased, bool CanAdvance, string? ArchitectureSha256Digest, IReadOnlyList<ExistingArchitectureItem> Items, string? DiscoveryEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

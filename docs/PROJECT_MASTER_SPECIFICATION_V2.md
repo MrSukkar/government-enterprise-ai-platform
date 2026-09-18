@@ -367,3 +367,9 @@ Change-control record: `docs/change-control/CR-025-INTEGRATION-DEMO-ENTERPRISE-C
 Integration Demo Stage 04 connects only the existing Authorized Existing Systems contract to a validated, evidence-bearing Enterprise Context snapshot, signed localhost-only OPA scope, TLS read-only synthetic Neo4j inventory, per-system and per-relationship authorization, and immutable PostgreSQL evidence. The policy permits only two named synthetic UUID systems and the `DependsOn` relationship; an out-of-scope fixture demonstrates the allow-list boundary. The result remains non-advancing (`CanAdvance: false`). Existing Architecture, live connectors, Graph mutation, AI, workflow advancement, production action, new service boundaries, and Phase 31 remain disconnected.
 
 Change-control record: `docs/change-control/CR-026-INTEGRATION-DEMO-EXISTING-SYSTEMS.md`.
+
+## Approved Integration Demo addendum — CR-027
+
+Integration Demo Stage 05 connects only the existing Authorized Existing Architecture contract to exact evidence-bearing Intent, Enterprise Context, and Existing Systems prerequisites, signed localhost-only OPA scope, TLS read-only synthetic Neo4j Architecture, constitutional conformance validation, per-item authorization, and immutable PostgreSQL evidence. Only two approved active synthetic `Component`/`Interface` items bound to the Stage 04 systems and `DependsOn` relationship may be released. `CanAdvance` remains false. Approved Packages, redesign, generated content, Graph mutation, AI, workflow advancement, production action, new service boundaries, and Phase 31 remain disconnected.
+
+Change-control record: `docs/change-control/CR-027-INTEGRATION-DEMO-EXISTING-ARCHITECTURE.md`.

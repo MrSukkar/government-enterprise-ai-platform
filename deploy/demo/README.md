@@ -2,7 +2,7 @@
 
 This directory contains versioned, non-secret configuration for the local Integration Demo. It is not a production deployment profile.
 
-## Stage 04 topology
+## Stage 05 topology
 
 | Service | Address | Purpose |
 |---|---|---|
@@ -28,9 +28,9 @@ This directory contains versioned, non-secret configuration for the local Integr
 3. A trusted ASP.NET Core localhost development certificate.
 4. Local runtime secrets supplied outside the repository.
 
-Set `GEAIP_DEMO_POSTGRES_PASSWORD` and `GEAIP_DEMO_NEO4J_PASSWORD` to local runtime secrets, then run `scripts/prepare-integration-demo-stage-04.ps1 -StartInfrastructure`. The script creates ignored localhost TLS and OPA signing material, builds and verifies the signed bundle, starts only the pinned Stage 04 services, and seeds synthetic graph fixtures. PostgreSQL migrations are initializer-owned; the API never performs migrations.
+Set `GEAIP_DEMO_POSTGRES_PASSWORD` and `GEAIP_DEMO_NEO4J_PASSWORD` to local runtime secrets, then run `scripts/prepare-integration-demo-stage-05.ps1 -StartInfrastructure`. The script creates ignored localhost TLS and OPA signing material, builds the signed bundle, starts only the pinned Stage 05 services, and seeds synthetic graph fixtures. PostgreSQL migrations are initializer-owned; the API never performs migrations.
 
-The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PERMIT_RENEWAL_SCENARIO.md`. Stage 04 acceptance evidence is recorded in `docs/demo/STAGE_04_EXISTING_SYSTEMS_ACCEPTANCE.md`.
+The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PERMIT_RENEWAL_SCENARIO.md`. Stage 05 acceptance evidence is recorded in `docs/demo/STAGE_05_EXISTING_ARCHITECTURE_ACCEPTANCE.md`.
 
 ## Runtime behavior
 
