@@ -25,18 +25,18 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 03 - Authorized Enterprise Context Discovery",
+    "stage": "Stage 04 - Existing Systems Discovery",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-025-INTEGRATION-DEMO-ENTERPRISE-CONTEXT.md",
-    "acceptanceArtifact": "docs/demo/STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md",
-    "nextGate": "Stage 04 - Existing Systems discovery",
-    "executionBoundary": "Synthetic localhost OIDC, a verified signed OPA bundle, TLS PostgreSQL, and a read-only TLS Neo4j graph release only exact authorized Enterprise Context with immutable evidence; no workflow advancement, Existing Systems access, AI invocation, material action, production effect, or Phase 31"
+    "changeControl": "docs/change-control/CR-026-INTEGRATION-DEMO-EXISTING-SYSTEMS.md",
+    "acceptanceArtifact": "docs/demo/STAGE_04_EXISTING_SYSTEMS_ACCEPTANCE.md",
+    "nextGate": "Stage 05 - Existing Architecture discovery",
+    "executionBoundary": "Synthetic localhost OIDC, a verified signed OPA bundle, TLS PostgreSQL, and a read-only TLS Neo4j graph release only exact authorized Existing Systems with immutable evidence; no Existing Architecture access, live connector, AI invocation, workflow advancement, material action, production effect, or Phase 31"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_04_EXISTING_SYSTEMS_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

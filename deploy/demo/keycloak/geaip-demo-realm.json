@@ -123,7 +123,7 @@
           "consentRequired": false,
           "config": {
             "claim.name": "permission",
-              "claim.value": "developer.internal-service.create developer.internal-service.intent.register developer.internal-service.context.discover",
+              "claim.value": "developer.internal-service.create developer.internal-service.intent.register developer.internal-service.context.discover developer.internal-service.systems.discover",
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",

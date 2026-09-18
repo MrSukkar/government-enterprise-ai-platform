@@ -2702,6 +2702,29 @@ if (Test-Path $stage03AcceptancePath) {
     @('Status: **Satisfied**','CR-025','out-of-scope','CanAdvance: false','all 15 projects, 0 warnings, 0 errors','Stage 04') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 03 acceptance missing: $_" } }
 }
 
+$stage04AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_04_EXISTING_SYSTEMS_ACCEPTANCE.md'
+if (Test-Path $stage04AcceptancePath) {
+    $stage04Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-026-INTEGRATION-DEMO-EXISTING-SYSTEMS.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-04\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-04\opa\decision.rego'
+        Seed = Join-Path $repositoryRoot 'deploy\demo\stage-04\neo4j\seed.cypher'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-04.ps1'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+    }
+    $stage04Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 04 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage04Paths.Change
+    @('Status: **Approved for bounded implementation**','DependsOn','CanAdvance','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 04 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage04Paths.Compose
+    @('003_existing_systems_evidence.sql','neo4j:2025.10-community@sha256:','127.0.0.1:7687') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 04 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage04Paths.Policy
+    @('internal-service.existing-systems.discover','11111111-1111-1111-1111-111111111111','DependsOn','enterprise-graph','Developer','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 04 policy guard missing: $_" } }
+    $seed = Get-Content -Raw $stage04Paths.Seed
+    @('33333333-3333-3333-3333-333333333333','credentialsIncluded=false','externalEffectOccurred=false') | ForEach-Object { if ($seed -notmatch [regex]::Escape($_)) { throw "Stage 04 seed guard missing: $_" } }
+    $page = Get-Content -Raw $stage04Paths.Page
+    @('Discover existing systems','DiscoverExistingSystemsAsync','ExistingSystemsReceipt','developer.internal-service.systems.discover','CanAdvance') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 04 UI guard missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
