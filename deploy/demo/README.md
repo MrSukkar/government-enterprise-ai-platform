@@ -34,7 +34,7 @@ The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PER
 
 ## Stage 06 topology
 
-Stage 06 adds the pinned PostgreSQL institutional package catalog and the signed exact-coordinate Approved Packages policy. Prepare it with `scripts/prepare-integration-demo-stage-06.ps1 -StartInfrastructure`; all certificates, signing keys, package attestations, passwords, logs, and database volumes are generated under `.runtime/integration-demo-stage-06` and remain outside Git. The presenter must stop after the two synthetic package coordinates are released with immutable evidence; AI Planning is a separate Stage 07 gate.
+Stage 06 adds the pinned PostgreSQL institutional package catalog and the signed exact-coordinate Approved Packages policy. The deployment-controlled signed synthetic catalog seed must be provisioned at `.runtime/integration-demo-stage-06/packages/seed.sql` before running `scripts/prepare-integration-demo-stage-06.ps1 -StartInfrastructure`; the script fails closed when it is absent. Certificates, signing keys, package attestations, passwords, logs, and database volumes remain outside Git. The presenter must stop after the two synthetic package coordinates are released with immutable evidence; AI Planning is a separate Stage 07 gate.
 
 ## Runtime behavior
 
