@@ -38,6 +38,7 @@
             <button type="button" class="primary-action" disabled="@(!CanDiscoverContext || IsDiscoveringContext)" @onclick="DiscoverEnterpriseContextAsync">@(IsDiscoveringContext ? "Discovering..." : "Discover authorized context")</button>
             <button type="button" class="primary-action" disabled="@(!CanDiscoverSystems || IsDiscoveringSystems)" @onclick="DiscoverExistingSystemsAsync">@(IsDiscoveringSystems ? "Discovering..." : "Discover existing systems")</button>
             <button type="button" class="primary-action" disabled="@(!CanDiscoverArchitecture || IsDiscoveringArchitecture)" @onclick="DiscoverExistingArchitectureAsync">@(IsDiscoveringArchitecture ? "Discovering..." : "Discover existing architecture")</button>
+            <button type="button" class="primary-action" disabled="@(!CanSelectPackages || IsSelectingPackages)" @onclick="SelectApprovedPackagesAsync">@(IsSelectingPackages ? "Selecting..." : "Select approved packages")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -86,6 +87,16 @@
                 <div><dt>Released items</dt><dd>@ArchitectureReceipt.Items.Count</dd></div>
                 <div><dt>Architecture digest</dt><dd>@ArchitectureReceipt.ArchitectureSha256Digest</dd></div>
                 <div><dt>Can advance</dt><dd>@(ArchitectureReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
+            </dl>
+        }
+        @if (PackagesReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Approved Packages receipt">
+                <div><dt>Selection</dt><dd>@PackagesReceipt.SelectionId</dd></div>
+                <div><dt>Released packages</dt><dd>@PackagesReceipt.Packages.Count</dd></div>
+                <div><dt>Selection digest</dt><dd>@PackagesReceipt.SelectionSha256Digest</dd></div>
+                <div><dt>Evidence</dt><dd>@PackagesReceipt.SelectionEvidenceReference</dd></div>
+                <div><dt>Can advance</dt><dd>@(PackagesReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -202,16 +213,19 @@
     private bool IsDiscoveringContext { get; set; }
     private bool IsDiscoveringSystems { get; set; }
     private bool IsDiscoveringArchitecture { get; set; }
+    private bool IsSelectingPackages { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
     private EnterpriseContextReceipt? ContextReceipt { get; set; }
     private ExistingSystemsReceipt? SystemsReceipt { get; set; }
     private ExistingArchitectureReceipt? ArchitectureReceipt { get; set; }
+    private ApprovedPackagesReceipt? PackagesReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
     private Guid ArchitectureDiscoveryId { get; set; }
+    private Guid PackageSelectionId { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -239,6 +253,10 @@
     private bool CanDiscoverArchitecture =>
         SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false, InventorySha256Digest: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.architecture.discover");
+
+    private bool CanSelectPackages =>
+        ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false, ArchitectureSha256Digest: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.packages.select");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -449,6 +467,7 @@
             var request = new ExistingArchitectureRequest(ArchitectureDiscoveryId, RegistrationReceipt.Version!.Value, RegistrationReceipt.IntentSha256Digest, ContextReceipt.ContextSha256Digest, SystemsReceipt.InventorySha256Digest, ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture", request);
             ArchitectureReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ExistingArchitectureReceipt>() : null;
+            PackagesReceipt = null;
             EvaluationMessage = ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Architecture released {ArchitectureReceipt.Items.Count} approved synthetic items with immutable evidence. Advancement remains locked."
                 : $"Existing Architecture failed closed ({(int)response.StatusCode}). No architecture was released.";
@@ -457,7 +476,29 @@
         finally { IsDiscoveringArchitecture = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-05", "2026.09.19", "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task SelectApprovedPackagesAsync()
+    {
+        if (!CanSelectPackages || RegistrationReceipt is null || ContextReceipt is null || SystemsReceipt is null || ArchitectureReceipt is null) return;
+        IsSelectingPackages = true;
+        try
+        {
+            var request = new ApprovedPackagesRequest(PackageSelectionId, RegistrationReceipt.Version!.Value,
+                RegistrationReceipt.IntentSha256Digest, ContextReceipt.ContextSha256Digest!, SystemsReceipt.InventorySha256Digest!,
+                ArchitectureReceipt.ArchitectureSha256Digest!, ExperienceContext.Purpose, Classification, "IntegrationDemo",
+                DemoPolicyBundle(), [
+                    new PackageCoordinate("NuGet", "Platform.Synthetic.Permit.Contracts", "1.0.0", "sha256:1111111111111111111111111111111111111111111111111111111111111111"),
+                    new PackageCoordinate("FrontendDependency", "@geaip/permit-ui-contracts", "1.0.0", "sha256:2222222222222222222222222222222222222222222222222222222222222222")]);
+            var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages", request);
+            PackagesReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ApprovedPackagesReceipt>() : null;
+            EvaluationMessage = PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false }
+                ? $"Authorized Approved Packages released {PackagesReceipt.Packages.Count} exact synthetic package coordinates with immutable evidence. Advancement remains locked."
+                : $"Approved Packages failed closed ({(int)response.StatusCode}). No package selection was released.";
+        }
+        catch (HttpRequestException) { PackagesReceipt = null; EvaluationMessage = "OPA, PostgreSQL, or supply-chain assurance is unavailable. Approved Packages failed closed."; }
+        finally { IsSelectingPackages = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-06", "2026.09.19", "d478e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb15a", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -547,6 +588,10 @@
     private sealed record ExistingArchitectureRequest(Guid DiscoveryId, long ExpectedRegistrationVersion, string ExpectedIntentSha256Digest, string ExpectedContextSha256Digest, string ExpectedInventorySha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record ExistingArchitectureItem(Guid ArchitectureItemId, Guid SystemId, string Kind, string Name);
     private sealed record ExistingArchitectureReceipt(Guid DiscoveryId, Guid SystemsDiscoveryId, Guid ContextDiscoveryId, Guid RegistrationId, long RegistrationVersion, string TenantId, string IntentSha256Digest, string ContextSha256Digest, string InventorySha256Digest, string PolicyOutcome, bool IsArchitectureReleased, bool CanAdvance, string? ArchitectureSha256Digest, IReadOnlyList<ExistingArchitectureItem> Items, string? DiscoveryEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record PackageCoordinate(string Kind, string Name, string Version, string ContentDigest);
+    private sealed record ApprovedPackagesRequest(Guid SelectionId, long ExpectedRegistrationVersion, string ExpectedIntentSha256Digest, string ExpectedContextSha256Digest, string ExpectedInventorySha256Digest, string ExpectedArchitectureSha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle, IReadOnlyList<PackageCoordinate> RequestedCoordinates);
+    private sealed record ApprovedPackage(string Kind, string Name, string Version, string ContentDigest);
+    private sealed record ApprovedPackagesReceipt(Guid SelectionId, Guid ArchitectureDiscoveryId, Guid SystemsDiscoveryId, Guid ContextDiscoveryId, Guid RegistrationId, long RegistrationVersion, string TenantId, string ArchitectureSha256Digest, string PolicyOutcome, bool IsSelectionReleased, bool CanAdvance, string? SelectionSha256Digest, IReadOnlyList<ApprovedPackage> Packages, string? SelectionEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

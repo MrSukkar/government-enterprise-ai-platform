@@ -32,6 +32,10 @@ Set `GEAIP_DEMO_POSTGRES_PASSWORD` and `GEAIP_DEMO_NEO4J_PASSWORD` to local runt
 
 The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PERMIT_RENEWAL_SCENARIO.md`. Stage 05 acceptance evidence is recorded in `docs/demo/STAGE_05_EXISTING_ARCHITECTURE_ACCEPTANCE.md`.
 
+## Stage 06 topology
+
+Stage 06 adds the pinned PostgreSQL institutional package catalog and the signed exact-coordinate Approved Packages policy. Prepare it with `scripts/prepare-integration-demo-stage-06.ps1 -StartInfrastructure`; all certificates, signing keys, package attestations, passwords, logs, and database volumes are generated under `.runtime/integration-demo-stage-06` and remain outside Git. The presenter must stop after the two synthetic package coordinates are released with immutable evidence; AI Planning is a separate Stage 07 gate.
+
 ## Runtime behavior
 
 The demo-specific API settings load only when `ASPNETCORE_ENVIRONMENT=IntegrationDemo`. Normal repository defaults remain unconfigured and fail closed. Stopping Keycloak, OPA, PostgreSQL, or Neo4j, presenting an invalid token, failing signed-bundle verification, or receiving policy denial prevents registration or context release. Authorized context remains read-only and non-advancing.

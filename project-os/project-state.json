@@ -25,18 +25,18 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 05 - Existing Architecture Discovery",
+    "stage": "Stage 06 - Approved Packages Selection",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-027-INTEGRATION-DEMO-EXISTING-ARCHITECTURE.md",
-    "acceptanceArtifact": "docs/demo/STAGE_05_EXISTING_ARCHITECTURE_ACCEPTANCE.md",
-    "nextGate": "Stage 06 - Approved Packages selection",
-    "executionBoundary": "Synthetic localhost OIDC, signed OPA, TLS PostgreSQL, and read-only TLS Neo4j release only approved active synthetic Existing Architecture with immutable evidence; no Approved Packages, redesign, AI invocation, workflow advancement, production effect, or Phase 31"
+    "changeControl": "docs/change-control/CR-028-INTEGRATION-DEMO-APPROVED-PACKAGES.md",
+    "acceptanceArtifact": "docs/demo/STAGE_06_APPROVED_PACKAGES_ACCEPTANCE.md",
+    "nextGate": "Stage 07 - AI Planning",
+    "executionBoundary": "Synthetic localhost OIDC, signed OPA, TLS PostgreSQL catalog, and exact Stage 05 prerequisite release only approved, current, sovereign, attested synthetic packages with immutable evidence; no transfer, execution, AI invocation, workflow advancement, production effect, or Phase 31"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_05_EXISTING_ARCHITECTURE_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_06_APPROVED_PACKAGES_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
