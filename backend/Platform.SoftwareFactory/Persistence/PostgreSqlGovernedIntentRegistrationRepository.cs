@@ -246,6 +246,8 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
         RegisteredGovernedIntent candidate,
         RegisteredGovernedIntent existing)
     {
+        // A replay is re-authorized, so its decision id, decision evidence, and decision time are
+        // intentionally fresh. Idempotency is bound to the immutable intent and policy bundle.
         if (existing.RegistrationId != candidate.RegistrationId ||
             existing.SubmissionId != candidate.SubmissionId ||
             !StringComparer.Ordinal.Equals(existing.TenantId, candidate.TenantId) ||
@@ -256,14 +258,11 @@ public sealed class PostgreSqlGovernedIntentRegistrationRepository(
             !StringComparer.Ordinal.Equals(existing.Mission, candidate.Mission) ||
             !StringComparer.Ordinal.Equals(existing.PrimaryUsers, candidate.PrimaryUsers) ||
             !StringComparer.OrdinalIgnoreCase.Equals(existing.IntentSha256Digest, candidate.IntentSha256Digest) ||
-            existing.PolicyDecisionRequestId != candidate.PolicyDecisionRequestId ||
             !StringComparer.Ordinal.Equals(existing.PolicyBundleId, candidate.PolicyBundleId) ||
             !StringComparer.Ordinal.Equals(existing.PolicyBundleVersion, candidate.PolicyBundleVersion) ||
             !StringComparer.OrdinalIgnoreCase.Equals(existing.PolicyBundleSha256Digest, candidate.PolicyBundleSha256Digest) ||
             !StringComparer.Ordinal.Equals(existing.IdempotencyKey, candidate.IdempotencyKey) ||
-            existing.Version != candidate.Version ||
-            !existing.EvidenceReferences.SequenceEqual(candidate.EvidenceReferences, StringComparer.Ordinal) ||
-            existing.RegisteredAt < candidate.RegisteredAt)
+            existing.Version != candidate.Version)
             throw new GovernedIntentConcurrencyException(
                 "Stored governed intent does not exactly match the authorized idempotent candidate.");
     }

@@ -13,9 +13,9 @@ Status: **Operationalization Wave 21 complete — Governed Evidence Completion**
 - Increment acceptance: `docs/phase-29/OPERATIONAL_INCREMENT_22_ACCEPTANCE.md`
 - Operationalization: **Wave 21 — Governed Evidence Completion — adapter implementation complete and verified under CR-022**
 - Operationalization acceptance: `docs/operationalization/WAVE_21_ACCEPTANCE.md`
-- Integration Demo: **Stage 01 — Governed Intent validation complete and verified under CR-023**
-- Integration Demo acceptance: `docs/demo/STAGE_01_GOVERNED_INTENT_ACCEPTANCE.md`
-- Next Integration Demo gate: **Stage 02 — signed OPA policy and PostgreSQL atomic Intent registration; separately approved and verified, with no Phase 31**
+- Integration Demo: **Stage 02 — Governed Intent registration complete and verified under CR-024**
+- Integration Demo acceptance: `docs/demo/STAGE_02_GOVERNED_INTENT_REGISTRATION_ACCEPTANCE.md`
+- Next Integration Demo gate: **Stage 03 — Authorized Enterprise Context discovery; separately approved and verified, with no Phase 31**
 - Execution boundary: **The governed Create Internal Service path is operationalized through final Evidence completion: exact signed OPA, independently authorized append/read/classification access, atomic append-only storage, sovereign signing, full ten-stage cryptographic verification, and independent release authorization. All 153 dependencies remain fail closed by default because no signing or trust material is selected. No workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists.**
 
 The approved platform foundation is complete through Phase 30 and the Create Internal Service path is operationalized through Evidence. Waves 01–21 are complete while preserving sovereign fail-closed operation and the absence of any AI-to-production path.
