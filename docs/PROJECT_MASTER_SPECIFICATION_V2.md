@@ -355,3 +355,9 @@ Integration Demo Stage 02 connects the existing Governed Intent Registration con
 The demo runtime uses pinned official container images. Private signing keys, database passwords, TLS private keys, generated signed bundles, tokens, logs, and database volumes remain outside Git. Repository defaults remain unconfigured and fail closed. Stage 02 may demonstrate permit, deny, idempotent replay, and no-persistence-on-failure only; it grants no workflow advancement, AI invocation, later-station access, production action, public deployment, institutional policy selection, new service boundary, or Phase 31.
 
 Change-control record: `docs/change-control/CR-024-INTEGRATION-DEMO-INTENT-REGISTRATION.md`.
+
+## Approved Integration Demo addendum — CR-025
+
+Integration Demo Stage 03 connects the existing Authorized Enterprise Context contract to the exact persisted synthetic Stage 02 Intent, a verified signed localhost-only OPA decision, a TLS Neo4j read-only Enterprise Graph source with fixed tenant/resource/classification/result bounds, per-result reauthorization, and immutable PostgreSQL evidence. The demo policy releases only two named synthetic Internal Graph resources; a separately seeded out-of-scope object proves the resource allow-list boundary. Repository defaults remain unconfigured and fail closed. The result remains non-advancing (`CanAdvance: false`) and Existing Systems, all later stations, AI invocation, workflow advancement, production action, new service boundaries, and Phase 31 remain disconnected.
+
+Change-control record: `docs/change-control/CR-025-INTEGRATION-DEMO-ENTERPRISE-CONTEXT.md`.

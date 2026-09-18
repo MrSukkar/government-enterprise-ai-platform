@@ -25,18 +25,18 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 02 - Governed Intent Registration",
+    "stage": "Stage 03 - Authorized Enterprise Context Discovery",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-024-INTEGRATION-DEMO-INTENT-REGISTRATION.md",
-    "acceptanceArtifact": "docs/demo/STAGE_02_GOVERNED_INTENT_REGISTRATION_ACCEPTANCE.md",
-    "nextGate": "Stage 03 - Authorized Enterprise Context discovery",
-    "executionBoundary": "Synthetic localhost OIDC, a verified signed OPA bundle, and TLS PostgreSQL permit atomic governed Intent registration with deterministic replay and denial without mutation; no workflow advancement, AI invocation, material action, production effect, or Phase 31"
+    "changeControl": "docs/change-control/CR-025-INTEGRATION-DEMO-ENTERPRISE-CONTEXT.md",
+    "acceptanceArtifact": "docs/demo/STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md",
+    "nextGate": "Stage 04 - Existing Systems discovery",
+    "executionBoundary": "Synthetic localhost OIDC, a verified signed OPA bundle, TLS PostgreSQL, and a read-only TLS Neo4j graph release only exact authorized Enterprise Context with immutable evidence; no workflow advancement, Existing Systems access, AI invocation, material action, production effect, or Phase 31"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_02_GOVERNED_INTENT_REGISTRATION_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

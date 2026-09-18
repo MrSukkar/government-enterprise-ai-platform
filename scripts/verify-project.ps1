@@ -2671,6 +2671,37 @@ if (Test-Path $stage02AcceptancePath) {
     @('Status: **Satisfied**','CR-024','HTTP `201`','HTTP `200`','HTTP `403`','all 15 projects, 0 warnings, 0 errors','Stage 03') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 02 acceptance missing: $_" } }
 }
 
+$stage03AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md'
+if (Test-Path $stage03AcceptancePath) {
+    $stage03Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-025-INTEGRATION-DEMO-ENTERPRISE-CONTEXT.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-03\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-03\opa\decision.rego'
+        Bundle = Join-Path $repositoryRoot 'deploy\demo\stage-03\opa\bundle_verification.rego'
+        Seed = Join-Path $repositoryRoot 'deploy\demo\stage-03\neo4j\seed.cypher'
+        Neo4jConfiguration = Join-Path $repositoryRoot 'deploy\demo\stage-03\neo4j\neo4j.conf'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-03.ps1'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+    }
+    $stage03Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 03 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage03Paths.Change
+    @('Status: **Approved for bounded implementation**','Graph only','CanAdvance','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 03 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage03Paths.Compose
+    @('openpolicyagent/opa:1.20.2-static@sha256:','postgres:18.6-bookworm@sha256:','neo4j:2025.10-community@sha256:','127.0.0.1:7687','002_enterprise_context_evidence.sql') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 03 composition guard missing: $_" } }
+    $neo4jConfiguration = Get-Content -Raw $stage03Paths.Neo4jConfiguration
+    @('server.bolt.tls_level=REQUIRED','dbms.ssl.policy.bolt.enabled=true') | ForEach-Object { if ($neo4jConfiguration -notmatch [regex]::Escape($_)) { throw "Stage 03 Neo4j guard missing: $_" } }
+    $policy = Get-Content -Raw $stage03Paths.Policy
+    @('internal-service.enterprise-context.discover','enterprise-object:permit-renewal-policy','enterprise-object:permit-renewal-service','"Graph"','"maximumResults": 2','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 03 policy guard missing: $_" } }
+    $seed = Get-Content -Raw $stage03Paths.Seed
+    @('enterprise-object:out-of-scope-control','Synthetic negative fixture','classificationRank = 1') | ForEach-Object { if ($seed -notmatch [regex]::Escape($_)) { throw "Stage 03 seed guard missing: $_" } }
+    $preparation = Get-Content -Raw $stage03Paths.Preparation
+    @('GEAIP_DEMO_POSTGRES_PASSWORD','GEAIP_DEMO_NEO4J_PASSWORD','--signing-key','--verification-key','cypher-shell') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 03 preparation guard missing: $_" } }
+    $page = Get-Content -Raw $stage03Paths.Page
+    @('Discover authorized context','DiscoverEnterpriseContextAsync','EnterpriseContextReceipt','developer.internal-service.context.discover','CanAdvance') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 03 UI guard missing: $_" } }
+    $acceptance = Get-Content -Raw $stage03AcceptancePath
+    @('Status: **Satisfied**','CR-025','out-of-scope','CanAdvance: false','all 15 projects, 0 warnings, 0 errors','Stage 04') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 03 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

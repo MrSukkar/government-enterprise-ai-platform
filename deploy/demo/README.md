@@ -2,13 +2,14 @@
 
 This directory contains versioned, non-secret configuration for the local Integration Demo. It is not a production deployment profile.
 
-## Stage 02 topology
+## Stage 03 topology
 
 | Service | Address | Purpose |
 |---|---|---|
 | Keycloak | `https://localhost:8443` | Synthetic OIDC authority |
-| OPA | `https://localhost:8181` | Verified signed policy bundle and Intent-registration decision |
-| PostgreSQL | `localhost:5433` | TLS atomic Intent and evidence persistence |
+| OPA | `https://localhost:8181` | Verified signed policy bundle, Intent registration, and Enterprise Context decision |
+| PostgreSQL | `localhost:5433` | TLS atomic Intent and Enterprise Context evidence persistence |
+| Neo4j | `neo4j+s://localhost:7687` | TLS synthetic, read-only Enterprise Graph |
 | Platform API | `https://localhost:7200` | Protected governed boundaries and developer portal |
 | Platform Web | `https://localhost:7071` | Blazor WebAssembly demonstration UI |
 
@@ -27,12 +28,12 @@ This directory contains versioned, non-secret configuration for the local Integr
 3. A trusted ASP.NET Core localhost development certificate.
 4. Local runtime secrets supplied outside the repository.
 
-Set `GEAIP_DEMO_POSTGRES_PASSWORD` to a local runtime secret, then run `scripts/prepare-integration-demo-stage-02.ps1 -StartInfrastructure`. The script creates ignored localhost TLS material and OPA signing material, builds and verifies the signed bundle, and starts only the pinned Stage 02 services. The existing migration is applied by PostgreSQL initialization, never API startup.
+Set `GEAIP_DEMO_POSTGRES_PASSWORD` and `GEAIP_DEMO_NEO4J_PASSWORD` to local runtime secrets, then run `scripts/prepare-integration-demo-stage-03.ps1 -StartInfrastructure`. The script creates ignored localhost TLS and OPA signing material, builds and verifies the signed bundle, starts only the pinned Stage 03 services, and seeds synthetic graph fixtures. PostgreSQL migrations are initializer-owned; the API never performs migrations.
 
-The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PERMIT_RENEWAL_SCENARIO.md`. Stage 02 acceptance evidence is recorded in `docs/demo/STAGE_02_GOVERNED_INTENT_REGISTRATION_ACCEPTANCE.md`.
+The current accepted presenter workflow is documented in `docs/demo/NATIONAL_PERMIT_RENEWAL_SCENARIO.md`. Stage 03 acceptance evidence is recorded in `docs/demo/STAGE_03_AUTHORIZED_ENTERPRISE_CONTEXT_ACCEPTANCE.md`.
 
 ## Runtime behavior
 
-The demo-specific API settings load only when `ASPNETCORE_ENVIRONMENT=IntegrationDemo`. Normal repository defaults remain unconfigured and fail closed. Stopping Keycloak, OPA, or PostgreSQL, presenting an invalid token, failing signed-bundle verification, or receiving policy denial prevents registration. Exact authorized replays return the original immutable record and evidence reference.
+The demo-specific API settings load only when `ASPNETCORE_ENVIRONMENT=IntegrationDemo`. Normal repository defaults remain unconfigured and fail closed. Stopping Keycloak, OPA, PostgreSQL, or Neo4j, presenting an invalid token, failing signed-bundle verification, or receiving policy denial prevents registration or context release. Authorized context remains read-only and non-advancing.
 
 Do not reuse this realm, its synthetic identities, or localhost certificates for Pilot or Production. Those environments require institutionally selected identity, trust, secret-management, and deployment profiles.

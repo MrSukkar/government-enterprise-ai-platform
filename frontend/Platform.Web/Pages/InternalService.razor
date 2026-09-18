@@ -35,6 +35,7 @@
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
             <button type="button" class="primary-action" disabled="@(!CanRegister || IsRegistering)" @onclick="RegisterIntentAsync">@(IsRegistering ? "Registering..." : "Register with OPA + PostgreSQL")</button>
+            <button type="button" class="primary-action" disabled="@(!CanDiscoverContext || IsDiscoveringContext)" @onclick="DiscoverEnterpriseContextAsync">@(IsDiscoveringContext ? "Discovering..." : "Discover authorized context")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -56,15 +57,26 @@
                 <div><dt>Can advance</dt><dd>@(RegistrationReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
             </dl>
         }
+        @if (ContextReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Authorized Enterprise Context receipt">
+                <div><dt>Discovery</dt><dd>@ContextReceipt.DiscoveryId</dd></div>
+                <div><dt>Policy</dt><dd>@ContextReceipt.PolicyOutcome</dd></div>
+                <div><dt>Released items</dt><dd>@ContextReceipt.Items.Count</dd></div>
+                <div><dt>Context digest</dt><dd>@ContextReceipt.ContextSha256Digest</dd></div>
+                <div><dt>Evidence</dt><dd>@ContextReceipt.DiscoveryEvidenceReference</dd></div>
+                <div><dt>Can advance</dt><dd>@(ContextReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
         <p class="eyebrow">02 / Authorized context</p><h2>Enterprise context</h2>
         <ul class="context-list">
             <li><span>Identity and purpose</span><strong class="@(ExperienceContext.IsGovernedIdentityEstablished ? "available" : "waiting")">@(ExperienceContext.IsGovernedIdentityEstablished ? "Established" : "Waiting")</strong></li>
-            <li><span>Governed Intent reader</span><strong class="waiting">Adapter available / not configured</strong></li>
-            <li><span>Enterprise Context OPA, Graph, and evidence</span><strong class="waiting">Adapters available / not configured</strong></li>
-            <li><span>Enterprise Context snapshot reader</span><strong class="waiting">Adapter available / not configured</strong></li>
+            <li><span>Governed Intent reader</span><strong class="@(RegistrationReceipt is not null ? "available" : "waiting")">@(RegistrationReceipt is not null ? "Registered" : "Waiting")</strong></li>
+            <li><span>Enterprise Context OPA, Graph, and evidence</span><strong class="@(ContextReceipt?.IsContextReleased == true ? "available" : "waiting")">@(ContextReceipt?.IsContextReleased == true ? "Authorized and evidenced" : "Waiting")</strong></li>
+            <li><span>Enterprise Context snapshot reader</span><strong class="@(ContextReceipt?.IsContextReleased == true ? "available" : "waiting")">@(ContextReceipt?.IsContextReleased == true ? "Snapshot recorded" : "Waiting")</strong></li>
             <li><span>Existing Systems OPA gate</span><strong class="waiting">Adapter available / not configured</strong></li>
             <li><span>Enterprise Graph inventory source</span><strong class="waiting">Adapter available / not configured</strong></li>
             <li><span>System and relationship authorizer</span><strong class="waiting">Adapter available / not configured</strong></li>
@@ -167,10 +179,13 @@
     private string EvaluationMessage { get; set; } = "Draft is complete enough for governed intent submission. Submission remains locked.";
     private bool IsSubmitting { get; set; }
     private bool IsRegistering { get; set; }
+    private bool IsDiscoveringContext { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
+    private EnterpriseContextReceipt? ContextReceipt { get; set; }
     private Guid RegistrationId { get; set; }
+    private Guid ContextDiscoveryId { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -186,6 +201,10 @@
         LastSubmission is not null &&
         LastReceipt is not null &&
         ExperienceContext.HasPermission("developer.internal-service.intent.register");
+
+    private bool CanDiscoverContext =>
+        RegistrationReceipt is { IsPersisted: true, Version: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.context.discover");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -249,7 +268,9 @@
                 LastReceipt = await response.Content.ReadFromJsonAsync<IntentValidationReceipt>();
                 LastSubmission = request;
                 RegistrationReceipt = null;
+                ContextReceipt = null;
                 RegistrationId = Guid.NewGuid();
+                ContextDiscoveryId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
             else
@@ -280,9 +301,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-intent-registration",
+                    "geaip-demo-stage-03",
                     "2026.09.18",
-                    "041941cce6753212eb98bd3f0ef73b0772d14df0be6a6dea141c18b6041ac4bd",
+                    "847bc7c3f57336bfa5cd44d09d9463b23eb1fcee62df71ab8721d791c2a91d0c",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -291,6 +312,7 @@
             if (response.IsSuccessStatusCode)
             {
                 RegistrationReceipt = await response.Content.ReadFromJsonAsync<IntentRegistrationReceipt>();
+                ContextReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -309,6 +331,54 @@
         finally
         {
             IsRegistering = false;
+        }
+    }
+
+    private async Task DiscoverEnterpriseContextAsync()
+    {
+        if (!CanDiscoverContext || RegistrationReceipt is null) return;
+
+        IsDiscoveringContext = true;
+        try
+        {
+            var request = new EnterpriseContextRequest(
+                ContextDiscoveryId,
+                RegistrationReceipt.Version!.Value,
+                RegistrationReceipt.IntentSha256Digest,
+                ExperienceContext.Purpose,
+                Classification,
+                "IntegrationDemo",
+                new IntentPolicyBundle(
+                    "geaip-demo-stage-03",
+                    "2026.09.18",
+                    "847bc7c3f57336bfa5cd44d09d9463b23eb1fcee62df71ab8721d791c2a91d0c",
+                    "signature://demo/opa/demo-opa-signing-01",
+                    "IntegrationDemo",
+                    new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context",
+                request);
+            if (response.IsSuccessStatusCode)
+            {
+                ContextReceipt = await response.Content.ReadFromJsonAsync<EnterpriseContextReceipt>();
+                EvaluationMessage = ContextReceipt is { IsContextReleased: true, CanAdvance: false }
+                    ? $"Authorized Enterprise Context released {ContextReceipt.Items.Count} scoped graph items and recorded immutable evidence. Advancement remains locked."
+                    : "Enterprise Context response did not satisfy the Stage 03 boundary.";
+            }
+            else
+            {
+                ContextReceipt = null;
+                EvaluationMessage = $"Enterprise Context failed closed ({(int)response.StatusCode}). No context was released.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            ContextReceipt = null;
+            EvaluationMessage = "OPA, PostgreSQL, or Neo4j is unavailable. Enterprise Context failed closed.";
+        }
+        finally
+        {
+            IsDiscoveringContext = false;
         }
     }
 
@@ -356,6 +426,40 @@
         string? Disposition,
         long? Version,
         string? RegistrationEvidenceReference,
+        IReadOnlyList<string> EvidenceReferences,
+        string NextRequiredGate,
+        DateTimeOffset CompletedAt);
+
+    private sealed record EnterpriseContextRequest(
+        Guid DiscoveryId,
+        long ExpectedRegistrationVersion,
+        string ExpectedIntentSha256Digest,
+        string Purpose,
+        string RegistrationClassification,
+        string Environment,
+        IntentPolicyBundle PolicyBundle);
+
+    private sealed record EnterpriseContextItem(
+        string ResourceId,
+        string Classification,
+        string Content,
+        string Modality,
+        decimal Relevance,
+        string Source,
+        IReadOnlyList<string> EvidenceReferences);
+
+    private sealed record EnterpriseContextReceipt(
+        Guid DiscoveryId,
+        Guid RegistrationId,
+        long RegistrationVersion,
+        string TenantId,
+        string IntentSha256Digest,
+        string PolicyOutcome,
+        bool IsContextReleased,
+        bool CanAdvance,
+        string? ContextSha256Digest,
+        IReadOnlyList<EnterpriseContextItem> Items,
+        string? DiscoveryEvidenceReference,
         IReadOnlyList<string> EvidenceReferences,
         string NextRequiredGate,
         DateTimeOffset CompletedAt);
