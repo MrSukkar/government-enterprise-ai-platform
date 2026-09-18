@@ -2639,6 +2639,38 @@ if(Test-Path $wave21AcceptancePath){
  $acceptance=Get-Content -Raw $wave21AcceptancePath;@('Status: **Satisfied**','CR-022','all 153 dependencies remain fail closed','All 15 projects build with zero warnings and zero errors')|ForEach-Object{if($acceptance-notmatch[regex]::Escape($_)){throw "Wave 21 acceptance missing: $_"}}
 }
 
+$stage02AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_02_GOVERNED_INTENT_REGISTRATION_ACCEPTANCE.md'
+if (Test-Path $stage02AcceptancePath) {
+    $stage02Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-024-INTEGRATION-DEMO-INTENT-REGISTRATION.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-02\compose.yml'
+        Manifest = Join-Path $repositoryRoot 'deploy\demo\stage-02\opa\.manifest'
+        RegistrationPolicy = Join-Path $repositoryRoot 'deploy\demo\stage-02\opa\intent_registration.rego'
+        BundlePolicy = Join-Path $repositoryRoot 'deploy\demo\stage-02\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-02.ps1'
+        ControlPlane = Join-Path $repositoryRoot 'backend\Platform.Governance\Policies\SovereignPolicyControlPlane.cs'
+        Repository = Join-Path $repositoryRoot 'backend\Platform.SoftwareFactory\Persistence\PostgreSqlGovernedIntentRegistrationRepository.cs'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+    }
+    $stage02Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 02 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage02Paths.Change
+    @('Status: **Approved for bounded implementation**','deterministic idempotency','No later vertical-slice station','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 02 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage02Paths.Compose
+    @('openpolicyagent/opa:1.20.2-static@sha256:','postgres:18.6-bookworm@sha256:','--verification-key=','127.0.0.1:8181','127.0.0.1:5433','ssl=on','read_only: true','cap_drop:') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 02 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage02Paths.RegistrationPolicy
+    @('internal-service.intent.register','demo-permit-authority','IntegrationDemo','signatureValid == true','041941cce6753212eb98bd3f0ef73b0772d14df0be6a6dea141c18b6041ac4bd','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 02 policy guard missing: $_" } }
+    $preparation = Get-Content -Raw $stage02Paths.Preparation
+    @('GEAIP_DEMO_POSTGRES_PASSWORD','--signing-key','--verification-key','--no-password','docker compose') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 02 preparation guard missing: $_" } }
+    $controlPlane = Get-Content -Raw $stage02Paths.ControlPlane
+    @('/v1/data/','new { input = request }','TryGetProperty("result"','ResponseHeadersRead','ReadAsByteArrayAsync','MaximumResponseBytes') | ForEach-Object { if ($controlPlane -notmatch [regex]::Escape($_)) { throw "Stage 02 OPA adapter guard missing: $_" } }
+    $repository = Get-Content -Raw $stage02Paths.Repository
+    @('immutable intent and policy bundle','GovernedIntentRegistrationDisposition.Unchanged','BeginTransactionAsync','ON CONFLICT DO NOTHING') | ForEach-Object { if ($repository -notmatch [regex]::Escape($_)) { throw "Stage 02 idempotency guard missing: $_" } }
+    $page = Get-Content -Raw $stage02Paths.Page
+    @('Register with OPA + PostgreSQL','RegisterIntentAsync','RegistrationReceipt','CanAdvance') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 02 UI guard missing: $_" } }
+    $acceptance = Get-Content -Raw $stage02AcceptancePath
+    @('Status: **Satisfied**','CR-024','HTTP `201`','HTTP `200`','HTTP `403`','all 15 projects, 0 warnings, 0 errors','Stage 03') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 02 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

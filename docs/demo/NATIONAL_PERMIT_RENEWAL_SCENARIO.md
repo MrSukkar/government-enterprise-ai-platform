@@ -79,7 +79,7 @@ Use separate synthetic identities for Developer and Approver even in a non-produ
 | Enterprise Model | Read-only contextualized service and relationships | The Enterprise Model remains the contextual source of truth |
 | Evidence | Ordered signed chain and independent verification result | The complete outcome is tamper-evident and auditable |
 
-## 6. Presenter flow for Integration Demo Stage 01
+## 6. Presenter flow for Integration Demo Stages 01–02
 
 1. Open the HTTPS frontend at `https://localhost:7071/build/internal-services`.
 2. Point to **Sign-in required** and the disabled **Submit governed intent** action; explain that navigation never grants API authority.
@@ -89,13 +89,16 @@ Use separate synthetic identities for Developer and Approver even in a non-produ
 6. Enter `evidence://demo/permit-renewal/intent/001` as the intent evidence reference.
 7. Select **Evaluate intent** and show that both draft completeness and governed identity are required.
 8. Select **Submit governed intent** and show the deterministic validation receipt: submission identifier, digest, status `validated-not-persisted`, and `Persisted: No`.
-9. Explain that Stage 01 validates only; it does not call OPA, persist an Intent, advance workflow, invoke AI, or reach production.
-10. Sign out and show that submission locks again.
-11. Open the developer console at `https://localhost:7200/developers`.
-12. Open `/health` and show that liveness proves the API process is running.
-13. Open `/health/ready` and explain that `503` is the correct fail-closed result while institutional dependencies are absent.
-14. Open `/openapi/v1.json` and show the protected identity-context and Intent validation contracts.
-15. Close with Stage 02: connect a signed OPA policy bundle and PostgreSQL atomic Intent registration, then demonstrate permit, deny, idempotency, and no-persistence-on-failure paths.
+9. Select **Register validated intent** and show the signed-policy permit plus the atomic `Created` receipt with `canAdvance: false`.
+10. Repeat the exact registration and show `Unchanged` with the same immutable registration evidence reference.
+11. Demonstrate the denied-purpose path and show `403`, `Deny`, and no additional PostgreSQL row.
+12. Explain that Stage 02 registers only; it does not advance workflow, release Enterprise Context, invoke AI, or reach production.
+13. Sign out and show that submission and registration lock again.
+14. Open the developer console at `https://localhost:7200/developers`.
+15. Open `/health` and show that liveness proves the API process is running.
+16. Open `/health/ready` and explain that `503` remains correct while later institutional dependencies are absent, even though Identity, OPA, and Intent PostgreSQL are configured for the demo.
+17. Open `/openapi/v1.json` and show the protected validation and registration contracts.
+18. Close with Stage 03: separately authorize Enterprise Context discovery; Stage 02 cannot cross that gate.
 
 The earlier HTTP ports `5130` and `5171` remain suitable only for the unauthenticated static preview. The Integration Demo uses trusted localhost HTTPS on `7071`, `7200`, and `8443`.
 

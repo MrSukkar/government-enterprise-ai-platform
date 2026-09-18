@@ -34,6 +34,7 @@
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRegister || IsRegistering)" @onclick="RegisterIntentAsync">@(IsRegistering ? "Registering..." : "Register with OPA + PostgreSQL")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -43,6 +44,16 @@
                 <div><dt>Status</dt><dd>@LastReceipt.Status</dd></div>
                 <div><dt>Intent digest</dt><dd>@LastReceipt.IntentDigest</dd></div>
                 <div><dt>Persisted</dt><dd>@(LastReceipt.IsPersisted ? "Yes" : "No — validation only")</dd></div>
+            </dl>
+        }
+        @if (RegistrationReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed intent registration receipt">
+                <div><dt>Registration</dt><dd>@RegistrationReceipt.RegistrationId</dd></div>
+                <div><dt>Policy</dt><dd>@RegistrationReceipt.PolicyOutcome</dd></div>
+                <div><dt>Disposition</dt><dd>@RegistrationReceipt.Disposition</dd></div>
+                <div><dt>Evidence</dt><dd>@RegistrationReceipt.RegistrationEvidenceReference</dd></div>
+                <div><dt>Can advance</dt><dd>@(RegistrationReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -155,7 +166,11 @@
     private int DraftScore { get; set; } = 100;
     private string EvaluationMessage { get; set; } = "Draft is complete enough for governed intent submission. Submission remains locked.";
     private bool IsSubmitting { get; set; }
+    private bool IsRegistering { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
+    private IntentSubmissionRequest? LastSubmission { get; set; }
+    private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
+    private Guid RegistrationId { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -166,6 +181,11 @@
         !string.IsNullOrWhiteSpace(PrimaryUsers) &&
         !string.IsNullOrWhiteSpace(Classification) &&
         !string.IsNullOrWhiteSpace(IntentEvidenceReference);
+
+    private bool CanRegister =>
+        LastSubmission is not null &&
+        LastReceipt is not null &&
+        ExperienceContext.HasPermission("developer.internal-service.intent.register");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -227,7 +247,10 @@
             if (response.IsSuccessStatusCode)
             {
                 LastReceipt = await response.Content.ReadFromJsonAsync<IntentValidationReceipt>();
-                EvaluationMessage = "Intent validated by the server. No state was persisted; OPA-gated registration remains the next step.";
+                LastSubmission = request;
+                RegistrationReceipt = null;
+                RegistrationId = Guid.NewGuid();
+                EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
             else
             {
@@ -242,6 +265,50 @@
         finally
         {
             IsSubmitting = false;
+        }
+    }
+
+    private async Task RegisterIntentAsync()
+    {
+        if (!CanRegister || LastSubmission is null) return;
+
+        IsRegistering = true;
+        try
+        {
+            var request = new IntentRegistrationRequest(
+                RegistrationId,
+                LastSubmission,
+                "IntegrationDemo",
+                new IntentPolicyBundle(
+                    "geaip-demo-intent-registration",
+                    "2026.09.18",
+                    "041941cce6753212eb98bd3f0ef73b0772d14df0be6a6dea141c18b6041ac4bd",
+                    "signature://demo/opa/demo-opa-signing-01",
+                    "IntegrationDemo",
+                    new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
+                -1);
+            var response = await Http.PostAsJsonAsync("api/v1/internal-services/intents/register", request);
+            if (response.IsSuccessStatusCode)
+            {
+                RegistrationReceipt = await response.Content.ReadFromJsonAsync<IntentRegistrationReceipt>();
+                EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
+                    ? "Idempotency proven: the exact governed registration was returned unchanged."
+                    : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
+            }
+            else
+            {
+                RegistrationReceipt = null;
+                EvaluationMessage = $"Registration failed closed ({(int)response.StatusCode}). No advancement was granted.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            RegistrationReceipt = null;
+            EvaluationMessage = "OPA or PostgreSQL is unavailable. Registration failed closed.";
+        }
+        finally
+        {
+            IsRegistering = false;
         }
     }
 
@@ -262,6 +329,36 @@
         string IntentDigest,
         string Status,
         bool IsPersisted);
+
+    private sealed record IntentPolicyBundle(
+        string BundleId,
+        string Version,
+        string Sha256Digest,
+        string SignatureReference,
+        string Environment,
+        DateTimeOffset ActivatedAt);
+
+    private sealed record IntentRegistrationRequest(
+        Guid RegistrationId,
+        IntentSubmissionRequest Submission,
+        string Environment,
+        IntentPolicyBundle PolicyBundle,
+        long ExpectedVersion);
+
+    private sealed record IntentRegistrationReceipt(
+        Guid RegistrationId,
+        Guid SubmissionId,
+        string TenantId,
+        string IntentSha256Digest,
+        string PolicyOutcome,
+        bool IsPersisted,
+        bool CanAdvance,
+        string? Disposition,
+        long? Version,
+        string? RegistrationEvidenceReference,
+        IReadOnlyList<string> EvidenceReferences,
+        string NextRequiredGate,
+        DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

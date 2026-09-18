@@ -347,3 +347,11 @@ Integration Demo Stage 01 connects the existing protected Governed Intent valida
 This selection is limited to the local Integration Demo and does not choose a production identity provider. Repository defaults remain unconfigured and fail closed. No credential, token, private key, exported certificate, trust material, or institutional data is committed. This stage performs Intent validation only: it introduces no OPA decision, persistence, workflow advancement, external access, AI invocation, material action, or production effect. OPA-gated PostgreSQL Intent registration remains the next separately verified step within the existing Governed Intent station; no Phase 31, new station, service boundary, policy authority, or architectural deviation is introduced.
 
 Change-control record: `docs/change-control/CR-023-INTEGRATION-DEMO-GOVERNED-INTENT.md`.
+
+## Approved Integration Demo addendum — CR-024
+
+Integration Demo Stage 02 connects the existing Governed Intent Registration contract to a localhost-only OPA 1.20.2 runtime that refuses unsigned policy bundles and to PostgreSQL 18.6 over verified TLS. The demo policy permits only the exact synthetic tenant, purpose, environment, supported classification, action, and signed-bundle binding. The existing application engine remains responsible for decision revalidation, policy-before-persistence ordering, deterministic idempotency, optimistic concurrency, atomic registration, and cryptographic evidence.
+
+The demo runtime uses pinned official container images. Private signing keys, database passwords, TLS private keys, generated signed bundles, tokens, logs, and database volumes remain outside Git. Repository defaults remain unconfigured and fail closed. Stage 02 may demonstrate permit, deny, idempotent replay, and no-persistence-on-failure only; it grants no workflow advancement, AI invocation, later-station access, production action, public deployment, institutional policy selection, new service boundary, or Phase 31.
+
+Change-control record: `docs/change-control/CR-024-INTEGRATION-DEMO-INTENT-REGISTRATION.md`.

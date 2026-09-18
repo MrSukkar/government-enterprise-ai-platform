@@ -48,10 +48,16 @@ public sealed class SovereignPolicyBundleVerifier(
         HttpClient client, Uri endpoint, TRequest request, PolicyControlPlaneOptions options,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(options.RequestTimeoutSeconds));
+        object requestPayload;
+        if (endpoint.AbsolutePath.StartsWith("/v1/data/", StringComparison.Ordinal))
+            requestPayload = new { input = request };
+        else
+            requestPayload = request;
         using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)
-        { Content = JsonContent.Create(request, options: JsonSerializerOptions.Web) };
+        { Content = JsonContent.Create(requestPayload, options: JsonSerializerOptions.Web) };
         HttpResponseMessage response;
         try
         {
@@ -79,7 +85,11 @@ public sealed class SovereignPolicyBundleVerifier(
             var bytes = await response.Content.ReadAsByteArrayAsync(timeout.Token);
             if (bytes.Length == 0 || bytes.Length > options.MaximumResponseBytes)
                 throw new InvalidOperationException("Policy control-plane response is empty or exceeds its configured safety bound.");
-            return JsonSerializer.Deserialize<TResponse>(bytes, JsonSerializerOptions.Web)
+            using var document = JsonDocument.Parse(bytes);
+            var responsePayload = document.RootElement.TryGetProperty("result", out var result)
+                ? result
+                : document.RootElement;
+            return responsePayload.Deserialize<TResponse>(JsonSerializerOptions.Web)
                 ?? throw new InvalidOperationException("Policy control-plane response is malformed.");
         }
     }

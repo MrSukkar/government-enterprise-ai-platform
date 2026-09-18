@@ -315,19 +315,21 @@ public sealed class GovernedIntentRegistrationEngine(GovernedIntentSubmissionVal
             !StringComparer.Ordinal.Equals(persisted.Mission, candidate.Mission) ||
             !StringComparer.Ordinal.Equals(persisted.PrimaryUsers, candidate.PrimaryUsers) ||
             !StringComparer.OrdinalIgnoreCase.Equals(persisted.IntentSha256Digest, candidate.IntentSha256Digest) ||
-            persisted.PolicyDecisionRequestId != candidate.PolicyDecisionRequestId ||
             !StringComparer.Ordinal.Equals(persisted.PolicyBundleId, candidate.PolicyBundleId) ||
             !StringComparer.Ordinal.Equals(persisted.PolicyBundleVersion, candidate.PolicyBundleVersion) ||
             !StringComparer.OrdinalIgnoreCase.Equals(persisted.PolicyBundleSha256Digest, candidate.PolicyBundleSha256Digest) ||
             !StringComparer.Ordinal.Equals(persisted.IdempotencyKey, candidate.IdempotencyKey) ||
-            !candidate.EvidenceReferences.All(persisted.EvidenceReferences.Contains) ||
             string.IsNullOrWhiteSpace(persisted.RegistrationEvidenceReference) ||
-            StringComparer.Ordinal.Equals(persisted.RegistrationEvidenceReference, "pending-atomic-registration") ||
-            persisted.RegisteredAt < candidate.RegisteredAt)
+            StringComparer.Ordinal.Equals(persisted.RegistrationEvidenceReference, "pending-atomic-registration"))
             throw new InvalidOperationException("Intent repository changed governed registration state.");
-        if (result.Disposition == GovernedIntentRegistrationDisposition.Created &&
-            persisted.Version != request.ExpectedVersion + 1)
-            throw new InvalidOperationException("Created intent registration version is invalid.");
+        if (result.Disposition == GovernedIntentRegistrationDisposition.Created)
+        {
+            if (persisted.PolicyDecisionRequestId != candidate.PolicyDecisionRequestId ||
+                !candidate.EvidenceReferences.All(persisted.EvidenceReferences.Contains) ||
+                persisted.RegisteredAt < candidate.RegisteredAt ||
+                persisted.Version != request.ExpectedVersion + 1)
+                throw new InvalidOperationException("Created intent registration is invalid.");
+        }
         if (result.Disposition == GovernedIntentRegistrationDisposition.Unchanged &&
             persisted.Version < 0)
             throw new InvalidOperationException("Unchanged intent registration version is invalid.");
