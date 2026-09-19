@@ -2868,11 +2868,44 @@ if (Test-Path $stage10AcceptancePath) {
     $runbook = Get-Content -Raw $stage10Paths.Runbook
     @('demo-security-data-flow','demo-security-input-boundary','Repository defaults remain empty and fail closed','cannot mutate source','Sandbox') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 10 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage10Paths.Page
-    @('Run governed Security Validation','RunSecurityValidationAsync','developer.internal-service.security-validation.create','IsExecutable: false','CanAdvance: false','geaip-demo-stage-10') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 10 UI guard missing: $_" } }
+    @('Run governed Security Validation','RunSecurityValidationAsync','developer.internal-service.security-validation.create','IsExecutable: false','CanAdvance: false') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 10 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage10Paths.Realm
     @('developer.internal-service.static-validation.create','developer.internal-service.security-validation.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 10 identity permission missing: $_" } }
     $acceptance = Get-Content -Raw $stage10AcceptancePath
     @('CR-032','Exact accepted Static report','non-executable','non-advancing','Sandbox and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 10 acceptance missing: $_" } }
+}
+
+$stage11AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_11_SECURITY_SANDBOX_ACCEPTANCE.md'
+if (Test-Path $stage11AcceptancePath) {
+    $stage11Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-033-INTEGRATION-DEMO-SECURITY-SANDBOX.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-11\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-11\opa\decision.rego'
+        BundleVerification = Join-Path $repositoryRoot 'deploy\demo\stage-11\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-11.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-11\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage11Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 11 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage11Paths.Change
+    @('Status: **Approved for bounded implementation**','real institutionally approved','No fake runtime','Tests','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 11 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage11Paths.Compose
+    @('015_sandbox_inputs.sql','016_sandbox_evidence.sql','integration-demo-stage-11','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 11 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage11Paths.Policy
+    @('internal-service.sandbox.execute','Platform.Synthetic.Permit.Sandbox','Firecracker-class','productionCredentialsAllowed":false','hostFilesystemAccessAllowed":false','networkDefaultDeny":true','"outputKind":"sandbox-result"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 11 policy guard missing: $_" } }
+    $bundle = Get-Content -Raw $stage11Paths.BundleVerification
+    @('geaip-demo-stage-11','bfa13a11c0864ed01b8ea3756e612cdc313fb1fac8600e4b117d27b3f6329467','trust://demo/opa/demo-opa-signing-01') | ForEach-Object { if ($bundle -notmatch [regex]::Escape($_)) { throw "Stage 11 bundle verification missing: $_" } }
+    $preparation = Get-Content -Raw $stage11Paths.Preparation
+    @('--signing-key','exact Sandbox image record','real institutionally approved Firecracker-class HTTPS runtime','Stage 11 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 11 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage11Paths.Runbook
+    @('GovernedSandboxService','ISecuritySandboxRuntime','Repository defaults remain empty and fail closed','never substitute a fake runtime','Tests') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 11 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage11Paths.Page
+    @('Run governed Security Sandbox','RunSandboxAsync','developer.internal-service.sandbox.execute','Firecracker-class','ProductionEffectOccurred: false','CanAdvance: false','geaip-demo-stage-11') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 11 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage11Paths.Realm
+    @('developer.internal-service.security-validation.create','developer.internal-service.sandbox.execute') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 11 identity permission missing: $_" } }
+    $acceptance = Get-Content -Raw $stage11AcceptancePath
+    @('CR-033','Exact accepted Security report','No fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Tests and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 11 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

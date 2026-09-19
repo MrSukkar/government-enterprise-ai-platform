@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 10 / Governed Security Validation</p>
+        <p class="eyebrow">Integration Demo Stage 11 / Governed Security Sandbox</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + SIGNED STATIC CONTROLS + EVIDENCE</span>
-        <strong>Governed Security Validation path available; institutional controls required</strong>
-        <small>Exact accepted Static evidence and policy permit precede signed deterministic Security controls. No source, candidate, or sandbox workload is executed or advanced.</small>
+        <span class="state-chip">OPA + FIRECRACKER-CLASS RUNTIME + EVIDENCE</span>
+        <strong>Governed Security Sandbox protocol available; institutional runtime required</strong>
+        <small>Exact accepted Security evidence, image assurance, signed policy, and a real attested sovereign runtime precede execution. Repository defaults remain unconfigured and fail closed.</small>
     </aside>
 </section>
 
@@ -43,6 +43,7 @@
             <button type="button" class="primary-action" disabled="@(!CanCreateCodeCandidate || IsCreatingCodeCandidate)" @onclick="CreateCodeCandidateAsync">@(IsCreatingCodeCandidate ? "Generating..." : "Create governed code candidate")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunStaticValidation || IsRunningStaticValidation)" @onclick="RunStaticValidationAsync">@(IsRunningStaticValidation ? "Validating..." : "Run governed Static Validation")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunSecurityValidation || IsRunningSecurityValidation)" @onclick="RunSecurityValidationAsync">@(IsRunningSecurityValidation ? "Validating security..." : "Run governed Security Validation")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRunSandbox || IsRunningSandbox)" @onclick="RunSandboxAsync">@(IsRunningSandbox ? "Requesting isolated execution..." : "Run governed Security Sandbox")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -155,6 +156,20 @@
                 <div><dt>Evidence</dt><dd>@SecurityValidationReceipt.ValidationEvidenceReference</dd></div>
                 <div><dt>Executable</dt><dd>@(SecurityValidationReceipt.IsExecutable ? "Yes" : "No — inspection only")</dd></div>
                 <div><dt>Can advance</dt><dd>@(SecurityValidationReceipt.CanAdvance ? "Yes" : "No — Sandbox remains separate")</dd></div>
+            </dl>
+        }
+        @if (SandboxReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Security Sandbox receipt">
+                <div><dt>Execution</dt><dd>@SandboxReceipt.ExecutionId</dd></div>
+                <div><dt>Policy</dt><dd>@SandboxReceipt.PolicyOutcome</dd></div>
+                <div><dt>Accepted</dt><dd>@(SandboxReceipt.IsAccepted ? "Yes" : "No")</dd></div>
+                <div><dt>Isolation</dt><dd>Firecracker-class ephemeral microVM</dd></div>
+                <div><dt>Exit</dt><dd>@SandboxReceipt.ExitCode</dd></div>
+                <div><dt>Result digest</dt><dd>@SandboxReceipt.ResultSha256Digest</dd></div>
+                <div><dt>Evidence</dt><dd>@SandboxReceipt.ExecutionEvidenceReference</dd></div>
+                <div><dt>Production effect</dt><dd>@(SandboxReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(SandboxReceipt.CanAdvance ? "Yes" : "No — Tests remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -276,6 +291,7 @@
     private bool IsCreatingCodeCandidate { get; set; }
     private bool IsRunningStaticValidation { get; set; }
     private bool IsRunningSecurityValidation { get; set; }
+    private bool IsRunningSandbox { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -287,6 +303,7 @@
     private GovernedCodeGenerationReceipt? CodeGenerationReceipt { get; set; }
     private GovernedStaticValidationReceipt? StaticValidationReceipt { get; set; }
     private GovernedSecurityValidationReceipt? SecurityValidationReceipt { get; set; }
+    private GovernedSandboxExecutionReceipt? SandboxReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -296,6 +313,7 @@
     private Guid GenerationId { get; set; }
     private Guid StaticValidationId { get; set; }
     private Guid SecurityValidationId { get; set; }
+    private Guid SandboxExecutionId { get; set; }
     private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
@@ -355,6 +373,11 @@
         StaticValidationReceipt is { IsAccepted: true, IsExecutable: false, CanAdvance: false,
             ReportSha256Digest: not null, ValidationEvidenceReference: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.security-validation.create");
+
+    private bool CanRunSandbox =>
+        SecurityValidationReceipt is { IsAccepted: true, IsExecutable: false, CanAdvance: false,
+            SecurityReportSha256Digest: not null, ValidationEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.sandbox.execute");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -426,6 +449,7 @@
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
                 SecurityValidationReceipt = null;
+                SandboxReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -435,6 +459,7 @@
                 GenerationId = Guid.NewGuid();
                 StaticValidationId = Guid.NewGuid();
                 SecurityValidationId = Guid.NewGuid();
+                SandboxExecutionId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -466,9 +491,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-10",
+                    "geaip-demo-stage-11",
                     "2026.09.19",
-                    "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a",
+                    "bfa13a11c0864ed01b8ea3756e612cdc313fb1fac8600e4b117d27b3f6329467",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -485,6 +510,7 @@
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
                 SecurityValidationReceipt = null;
+                SandboxReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -521,9 +547,9 @@
                 Classification,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-10",
+                    "geaip-demo-stage-11",
                     "2026.09.19",
-                    "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a",
+                    "bfa13a11c0864ed01b8ea3756e612cdc313fb1fac8600e4b117d27b3f6329467",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
@@ -540,6 +566,7 @@
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
                 SecurityValidationReceipt = null;
+                SandboxReceipt = null;
                 EvaluationMessage = ContextReceipt is { IsContextReleased: true, CanAdvance: false }
                     ? $"Authorized Enterprise Context released {ContextReceipt.Items.Count} scoped graph items and recorded immutable evidence. Advancement remains locked."
                     : "Enterprise Context response did not satisfy the Stage 03 boundary.";
@@ -576,6 +603,7 @@
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Systems released {SystemsReceipt.Systems.Count} synthetic scoped systems with immutable evidence. Advancement remains locked."
                 : $"Existing Systems failed closed ({(int)response.StatusCode}). No inventory was released.";
@@ -598,6 +626,7 @@
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Architecture released {ArchitectureReceipt.Items.Count} approved synthetic items with immutable evidence. Advancement remains locked."
                 : $"Existing Architecture failed closed ({(int)response.StatusCode}). No architecture was released.";
@@ -624,6 +653,7 @@
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false }
                 ? $"Authorized Approved Packages released {PackagesReceipt.Packages.Count} exact synthetic package coordinates with immutable evidence. Advancement remains locked."
                 : $"Approved Packages failed closed ({(int)response.StatusCode}). No package selection was released.";
@@ -660,6 +690,7 @@
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = PlanningReceipt is { IsPlanningCandidateReleased: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed AI Planning released one non-executable candidate after {PlanningReceipt.EvaluationFindings.Count} independent checks and immutable evidence. Code Generation remains locked."
                 : $"AI Planning failed closed ({(int)response.StatusCode}). No candidate was released.";
@@ -702,6 +733,7 @@
                 : null;
             StaticValidationReceipt = null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = CodeGenerationReceipt is
                 { IsCodeCandidateReleased: true, IsExecutable: false, IsApplied: false, CanAdvance: false }
                 ? $"Governed Code Generation released inert candidate data for {CodeGenerationReceipt.GeneratedFilePaths.Count} authorized paths after {CodeGenerationReceipt.EvaluationFindings.Count} independent checks. No file was written or applied."
@@ -735,6 +767,7 @@
                 ? await response.Content.ReadFromJsonAsync<GovernedStaticValidationReceipt>()
                 : null;
             SecurityValidationReceipt = null;
+            SandboxReceipt = null;
             EvaluationMessage = StaticValidationReceipt is
                 { IsAccepted: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed Static Validation accepted the inert candidate after {StaticValidationReceipt.ControlReports.Count} signed deterministic controls. Security Validation remains locked."
@@ -767,6 +800,7 @@
             SecurityValidationReceipt = response.IsSuccessStatusCode
                 ? await response.Content.ReadFromJsonAsync<GovernedSecurityValidationReceipt>()
                 : null;
+            SandboxReceipt = null;
             EvaluationMessage = SecurityValidationReceipt is
                 { IsAccepted: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed Security Validation accepted the inert candidate after {SecurityValidationReceipt.ControlReports.Count} signed deterministic controls. Sandbox remains locked."
@@ -780,7 +814,46 @@
         finally { IsRunningSecurityValidation = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-10", "2026.09.19", "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task RunSandboxAsync()
+    {
+        if (!CanRunSandbox || RegistrationReceipt is null || ContextReceipt is null ||
+            SystemsReceipt is null || ArchitectureReceipt is null || PackagesReceipt is null ||
+            PlanningReceipt is null || CodeGenerationReceipt is null || StaticValidationReceipt is null ||
+            SecurityValidationReceipt is null) return;
+        IsRunningSandbox = true;
+        try
+        {
+            var request = new SandboxExecutionRequest(
+                SandboxExecutionId, DeliveryRunId, CodeGenerationReceipt.CandidateSha256Digest!,
+                SecurityValidationReceipt.SecurityReportSha256Digest!, SecurityValidationReceipt.ValidationEvidenceReference!,
+                new PackageCoordinate("SandboxImage", "Platform.Synthetic.Permit.Sandbox", "1.0.0",
+                    "sha256:3333333333333333333333333333333333333333333333333333333333333333"),
+                new SandboxIsolationPolicy("Firecracker-class", true, true, false, false, true, [], 1, 536870912, TimeSpan.FromSeconds(30)),
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["CONFIG_PROFILE"] = "reference://demo/config/permit-sandbox-v1"
+                },
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation/{CodeGenerationReceipt.GenerationId:D}/static-validation/{StaticValidationReceipt.ValidationId:D}/security-validation/{SecurityValidationReceipt.ValidationId:D}/sandbox",
+                request);
+            SandboxReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedSandboxExecutionReceipt>()
+                : null;
+            EvaluationMessage = SandboxReceipt is
+                { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false }
+                ? $"Governed Security Sandbox accepted a signed Firecracker-class result with {SandboxReceipt.ProducedArtifactReferences.Count} evidenced outputs. Tests remains locked."
+                : $"Sandbox failed closed ({(int)response.StatusCode}). Configure a real approved image, signed sovereign runtime, trust, and bounds; no execution result was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            SandboxReceipt = null;
+            EvaluationMessage = "Sandbox policy, Security evidence, image assurance, signed sovereign runtime, result authorization, or PostgreSQL is unavailable. No workload was executed or claimed.";
+        }
+        finally { IsRunningSandbox = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-11", "2026.09.19", "bfa13a11c0864ed01b8ea3756e612cdc313fb1fac8600e4b117d27b3f6329467", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -884,6 +957,9 @@
     private sealed record GovernedStaticValidationReceipt(Guid ValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, string Gate, bool IsAccepted, bool IsExecutable, bool CanAdvance, string CandidateSha256Digest, string? ReportSha256Digest, IReadOnlyList<ValidationControlReport> ControlReports, string? ValidationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
     private sealed record SecurityValidationRequest(Guid ValidationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedStaticReportSha256Digest, string ExpectedStaticEvidenceReference, IReadOnlyList<string> RequiredControlIds, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedSecurityValidationReceipt(Guid ValidationId, Guid StaticValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, string Gate, bool IsAccepted, bool IsExecutable, bool CanAdvance, string CandidateSha256Digest, string StaticReportSha256Digest, string? SecurityReportSha256Digest, IReadOnlyList<ValidationControlReport> ControlReports, string? ValidationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record SandboxIsolationPolicy(string IsolationClass, bool Ephemeral, bool MicroVmIsolation, bool ProductionCredentialsAllowed, bool HostFilesystemAccessAllowed, bool NetworkDefaultDeny, IReadOnlyList<string> AllowedNetworkDestinations, int CpuLimit, long MemoryLimitBytes, TimeSpan ExecutionTimeout);
+    private sealed record SandboxExecutionRequest(Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSecurityEvidenceReference, PackageCoordinate SandboxImage, SandboxIsolationPolicy IsolationPolicy, IReadOnlyDictionary<string, string> NonSecretEnvironmentReferences, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedSandboxExecutionReceipt(Guid ExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ProductionEffectOccurred, bool CanAdvance, string CandidateSha256Digest, string SecurityReportSha256Digest, PackageCoordinate SandboxImage, int? ExitCode, bool? TimedOut, bool? IsolationViolationDetected, IReadOnlyList<string> ProducedArtifactReferences, string? ResultSha256Digest, string? ExecutionEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

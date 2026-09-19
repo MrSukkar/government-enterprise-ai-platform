@@ -1,0 +1,9 @@
+# Integration Demo Stage 11 runtime contract
+
+Stage 11 extends the localhost-only synthetic demonstration to the governed Security Sandbox boundary. It connects the exact accepted Security Validation evidence chain to signed action-specific OPA scope, the institutional Sandbox-image catalog and supply-chain verifiers, the existing `GovernedSandboxService` and `ISecuritySandboxRuntime`, the provider-neutral sovereign HTTPS runtime protocol, independent result authorization, and immutable evidence.
+
+Deployment operations must provision all Stage 10 inputs outside Git plus an exact current sovereign `SandboxImage` record for `Platform.Synthetic.Permit.Sandbox` version `1.0.0` at digest `sha256:3333333333333333333333333333333333333333333333333333333333333333`. They must also configure `Platform:SoftwareFactory:SandboxRuntime` with a real institutionally approved HTTPS endpoint, runtime profile, operator, positive request/response bounds, and pinned public response-signing trust. No runtime, image approval, trust key, endpoint, private key, credential, or successful execution result is stored in Git.
+
+The policy scope is exact: Firecracker-class ephemeral microVM isolation, one demo CPU, 536870912 demo bytes of memory, a 30-second demo timeout, no production credentials, no host filesystem, network default deny with no destinations, and the non-secret `CONFIG_PROFILE` reference. These are Integration Demo inputs, not institutional SLOs or Production defaults.
+
+Repository defaults remain empty and fail closed. The demo must never substitute a fake runtime, fabricate isolation, or report accepted execution without a verified signed runtime response. A successful receipt requires zero exit, no timeout, no isolation violation, unique evidence-bearing outputs, independent result authorization, and append-only evidence. It cannot mutate source, advance to Tests, reach Production, or grant workflow authority.
