@@ -2807,11 +2807,42 @@ if (Test-Path $stage08AcceptancePath) {
     $runbook = Get-Content -Raw $stage08Paths.Runbook
     @('generated content','distinct','Repository defaults remain empty and fail closed','cannot invoke tools or commands','write or apply files','Static Validation') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 08 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage08Paths.Page
-    @('Create governed code candidate','CreateCodeCandidateAsync','developer.internal-service.code-generation.create','IsExecutable: false','IsApplied: false','CanAdvance: false','geaip-demo-stage-08') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 08 UI guard missing: $_" } }
+    @('Create governed code candidate','CreateCodeCandidateAsync','developer.internal-service.code-generation.create','IsExecutable: false','IsApplied: false','CanAdvance: false') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 08 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage08Paths.Realm
     @('developer.internal-service.ai-planning.create','developer.internal-service.code-generation.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 08 identity permission missing: $_" } }
     $acceptance = Get-Content -Raw $stage08AcceptancePath
     @('Status: **Satisfied**','CR-030','Exact Stage 07','non-executable','unapplied','all 15 projects, 0 warnings, 0 errors','Static Validation and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 08 acceptance missing: $_" } }
+}
+
+$stage09AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_09_STATIC_VALIDATION_ACCEPTANCE.md'
+if (Test-Path $stage09AcceptancePath) {
+    $stage09Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-031-INTEGRATION-DEMO-STATIC-VALIDATION.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-09\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-09\opa\decision.rego'
+        Bundle = Join-Path $repositoryRoot 'deploy\demo\stage-09\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-09.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-09\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage09Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 09 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage09Paths.Change
+    @('Status: **Approved for bounded implementation**','deterministic','signed','non-executable','Security Validation','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 09 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage09Paths.Compose
+    @('011_static_validation_inputs.sql','012_static_validation_evidence.sql','integration-demo-stage-09','127.0.0.1:8181','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 09 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage09Paths.Policy
+    @('internal-service.static-validation.create','demo-static-contract-shape','demo-static-source-boundary','"outputKind":"static-report"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 09 policy guard missing: $_" } }
+    $preparation = Get-Content -Raw $stage09Paths.Preparation
+    @('code-generation\seed.sql','--signing-key','Stage 09 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 09 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage09Paths.Runbook
+    @('control signatures','demo-static-contract-shape','demo-static-source-boundary','Repository defaults remain empty and fail closed','cannot write source','Security Validation') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 09 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage09Paths.Page
+    @('Run governed Static Validation','RunStaticValidationAsync','developer.internal-service.static-validation.create','IsExecutable: false','CanAdvance: false','geaip-demo-stage-09') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 09 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage09Paths.Realm
+    @('developer.internal-service.code-generation.create','developer.internal-service.static-validation.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 09 identity permission missing: $_" } }
+    $acceptance = Get-Content -Raw $stage09AcceptancePath
+    @('CR-031','Exact accepted Stage 08','non-executable','non-advancing','Security Validation and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 09 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

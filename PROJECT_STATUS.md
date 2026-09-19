@@ -8,10 +8,10 @@ Status: **Operationalization Wave 21 complete — Governed Evidence Completion**
 - Next permitted phase: **None — the approved 30-phase roadmap is complete**
 - Business/domain implementation: **Create Internal Service Workspace — Operational Increments 01–22 complete**
 - Operationalization: **Wave 21 — Governed Evidence Completion complete under CR-022**
-- Integration Demo: **Stage 08 — Governed Code Generation complete under CR-030**
-- Last completed Integration Demo acceptance: `docs/demo/STAGE_08_CODE_GENERATION_ACCEPTANCE.md`
+- Integration Demo: **Stage 09 — Governed Static Validation complete under CR-031**
+- Last completed Integration Demo acceptance: `docs/demo/STAGE_09_STATIC_VALIDATION_ACCEPTANCE.md`
 - Integration Demo delivery map: `docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md`
-- Next Integration Demo gate: **Stage 09 — Governed Static Validation not started**
-- Execution boundary: **Stage 08 may release only a signed-policy-authorized, independently evaluated, non-executable, unapplied, and non-advancing synthetic code candidate with immutable evidence. No source write, Static Validation, workflow advancement, production action, or Phase 31 is authorized.**
+- Next Integration Demo gate: **Stage 10 — Governed Security Validation not started**
+- Execution boundary: **Stage 09 may release only a signed-policy-authorized, deterministic, non-executable, and non-advancing synthetic Static report with immutable evidence. No source mutation, Security Validation, workflow advancement, production action, or Phase 31 is authorized.**
 
 The approved platform foundation remains complete through Phase 30. The Integration Demo advances independently and remains synthetic, localhost-only, and fail closed outside its explicit runtime configuration.
