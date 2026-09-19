@@ -2748,6 +2748,38 @@ if (Test-Path $stage05AcceptancePath) {
     @('Discover existing architecture','DiscoverExistingArchitectureAsync','ExistingArchitectureReceipt','developer.internal-service.architecture.discover','CanAdvance') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 05 UI guard missing: $_" } }
 }
 
+$stage07AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_07_AI_PLANNING_ACCEPTANCE.md'
+if (Test-Path $stage07AcceptancePath) {
+    $stage07Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-029-INTEGRATION-DEMO-AI-PLANNING.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-07\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-07\opa\decision.rego'
+        Bundle = Join-Path $repositoryRoot 'deploy\demo\stage-07\opa\bundle_verification.rego'
+        Seed = Join-Path $repositoryRoot 'deploy\demo\stage-07\neo4j\seed.cypher'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-07.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-07\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage07Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 07 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage07Paths.Change
+    @('Status: **Approved for bounded implementation**','non-executable','independent evaluation','Code Generation','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 07 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage07Paths.Compose
+    @('007_ai_planning_inputs.sql','008_ai_planning_evidence.sql','ai-planning/seed.sql','integration-demo-stage-07','127.0.0.1:8181','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 07 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage07Paths.Policy
+    @('internal-service.ai-planning.create','demo-internal-service-planning','demo-sovereign-planner','996dc1d8964bab91d4db217c9e0d3d439898c34d76f95de1ad546d4061298fef','no-tools','no-generated-files','no-workflow-advancement','"outputKind":"planning"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 07 policy guard missing: $_" } }
+    $preparation = Get-Content -Raw $stage07Paths.Preparation
+    @('packages\seed.sql','ai-planning\seed.sql','--signing-key','Stage 07 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 07 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage07Paths.Runbook
+    @('signed database records','distinct','Repository defaults remain empty and fail closed','cannot invoke tools','cannot','Code Generation') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 07 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage07Paths.Page
+    @('Create governed AI plan','CreatePlanningCandidateAsync','developer.internal-service.ai-planning.create','IsExecutable: false','CanAdvance: false','geaip-demo-stage-07') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 07 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage07Paths.Realm
+    @('developer.internal-service.packages.select','developer.internal-service.ai-planning.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 07 identity permission missing: $_" } }
+    $acceptance = Get-Content -Raw $stage07AcceptancePath
+    @('Status: **Satisfied**','CR-029','all 15 projects, 0 warnings, 0 errors','Stage 08 Code Generation is separate and not started') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 07 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

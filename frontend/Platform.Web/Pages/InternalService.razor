@@ -39,6 +39,7 @@
             <button type="button" class="primary-action" disabled="@(!CanDiscoverSystems || IsDiscoveringSystems)" @onclick="DiscoverExistingSystemsAsync">@(IsDiscoveringSystems ? "Discovering..." : "Discover existing systems")</button>
             <button type="button" class="primary-action" disabled="@(!CanDiscoverArchitecture || IsDiscoveringArchitecture)" @onclick="DiscoverExistingArchitectureAsync">@(IsDiscoveringArchitecture ? "Discovering..." : "Discover existing architecture")</button>
             <button type="button" class="primary-action" disabled="@(!CanSelectPackages || IsSelectingPackages)" @onclick="SelectApprovedPackagesAsync">@(IsSelectingPackages ? "Selecting..." : "Select approved packages")</button>
+            <button type="button" class="primary-action" disabled="@(!CanCreatePlanningCandidate || IsCreatingPlanningCandidate)" @onclick="CreatePlanningCandidateAsync">@(IsCreatingPlanningCandidate ? "Planning..." : "Create governed AI plan")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -97,6 +98,18 @@
                 <div><dt>Selection digest</dt><dd>@PackagesReceipt.SelectionSha256Digest</dd></div>
                 <div><dt>Evidence</dt><dd>@PackagesReceipt.SelectionEvidenceReference</dd></div>
                 <div><dt>Can advance</dt><dd>@(PackagesReceipt.CanAdvance ? "Yes" : "No — next gate remains separate")</dd></div>
+            </dl>
+        }
+        @if (PlanningReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed AI Planning receipt">
+                <div><dt>Planning</dt><dd>@PlanningReceipt.PlanningId</dd></div>
+                <div><dt>Policy</dt><dd>@PlanningReceipt.PolicyOutcome</dd></div>
+                <div><dt>Candidate digest</dt><dd>@PlanningReceipt.CandidateSha256Digest</dd></div>
+                <div><dt>Evaluation findings</dt><dd>@PlanningReceipt.EvaluationFindings.Count</dd></div>
+                <div><dt>Evidence</dt><dd>@PlanningReceipt.PlanningEvidenceReference</dd></div>
+                <div><dt>Executable</dt><dd>@(PlanningReceipt.IsExecutable ? "Yes" : "No — planning only")</dd></div>
+                <div><dt>Can advance</dt><dd>@(PlanningReceipt.CanAdvance ? "Yes" : "No — Code Generation remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -214,6 +227,7 @@
     private bool IsDiscoveringSystems { get; set; }
     private bool IsDiscoveringArchitecture { get; set; }
     private bool IsSelectingPackages { get; set; }
+    private bool IsCreatingPlanningCandidate { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -221,11 +235,14 @@
     private ExistingSystemsReceipt? SystemsReceipt { get; set; }
     private ExistingArchitectureReceipt? ArchitectureReceipt { get; set; }
     private ApprovedPackagesReceipt? PackagesReceipt { get; set; }
+    private AiPlanningReceipt? PlanningReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
     private Guid ArchitectureDiscoveryId { get; set; }
     private Guid PackageSelectionId { get; set; }
+    private Guid PlanningId { get; set; }
+    private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -257,6 +274,13 @@
     private bool CanSelectPackages =>
         ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false, ArchitectureSha256Digest: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.packages.select");
+
+    private bool CanCreatePlanningCandidate =>
+        PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false, SelectionSha256Digest: not null, SelectionEvidenceReference: not null } &&
+        ContextReceipt?.DiscoveryEvidenceReference is not null &&
+        SystemsReceipt?.DiscoveryEvidenceReference is not null &&
+        ArchitectureReceipt?.DiscoveryEvidenceReference is not null &&
+        ExperienceContext.HasPermission("developer.internal-service.ai-planning.create");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -328,6 +352,8 @@
                 SystemsDiscoveryId = Guid.NewGuid();
                 ArchitectureDiscoveryId = Guid.NewGuid();
                 PackageSelectionId = Guid.NewGuid();
+                PlanningId = Guid.NewGuid();
+                DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
             else
@@ -358,9 +384,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-05",
+                    "geaip-demo-stage-07",
                     "2026.09.19",
-                    "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299",
+                    "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -408,9 +434,9 @@
                 Classification,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-05",
+                    "geaip-demo-stage-07",
                     "2026.09.19",
-                    "ef58b286a8b6dbb439d07e45baa6e2590594c6fc6846af09e00d558d72148299",
+                    "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
@@ -491,6 +517,7 @@
                     new PackageCoordinate("FrontendDependency", "@geaip/permit-ui-contracts", "1.0.0", "sha256:2222222222222222222222222222222222222222222222222222222222222222")]);
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages", request);
             PackagesReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ApprovedPackagesReceipt>() : null;
+            PlanningReceipt = null;
             EvaluationMessage = PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false }
                 ? $"Authorized Approved Packages released {PackagesReceipt.Packages.Count} exact synthetic package coordinates with immutable evidence. Advancement remains locked."
                 : $"Approved Packages failed closed ({(int)response.StatusCode}). No package selection was released.";
@@ -499,7 +526,44 @@
         finally { IsSelectingPackages = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-06", "2026.09.19", "d478e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb15a", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task CreatePlanningCandidateAsync()
+    {
+        if (!CanCreatePlanningCandidate || RegistrationReceipt is null || ContextReceipt is null ||
+            SystemsReceipt is null || ArchitectureReceipt is null || PackagesReceipt is null) return;
+        IsCreatingPlanningCandidate = true;
+        try
+        {
+            var contextReferences = new[]
+            {
+                ContextReceipt.DiscoveryEvidenceReference!,
+                SystemsReceipt.DiscoveryEvidenceReference!,
+                ArchitectureReceipt.DiscoveryEvidenceReference!,
+                PackagesReceipt.SelectionEvidenceReference!
+            };
+            var request = new AiPlanningRequest(
+                PlanningId, DeliveryRunId, RegistrationReceipt.Version!.Value,
+                ArchitectureReceipt.ArchitectureSha256Digest!, PackagesReceipt.SelectionSha256Digest!,
+                "demo-internal-service-planning", "1.0.0", "demo-sovereign-planner",
+                contextReferences,
+                ["planning-only", "no-tools", "no-generated-files", "no-workflow-advancement"],
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning",
+                request);
+            PlanningReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AiPlanningReceipt>() : null;
+            EvaluationMessage = PlanningReceipt is { IsPlanningCandidateReleased: true, IsExecutable: false, CanAdvance: false }
+                ? $"Governed AI Planning released one non-executable candidate after {PlanningReceipt.EvaluationFindings.Count} independent checks and immutable evidence. Code Generation remains locked."
+                : $"AI Planning failed closed ({(int)response.StatusCode}). No candidate was released.";
+        }
+        catch (HttpRequestException)
+        {
+            PlanningReceipt = null;
+            EvaluationMessage = "OPA, governed prompt/context, sovereign planning, independent evaluation, or PostgreSQL is unavailable. AI Planning failed closed.";
+        }
+        finally { IsCreatingPlanningCandidate = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-07", "2026.09.19", "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -593,6 +657,9 @@
     private sealed record ApprovedPackagesRequest(Guid SelectionId, long ExpectedRegistrationVersion, string ExpectedIntentSha256Digest, string ExpectedContextSha256Digest, string ExpectedInventorySha256Digest, string ExpectedArchitectureSha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle, IReadOnlyList<PackageCoordinate> RequestedCoordinates);
     private sealed record ApprovedPackage(string Kind, string Name, string Version, string ContentDigest);
     private sealed record ApprovedPackagesReceipt(Guid SelectionId, Guid ArchitectureDiscoveryId, Guid SystemsDiscoveryId, Guid ContextDiscoveryId, Guid RegistrationId, long RegistrationVersion, string TenantId, string ArchitectureSha256Digest, string PolicyOutcome, bool IsSelectionReleased, bool CanAdvance, string? SelectionSha256Digest, IReadOnlyList<ApprovedPackage> Packages, string? SelectionEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record AiPlanningRequest(Guid PlanningId, Guid DeliveryRunId, long ExpectedRegistrationVersion, string ExpectedArchitectureSha256Digest, string ExpectedSelectionSha256Digest, string PromptTemplateId, string PromptTemplateVersion, string RuntimeProfile, IReadOnlyList<string> ContextReferences, IReadOnlyList<string> Constraints, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record AiEvaluationFinding(string Criterion, bool Passed, string Rationale, string EvidenceReference);
+    private sealed record AiPlanningReceipt(Guid PlanningId, Guid PackageSelectionId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsPlanningCandidateReleased, bool IsExecutable, bool CanAdvance, string? CandidateSha256Digest, string? Content, IReadOnlyList<AiEvaluationFinding> EvaluationFindings, string? PlanningEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
