@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Operationalization wave 10 / Security Validation</p>
+        <p class="eyebrow">Integration Demo Stage 08 / Governed Code Generation</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + SIGNED SECURITY CONTROLS + EVIDENCE</span>
-        <strong>Governed Security Validation runtime available; institutional controls required</strong>
-        <small>Accepted Static evidence and exact policy permit precede signed deterministic Security controls. No source, candidate, or sandbox workload is executed or advanced.</small>
+        <span class="state-chip">OPA + SOVEREIGN AI + INDEPENDENT EVALUATION + EVIDENCE</span>
+        <strong>Governed Code Generation candidate path available; deployment configuration required</strong>
+        <small>Exact accepted planning evidence and policy permit precede generation. Candidate content remains inert, unapplied, non-executable, and non-advancing.</small>
     </aside>
 </section>
 
@@ -40,6 +40,7 @@
             <button type="button" class="primary-action" disabled="@(!CanDiscoverArchitecture || IsDiscoveringArchitecture)" @onclick="DiscoverExistingArchitectureAsync">@(IsDiscoveringArchitecture ? "Discovering..." : "Discover existing architecture")</button>
             <button type="button" class="primary-action" disabled="@(!CanSelectPackages || IsSelectingPackages)" @onclick="SelectApprovedPackagesAsync">@(IsSelectingPackages ? "Selecting..." : "Select approved packages")</button>
             <button type="button" class="primary-action" disabled="@(!CanCreatePlanningCandidate || IsCreatingPlanningCandidate)" @onclick="CreatePlanningCandidateAsync">@(IsCreatingPlanningCandidate ? "Planning..." : "Create governed AI plan")</button>
+            <button type="button" class="primary-action" disabled="@(!CanCreateCodeCandidate || IsCreatingCodeCandidate)" @onclick="CreateCodeCandidateAsync">@(IsCreatingCodeCandidate ? "Generating..." : "Create governed code candidate")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -110,6 +111,20 @@
                 <div><dt>Evidence</dt><dd>@PlanningReceipt.PlanningEvidenceReference</dd></div>
                 <div><dt>Executable</dt><dd>@(PlanningReceipt.IsExecutable ? "Yes" : "No — planning only")</dd></div>
                 <div><dt>Can advance</dt><dd>@(PlanningReceipt.CanAdvance ? "Yes" : "No — Code Generation remains separate")</dd></div>
+            </dl>
+        }
+        @if (CodeGenerationReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Code Generation receipt">
+                <div><dt>Generation</dt><dd>@CodeGenerationReceipt.GenerationId</dd></div>
+                <div><dt>Policy</dt><dd>@CodeGenerationReceipt.PolicyOutcome</dd></div>
+                <div><dt>Candidate digest</dt><dd>@CodeGenerationReceipt.CandidateSha256Digest</dd></div>
+                <div><dt>Authorized output paths</dt><dd>@CodeGenerationReceipt.GeneratedFilePaths.Count</dd></div>
+                <div><dt>Evaluation findings</dt><dd>@CodeGenerationReceipt.EvaluationFindings.Count</dd></div>
+                <div><dt>Evidence</dt><dd>@CodeGenerationReceipt.GenerationEvidenceReference</dd></div>
+                <div><dt>Executable</dt><dd>@(CodeGenerationReceipt.IsExecutable ? "Yes" : "No — inert candidate data")</dd></div>
+                <div><dt>Applied</dt><dd>@(CodeGenerationReceipt.IsApplied ? "Yes" : "No — no filesystem write")</dd></div>
+                <div><dt>Can advance</dt><dd>@(CodeGenerationReceipt.CanAdvance ? "Yes" : "No — Static Validation remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -228,6 +243,7 @@
     private bool IsDiscoveringArchitecture { get; set; }
     private bool IsSelectingPackages { get; set; }
     private bool IsCreatingPlanningCandidate { get; set; }
+    private bool IsCreatingCodeCandidate { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -236,12 +252,14 @@
     private ExistingArchitectureReceipt? ArchitectureReceipt { get; set; }
     private ApprovedPackagesReceipt? PackagesReceipt { get; set; }
     private AiPlanningReceipt? PlanningReceipt { get; set; }
+    private GovernedCodeGenerationReceipt? CodeGenerationReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
     private Guid ArchitectureDiscoveryId { get; set; }
     private Guid PackageSelectionId { get; set; }
     private Guid PlanningId { get; set; }
+    private Guid GenerationId { get; set; }
     private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
@@ -281,6 +299,16 @@
         SystemsReceipt?.DiscoveryEvidenceReference is not null &&
         ArchitectureReceipt?.DiscoveryEvidenceReference is not null &&
         ExperienceContext.HasPermission("developer.internal-service.ai-planning.create");
+
+    private bool CanCreateCodeCandidate =>
+        RegistrationReceipt is { IsPersisted: true } &&
+        ContextReceipt is { IsContextReleased: true } &&
+        SystemsReceipt is { IsInventoryReleased: true } &&
+        ArchitectureReceipt is { IsArchitectureReleased: true } &&
+        PlanningReceipt is { IsPlanningCandidateReleased: true, IsExecutable: false, CanAdvance: false,
+            CandidateSha256Digest: not null, PlanningEvidenceReference: not null } &&
+        PackagesReceipt is { IsSelectionReleased: true, SelectionSha256Digest: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.code-generation.create");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -347,12 +375,16 @@
                 ContextReceipt = null;
                 SystemsReceipt = null;
                 ArchitectureReceipt = null;
+                PackagesReceipt = null;
+                PlanningReceipt = null;
+                CodeGenerationReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
                 ArchitectureDiscoveryId = Guid.NewGuid();
                 PackageSelectionId = Guid.NewGuid();
                 PlanningId = Guid.NewGuid();
+                GenerationId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -384,9 +416,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-07",
+                    "geaip-demo-stage-08",
                     "2026.09.19",
-                    "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17",
+                    "2ddd83cad2dd02cb32743ca1396902233d8074b88b2e001c2941dd812d0a6e77",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -398,6 +430,9 @@
                 ContextReceipt = null;
                 SystemsReceipt = null;
                 ArchitectureReceipt = null;
+                PackagesReceipt = null;
+                PlanningReceipt = null;
+                CodeGenerationReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -434,9 +469,9 @@
                 Classification,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-07",
+                    "geaip-demo-stage-08",
                     "2026.09.19",
-                    "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17",
+                    "2ddd83cad2dd02cb32743ca1396902233d8074b88b2e001c2941dd812d0a6e77",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
@@ -446,6 +481,11 @@
             if (response.IsSuccessStatusCode)
             {
                 ContextReceipt = await response.Content.ReadFromJsonAsync<EnterpriseContextReceipt>();
+                SystemsReceipt = null;
+                ArchitectureReceipt = null;
+                PackagesReceipt = null;
+                PlanningReceipt = null;
+                CodeGenerationReceipt = null;
                 EvaluationMessage = ContextReceipt is { IsContextReleased: true, CanAdvance: false }
                     ? $"Authorized Enterprise Context released {ContextReceipt.Items.Count} scoped graph items and recorded immutable evidence. Advancement remains locked."
                     : "Enterprise Context response did not satisfy the Stage 03 boundary.";
@@ -477,6 +517,9 @@
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems", request);
             SystemsReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ExistingSystemsReceipt>() : null;
             ArchitectureReceipt = null;
+            PackagesReceipt = null;
+            PlanningReceipt = null;
+            CodeGenerationReceipt = null;
             EvaluationMessage = SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Systems released {SystemsReceipt.Systems.Count} synthetic scoped systems with immutable evidence. Advancement remains locked."
                 : $"Existing Systems failed closed ({(int)response.StatusCode}). No inventory was released.";
@@ -495,6 +538,8 @@
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture", request);
             ArchitectureReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ExistingArchitectureReceipt>() : null;
             PackagesReceipt = null;
+            PlanningReceipt = null;
+            CodeGenerationReceipt = null;
             EvaluationMessage = ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Architecture released {ArchitectureReceipt.Items.Count} approved synthetic items with immutable evidence. Advancement remains locked."
                 : $"Existing Architecture failed closed ({(int)response.StatusCode}). No architecture was released.";
@@ -518,6 +563,7 @@
             var response = await Http.PostAsJsonAsync($"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages", request);
             PackagesReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ApprovedPackagesReceipt>() : null;
             PlanningReceipt = null;
+            CodeGenerationReceipt = null;
             EvaluationMessage = PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false }
                 ? $"Authorized Approved Packages released {PackagesReceipt.Packages.Count} exact synthetic package coordinates with immutable evidence. Advancement remains locked."
                 : $"Approved Packages failed closed ({(int)response.StatusCode}). No package selection was released.";
@@ -551,6 +597,7 @@
                 $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning",
                 request);
             PlanningReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AiPlanningReceipt>() : null;
+            CodeGenerationReceipt = null;
             EvaluationMessage = PlanningReceipt is { IsPlanningCandidateReleased: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed AI Planning released one non-executable candidate after {PlanningReceipt.EvaluationFindings.Count} independent checks and immutable evidence. Code Generation remains locked."
                 : $"AI Planning failed closed ({(int)response.StatusCode}). No candidate was released.";
@@ -563,7 +610,48 @@
         finally { IsCreatingPlanningCandidate = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-07", "2026.09.19", "a707e05577434db063f0424b2c8642b9073c2f0fa61e188b28bcd1fae87cb17", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task CreateCodeCandidateAsync()
+    {
+        if (!CanCreateCodeCandidate || RegistrationReceipt is null || ContextReceipt is null ||
+            SystemsReceipt is null || ArchitectureReceipt is null || PackagesReceipt is null || PlanningReceipt is null) return;
+        IsCreatingCodeCandidate = true;
+        try
+        {
+            var contextReferences = new[]
+            {
+                ContextReceipt.DiscoveryEvidenceReference!,
+                SystemsReceipt.DiscoveryEvidenceReference!,
+                ArchitectureReceipt.DiscoveryEvidenceReference!,
+                PackagesReceipt.SelectionEvidenceReference!,
+                PlanningReceipt.PlanningEvidenceReference!
+            };
+            var request = new CodeGenerationRequest(
+                GenerationId, DeliveryRunId, PackagesReceipt.SelectionSha256Digest!, PlanningReceipt.CandidateSha256Digest!,
+                "demo-internal-service-code-generation", "1.0.0", "demo-sovereign-code-generator",
+                contextReferences,
+                ["inert-content-only", "no-tools", "no-commands", "no-file-application"],
+                ["backend/Generated/PermitRenewalService.cs", "frontend/Generated/PermitRenewalView.razor"],
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation",
+                request);
+            CodeGenerationReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedCodeGenerationReceipt>()
+                : null;
+            EvaluationMessage = CodeGenerationReceipt is
+                { IsCodeCandidateReleased: true, IsExecutable: false, IsApplied: false, CanAdvance: false }
+                ? $"Governed Code Generation released inert candidate data for {CodeGenerationReceipt.GeneratedFilePaths.Count} authorized paths after {CodeGenerationReceipt.EvaluationFindings.Count} independent checks. No file was written or applied."
+                : $"Code Generation failed closed ({(int)response.StatusCode}). No candidate was released.";
+        }
+        catch (HttpRequestException)
+        {
+            CodeGenerationReceipt = null;
+            EvaluationMessage = "OPA, governed prompt/context, sovereign generation, independent evaluation, or PostgreSQL is unavailable. Code Generation failed closed.";
+        }
+        finally { IsCreatingCodeCandidate = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-08", "2026.09.19", "2ddd83cad2dd02cb32743ca1396902233d8074b88b2e001c2941dd812d0a6e77", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -660,6 +748,8 @@
     private sealed record AiPlanningRequest(Guid PlanningId, Guid DeliveryRunId, long ExpectedRegistrationVersion, string ExpectedArchitectureSha256Digest, string ExpectedSelectionSha256Digest, string PromptTemplateId, string PromptTemplateVersion, string RuntimeProfile, IReadOnlyList<string> ContextReferences, IReadOnlyList<string> Constraints, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record AiEvaluationFinding(string Criterion, bool Passed, string Rationale, string EvidenceReference);
     private sealed record AiPlanningReceipt(Guid PlanningId, Guid PackageSelectionId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsPlanningCandidateReleased, bool IsExecutable, bool CanAdvance, string? CandidateSha256Digest, string? Content, IReadOnlyList<AiEvaluationFinding> EvaluationFindings, string? PlanningEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record CodeGenerationRequest(Guid GenerationId, Guid DeliveryRunId, string ExpectedSelectionSha256Digest, string ExpectedPlanningSha256Digest, string PromptTemplateId, string PromptTemplateVersion, string RuntimeProfile, IReadOnlyList<string> ContextReferences, IReadOnlyList<string> Constraints, IReadOnlyList<string> RequestedOutputPaths, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedCodeGenerationReceipt(Guid GenerationId, Guid PlanningId, Guid PackageSelectionId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsCodeCandidateReleased, bool IsExecutable, bool IsApplied, bool CanAdvance, string? CandidateSha256Digest, string? Content, IReadOnlyList<string> GeneratedFilePaths, IReadOnlyList<AiEvaluationFinding> EvaluationFindings, string? GenerationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

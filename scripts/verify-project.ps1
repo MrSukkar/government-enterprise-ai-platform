@@ -2773,11 +2773,45 @@ if (Test-Path $stage07AcceptancePath) {
     $runbook = Get-Content -Raw $stage07Paths.Runbook
     @('signed database records','distinct','Repository defaults remain empty and fail closed','cannot invoke tools','cannot','Code Generation') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 07 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage07Paths.Page
-    @('Create governed AI plan','CreatePlanningCandidateAsync','developer.internal-service.ai-planning.create','IsExecutable: false','CanAdvance: false','geaip-demo-stage-07') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 07 UI guard missing: $_" } }
+    @('Create governed AI plan','CreatePlanningCandidateAsync','developer.internal-service.ai-planning.create','IsExecutable: false','CanAdvance: false') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 07 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage07Paths.Realm
     @('developer.internal-service.packages.select','developer.internal-service.ai-planning.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 07 identity permission missing: $_" } }
     $acceptance = Get-Content -Raw $stage07AcceptancePath
     @('Status: **Satisfied**','CR-029','all 15 projects, 0 warnings, 0 errors','Stage 08 Code Generation is separate and not started') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 07 acceptance missing: $_" } }
+}
+
+$stage08AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_08_CODE_GENERATION_ACCEPTANCE.md'
+if (Test-Path $stage08AcceptancePath) {
+    $stage08Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-030-INTEGRATION-DEMO-CODE-GENERATION.md'
+        Roadmap = Join-Path $repositoryRoot 'docs\demo\INTEGRATION_DEMO_STAGE_ROADMAP.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-08\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-08\opa\decision.rego'
+        Bundle = Join-Path $repositoryRoot 'deploy\demo\stage-08\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-08.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-08\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage08Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 08 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage08Paths.Change
+    @('Status: **Approved for bounded implementation**','non-executable','unapplied','independent evaluation','Static Validation','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 08 approval missing: $_" } }
+    $roadmap = Get-Content -Raw $stage08Paths.Roadmap
+    @('Stage 21','Governed Evidence Completion','Non-Production Pilot','Production','independent Change Control') | ForEach-Object { if ($roadmap -notmatch [regex]::Escape($_)) { throw "Integration Demo roadmap guard missing: $_" } }
+    $compose = Get-Content -Raw $stage08Paths.Compose
+    @('009_code_generation_inputs.sql','010_code_generation_evidence.sql','code-generation/seed.sql','integration-demo-stage-08','127.0.0.1:8181','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 08 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage08Paths.Policy
+    @('internal-service.code-generation.create','demo-internal-service-code-generation','demo-sovereign-code-generator','d01ae4012a2b374a3e9b1ec305472dbfb9bee8b131f2719c3505c365963246a8','inert-content-only','no-commands','no-file-application','backend/Generated/PermitRenewalService.cs','frontend/Generated/PermitRenewalView.razor','"outputKind":"inert-code-candidate"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 08 policy guard missing: $_" } }
+    $preparation = Get-Content -Raw $stage08Paths.Preparation
+    @('packages\seed.sql','ai-planning\seed.sql','code-generation\seed.sql','--signing-key','Stage 08 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 08 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage08Paths.Runbook
+    @('generated content','distinct','Repository defaults remain empty and fail closed','cannot invoke tools or commands','write or apply files','Static Validation') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 08 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage08Paths.Page
+    @('Create governed code candidate','CreateCodeCandidateAsync','developer.internal-service.code-generation.create','IsExecutable: false','IsApplied: false','CanAdvance: false','geaip-demo-stage-08') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 08 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage08Paths.Realm
+    @('developer.internal-service.ai-planning.create','developer.internal-service.code-generation.create') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 08 identity permission missing: $_" } }
+    $acceptance = Get-Content -Raw $stage08AcceptancePath
+    @('Status: **Satisfied**','CR-030','Exact Stage 07','non-executable','unapplied','all 15 projects, 0 warnings, 0 errors','Static Validation and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 08 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {
