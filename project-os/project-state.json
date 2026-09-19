@@ -25,20 +25,20 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 09 - Governed Static Validation",
+    "stage": "Stage 10 - Governed Security Validation",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-031-INTEGRATION-DEMO-STATIC-VALIDATION.md",
-    "acceptanceArtifact": "docs/demo/STAGE_09_STATIC_VALIDATION_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/demo/STAGE_08_CODE_GENERATION_ACCEPTANCE.md",
+    "changeControl": "docs/change-control/CR-032-INTEGRATION-DEMO-SECURITY-VALIDATION.md",
+    "acceptanceArtifact": "docs/demo/STAGE_10_SECURITY_VALIDATION_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/demo/STAGE_09_STATIC_VALIDATION_ACCEPTANCE.md",
     "deliveryMap": "docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md",
-    "nextGate": "Stage 10 - Governed Security Validation (not started)",
-    "executionBoundary": "Stage 09 is limited to a signed-policy-authorized, deterministic, non-executable, and non-advancing synthetic Static report with immutable evidence; no source mutation, Security Validation, workflow advancement, production effect, or Phase 31 is authorized"
+    "nextGate": "Stage 11 - Governed Security Sandbox (not started)",
+    "executionBoundary": "Stage 10 is limited to a signed-policy-authorized, deterministic, non-executable, and non-advancing synthetic Security report with immutable evidence; no source mutation, Sandbox execution, workflow advancement, production effect, or Phase 31 is authorized"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_09_STATIC_VALIDATION_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_10_SECURITY_VALIDATION_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

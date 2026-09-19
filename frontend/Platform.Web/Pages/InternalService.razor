@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 09 / Governed Static Validation</p>
+        <p class="eyebrow">Integration Demo Stage 10 / Governed Security Validation</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
         <span class="state-chip">OPA + SIGNED STATIC CONTROLS + EVIDENCE</span>
-        <strong>Governed Static Validation path available; institutional controls required</strong>
-        <small>Exact accepted Code Generation evidence and policy permit precede deterministic in-process controls. No source is written, compiled, executed, or advanced.</small>
+        <strong>Governed Security Validation path available; institutional controls required</strong>
+        <small>Exact accepted Static evidence and policy permit precede signed deterministic Security controls. No source, candidate, or sandbox workload is executed or advanced.</small>
     </aside>
 </section>
 
@@ -42,6 +42,7 @@
             <button type="button" class="primary-action" disabled="@(!CanCreatePlanningCandidate || IsCreatingPlanningCandidate)" @onclick="CreatePlanningCandidateAsync">@(IsCreatingPlanningCandidate ? "Planning..." : "Create governed AI plan")</button>
             <button type="button" class="primary-action" disabled="@(!CanCreateCodeCandidate || IsCreatingCodeCandidate)" @onclick="CreateCodeCandidateAsync">@(IsCreatingCodeCandidate ? "Generating..." : "Create governed code candidate")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunStaticValidation || IsRunningStaticValidation)" @onclick="RunStaticValidationAsync">@(IsRunningStaticValidation ? "Validating..." : "Run governed Static Validation")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRunSecurityValidation || IsRunningSecurityValidation)" @onclick="RunSecurityValidationAsync">@(IsRunningSecurityValidation ? "Validating security..." : "Run governed Security Validation")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -140,6 +141,20 @@
                 <div><dt>Evidence</dt><dd>@StaticValidationReceipt.ValidationEvidenceReference</dd></div>
                 <div><dt>Executable</dt><dd>@(StaticValidationReceipt.IsExecutable ? "Yes" : "No — inspection only")</dd></div>
                 <div><dt>Can advance</dt><dd>@(StaticValidationReceipt.CanAdvance ? "Yes" : "No — Security Validation remains separate")</dd></div>
+            </dl>
+        }
+        @if (SecurityValidationReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Security Validation receipt">
+                <div><dt>Validation</dt><dd>@SecurityValidationReceipt.ValidationId</dd></div>
+                <div><dt>Policy</dt><dd>@SecurityValidationReceipt.PolicyOutcome</dd></div>
+                <div><dt>Gate</dt><dd>@SecurityValidationReceipt.Gate</dd></div>
+                <div><dt>Accepted</dt><dd>@(SecurityValidationReceipt.IsAccepted ? "Yes" : "No")</dd></div>
+                <div><dt>Controls</dt><dd>@SecurityValidationReceipt.ControlReports.Count</dd></div>
+                <div><dt>Security report digest</dt><dd>@SecurityValidationReceipt.SecurityReportSha256Digest</dd></div>
+                <div><dt>Evidence</dt><dd>@SecurityValidationReceipt.ValidationEvidenceReference</dd></div>
+                <div><dt>Executable</dt><dd>@(SecurityValidationReceipt.IsExecutable ? "Yes" : "No — inspection only")</dd></div>
+                <div><dt>Can advance</dt><dd>@(SecurityValidationReceipt.CanAdvance ? "Yes" : "No — Sandbox remains separate")</dd></div>
             </dl>
         }
     </div>
@@ -260,6 +275,7 @@
     private bool IsCreatingPlanningCandidate { get; set; }
     private bool IsCreatingCodeCandidate { get; set; }
     private bool IsRunningStaticValidation { get; set; }
+    private bool IsRunningSecurityValidation { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -270,6 +286,7 @@
     private AiPlanningReceipt? PlanningReceipt { get; set; }
     private GovernedCodeGenerationReceipt? CodeGenerationReceipt { get; set; }
     private GovernedStaticValidationReceipt? StaticValidationReceipt { get; set; }
+    private GovernedSecurityValidationReceipt? SecurityValidationReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -278,6 +295,7 @@
     private Guid PlanningId { get; set; }
     private Guid GenerationId { get; set; }
     private Guid StaticValidationId { get; set; }
+    private Guid SecurityValidationId { get; set; }
     private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
@@ -332,6 +350,11 @@
         CodeGenerationReceipt is { IsCodeCandidateReleased: true, IsExecutable: false, IsApplied: false,
             CanAdvance: false, CandidateSha256Digest: not null, GenerationEvidenceReference: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.static-validation.create");
+
+    private bool CanRunSecurityValidation =>
+        StaticValidationReceipt is { IsAccepted: true, IsExecutable: false, CanAdvance: false,
+            ReportSha256Digest: not null, ValidationEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.security-validation.create");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -402,6 +425,7 @@
                 PlanningReceipt = null;
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
+                SecurityValidationReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -410,6 +434,7 @@
                 PlanningId = Guid.NewGuid();
                 GenerationId = Guid.NewGuid();
                 StaticValidationId = Guid.NewGuid();
+                SecurityValidationId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -441,9 +466,9 @@
                 LastSubmission,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-09",
+                    "geaip-demo-stage-10",
                     "2026.09.19",
-                    "7e764aa4b75897675ef99b614a83414bc7dc8b098ec9589a85c64788f8cc6ffd",
+                    "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)),
@@ -459,6 +484,7 @@
                 PlanningReceipt = null;
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
+                SecurityValidationReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -495,9 +521,9 @@
                 Classification,
                 "IntegrationDemo",
                 new IntentPolicyBundle(
-                    "geaip-demo-stage-09",
+                    "geaip-demo-stage-10",
                     "2026.09.19",
-                    "7e764aa4b75897675ef99b614a83414bc7dc8b098ec9589a85c64788f8cc6ffd",
+                    "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a",
                     "signature://demo/opa/demo-opa-signing-01",
                     "IntegrationDemo",
                     new DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)));
@@ -513,6 +539,7 @@
                 PlanningReceipt = null;
                 CodeGenerationReceipt = null;
                 StaticValidationReceipt = null;
+                SecurityValidationReceipt = null;
                 EvaluationMessage = ContextReceipt is { IsContextReleased: true, CanAdvance: false }
                     ? $"Authorized Enterprise Context released {ContextReceipt.Items.Count} scoped graph items and recorded immutable evidence. Advancement remains locked."
                     : "Enterprise Context response did not satisfy the Stage 03 boundary.";
@@ -548,6 +575,7 @@
             PlanningReceipt = null;
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = SystemsReceipt is { IsInventoryReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Systems released {SystemsReceipt.Systems.Count} synthetic scoped systems with immutable evidence. Advancement remains locked."
                 : $"Existing Systems failed closed ({(int)response.StatusCode}). No inventory was released.";
@@ -569,6 +597,7 @@
             PlanningReceipt = null;
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = ArchitectureReceipt is { IsArchitectureReleased: true, CanAdvance: false }
                 ? $"Authorized Existing Architecture released {ArchitectureReceipt.Items.Count} approved synthetic items with immutable evidence. Advancement remains locked."
                 : $"Existing Architecture failed closed ({(int)response.StatusCode}). No architecture was released.";
@@ -594,6 +623,7 @@
             PlanningReceipt = null;
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = PackagesReceipt is { IsSelectionReleased: true, CanAdvance: false }
                 ? $"Authorized Approved Packages released {PackagesReceipt.Packages.Count} exact synthetic package coordinates with immutable evidence. Advancement remains locked."
                 : $"Approved Packages failed closed ({(int)response.StatusCode}). No package selection was released.";
@@ -629,6 +659,7 @@
             PlanningReceipt = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AiPlanningReceipt>() : null;
             CodeGenerationReceipt = null;
             StaticValidationReceipt = null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = PlanningReceipt is { IsPlanningCandidateReleased: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed AI Planning released one non-executable candidate after {PlanningReceipt.EvaluationFindings.Count} independent checks and immutable evidence. Code Generation remains locked."
                 : $"AI Planning failed closed ({(int)response.StatusCode}). No candidate was released.";
@@ -670,6 +701,7 @@
                 ? await response.Content.ReadFromJsonAsync<GovernedCodeGenerationReceipt>()
                 : null;
             StaticValidationReceipt = null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = CodeGenerationReceipt is
                 { IsCodeCandidateReleased: true, IsExecutable: false, IsApplied: false, CanAdvance: false }
                 ? $"Governed Code Generation released inert candidate data for {CodeGenerationReceipt.GeneratedFilePaths.Count} authorized paths after {CodeGenerationReceipt.EvaluationFindings.Count} independent checks. No file was written or applied."
@@ -702,6 +734,7 @@
             StaticValidationReceipt = response.IsSuccessStatusCode
                 ? await response.Content.ReadFromJsonAsync<GovernedStaticValidationReceipt>()
                 : null;
+            SecurityValidationReceipt = null;
             EvaluationMessage = StaticValidationReceipt is
                 { IsAccepted: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed Static Validation accepted the inert candidate after {StaticValidationReceipt.ControlReports.Count} signed deterministic controls. Security Validation remains locked."
@@ -715,7 +748,39 @@
         finally { IsRunningStaticValidation = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-09", "2026.09.19", "7e764aa4b75897675ef99b614a83414bc7dc8b098ec9589a85c64788f8cc6ffd", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task RunSecurityValidationAsync()
+    {
+        if (!CanRunSecurityValidation || RegistrationReceipt is null || ContextReceipt is null ||
+            SystemsReceipt is null || ArchitectureReceipt is null || PackagesReceipt is null ||
+            PlanningReceipt is null || CodeGenerationReceipt is null || StaticValidationReceipt is null) return;
+        IsRunningSecurityValidation = true;
+        try
+        {
+            var request = new SecurityValidationRequest(
+                SecurityValidationId, DeliveryRunId, CodeGenerationReceipt.CandidateSha256Digest!,
+                StaticValidationReceipt.ReportSha256Digest!, StaticValidationReceipt.ValidationEvidenceReference!,
+                ["demo-security-data-flow", "demo-security-input-boundary"],
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation/{CodeGenerationReceipt.GenerationId:D}/static-validation/{StaticValidationReceipt.ValidationId:D}/security-validation",
+                request);
+            SecurityValidationReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedSecurityValidationReceipt>()
+                : null;
+            EvaluationMessage = SecurityValidationReceipt is
+                { IsAccepted: true, IsExecutable: false, CanAdvance: false }
+                ? $"Governed Security Validation accepted the inert candidate after {SecurityValidationReceipt.ControlReports.Count} signed deterministic controls. Sandbox remains locked."
+                : $"Security Validation failed closed ({(int)response.StatusCode}). No report was released.";
+        }
+        catch (HttpRequestException)
+        {
+            SecurityValidationReceipt = null;
+            EvaluationMessage = "OPA, Static evidence, signed Security controls, result authorization, or PostgreSQL is unavailable. Security Validation failed closed.";
+        }
+        finally { IsRunningSecurityValidation = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-10", "2026.09.19", "366c318c6fd81a13c6fe2094c1ba5336170ec29771f3b21d0c6a3a1c7d22cc0a", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -817,6 +882,8 @@
     private sealed record StaticValidationRequest(Guid ValidationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedGenerationEvidenceReference, IReadOnlyList<string> RequiredControlIds, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record ValidationControlReport(string ControlId, string Gate, bool Completed, IReadOnlyList<object> Findings, string EvidenceReference, bool Passed);
     private sealed record GovernedStaticValidationReceipt(Guid ValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, string Gate, bool IsAccepted, bool IsExecutable, bool CanAdvance, string CandidateSha256Digest, string? ReportSha256Digest, IReadOnlyList<ValidationControlReport> ControlReports, string? ValidationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record SecurityValidationRequest(Guid ValidationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedStaticReportSha256Digest, string ExpectedStaticEvidenceReference, IReadOnlyList<string> RequiredControlIds, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedSecurityValidationReceipt(Guid ValidationId, Guid StaticValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, string Gate, bool IsAccepted, bool IsExecutable, bool CanAdvance, string CandidateSha256Digest, string StaticReportSha256Digest, string? SecurityReportSha256Digest, IReadOnlyList<ValidationControlReport> ControlReports, string? ValidationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
