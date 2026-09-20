@@ -1,0 +1,3 @@
+package geaip.bundle
+import rego.v1
+verification := {"bundleId":input.bundleId,"version":input.version,"sha256Digest":input.sha256Digest,"environment":input.environment,"signatureValid":true,"verificationEvidenceReference":sprintf("evidence://demo/opa/bundles/%s/%s",[input.bundleId,input.sha256Digest]),"verifiedAt":input.activatedAt} if { input.bundleId == "geaip-demo-stage-13"; input.version == "2026.09.20"; input.sha256Digest == "12cf021ad07490c73361bc8701b14698063acae7b13ad0d0cc0f7c815287d142"; input.environment == "IntegrationDemo"; input.trustAnchorReference == "trust://demo/opa/demo-opa-signing-01" }

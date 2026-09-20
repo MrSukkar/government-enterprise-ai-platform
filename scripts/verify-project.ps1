@@ -2934,11 +2934,44 @@ if (Test-Path $stage12AcceptancePath) {
     $runbook = Get-Content -Raw $stage12Paths.Runbook
     @('IGovernedTestRuntime','Repository defaults remain empty and fail closed','never substitute a fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Human Review') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 12 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage12Paths.Page
-    @('Run governed Tests','RunTestsAsync','developer.internal-service.tests.execute','demo-tests-contract','demo-tests-policy-boundary','ProductionEffectOccurred: false','CanAdvance: false','geaip-demo-stage-12') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 12 UI guard missing: $_" } }
+    @('Run governed Tests','RunTestsAsync','developer.internal-service.tests.execute','demo-tests-contract','demo-tests-policy-boundary','ProductionEffectOccurred: false','CanAdvance: false') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 12 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage12Paths.Realm
     @('developer.internal-service.sandbox.execute','developer.internal-service.tests.execute') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 12 identity permission missing: $_" } }
     $acceptance = Get-Content -Raw $stage12AcceptancePath
     @('CR-034','exact accepted Sandbox and Security evidence chain','No fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Human Review and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 12 acceptance missing: $_" } }
+}
+
+$stage13AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_13_GOVERNED_HUMAN_REVIEW_ACCEPTANCE.md'
+if (Test-Path $stage13AcceptancePath) {
+    $stage13Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-035-INTEGRATION-DEMO-GOVERNED-HUMAN-REVIEW.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-13\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-13\opa\decision.rego'
+        BundleVerification = Join-Path $repositoryRoot 'deploy\demo\stage-13\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-13.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-13\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage13Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 13 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage13Paths.Change
+    @('Status: **Approved for bounded implementation**','distinct authenticated human reviewer','No fake reviewer','Git operation','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 13 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage13Paths.Compose
+    @('019_human_review_inputs.sql','020_human_review_evidence.sql','integration-demo-stage-13','human-review/seed.sql','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 13 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage13Paths.Policy
+    @('internal-service.human-review.decide','reviewerSubjectId','initiatorSubjectId','humanDecision','rationaleSha256Digest','humanAttestationReference','reviewerIsHuman":true','"outputKind":"human-review-decision"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 13 policy guard missing: $_" } }
+    $bundle = Get-Content -Raw $stage13Paths.BundleVerification
+    @('geaip-demo-stage-13','12cf021ad07490c73361bc8701b14698063acae7b13ad0d0cc0f7c815287d142','trust://demo/opa/demo-opa-signing-01') | ForEach-Object { if ($bundle -notmatch [regex]::Escape($_)) { throw "Stage 13 bundle verification missing: $_" } }
+    $preparation = Get-Content -Raw $stage13Paths.Preparation
+    @('--signing-key','Tests-stopped delivery-run snapshot with a distinct initiator','real institutionally approved signed human-attestation verifier','Stage 13 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 13 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage13Paths.Runbook
+    @('IHumanReviewAttestationVerifier','Repository defaults remain empty and fail closed','never substitute a fake reviewer','ProductionEffectOccurred: false','CanAdvance: false','Git') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 13 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage13Paths.Page
+    @('Record governed Human Review','RecordHumanReviewAsync','developer.internal-service.human-review.decide','ReviewRationale','HumanAttestationReference','ProductionEffectOccurred: false','CanAdvance: false','geaip-demo-stage-13') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 13 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage13Paths.Realm
+    @('developer.internal-service.human-review.decide','demo.human-reviewer','10000000-0000-0000-0000-000000000012','10000000-0000-0000-0000-000000000013') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 13 identity guard missing: $_" } }
+    $acceptance = Get-Content -Raw $stage13AcceptancePath
+    @('CR-035','enforced separation of duties','No fake reviewer','ProductionEffectOccurred: false','CanAdvance: false','Git and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 13 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

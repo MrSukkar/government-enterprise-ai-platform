@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 12 / Governed Tests</p>
+        <p class="eyebrow">Integration Demo Stage 13 / Governed Human Review</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + GOVERNED MANIFEST + SIGNED TEST RUNTIME + EVIDENCE</span>
-        <strong>Governed Tests protocol available; institutional runtime required</strong>
-        <small>Exact accepted Sandbox evidence, manifest and image assurance, signed policy, and a real attested sovereign runtime precede tests. Repository defaults remain unconfigured and fail closed.</small>
+        <span class="state-chip">OPA + HUMAN SEPARATION + SIGNED ATTESTATION + EVIDENCE</span>
+        <strong>Governed Human Review protocol available; institutional verifier required</strong>
+        <small>Exact accepted Tests evidence, a distinct authenticated reviewer, signed policy, and real non-repudiable attestation precede the atomic decision record. Repository defaults remain unconfigured and fail closed.</small>
     </aside>
 </section>
 
@@ -31,6 +31,12 @@
         </div>
         <label for="intent-evidence">Intent evidence reference</label>
         <input id="intent-evidence" @bind="IntentEvidenceReference" placeholder="evidence://intent/..." />
+        <div class="field-grid">
+            <div><label for="review-decision">Human decision</label><select id="review-decision" @bind="ReviewDecision"><option value="Approve">Approve</option><option value="Reject">Reject</option></select></div>
+            <div><label for="review-rationale">Review rationale</label><input id="review-rationale" @bind="ReviewRationale" placeholder="Required human rationale" /></div>
+        </div>
+        <label for="human-attestation">Signed human attestation reference</label>
+        <input id="human-attestation" @bind="HumanAttestationReference" placeholder="attestation://institution/..." />
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
@@ -45,6 +51,7 @@
             <button type="button" class="primary-action" disabled="@(!CanRunSecurityValidation || IsRunningSecurityValidation)" @onclick="RunSecurityValidationAsync">@(IsRunningSecurityValidation ? "Validating security..." : "Run governed Security Validation")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunSandbox || IsRunningSandbox)" @onclick="RunSandboxAsync">@(IsRunningSandbox ? "Requesting isolated execution..." : "Run governed Security Sandbox")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunTests || IsRunningTests)" @onclick="RunTestsAsync">@(IsRunningTests ? "Running governed tests..." : "Run governed Tests")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRecordHumanReview || IsRecordingHumanReview)" @onclick="RecordHumanReviewAsync">@(IsRecordingHumanReview ? "Verifying human decision..." : "Record governed Human Review")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -186,6 +193,19 @@
                 <div><dt>Can advance</dt><dd>@(TestsReceipt.CanAdvance ? "Yes" : "No — Human Review remains separate")</dd></div>
             </dl>
         }
+        @if (HumanReviewReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Human Review receipt">
+                <div><dt>Review</dt><dd>@HumanReviewReceipt.ReviewId</dd></div>
+                <div><dt>Policy</dt><dd>@HumanReviewReceipt.PolicyOutcome</dd></div>
+                <div><dt>Recorded</dt><dd>@(HumanReviewReceipt.IsRecorded ? "Yes" : "No")</dd></div>
+                <div><dt>Decision</dt><dd>@HumanReviewReceipt.Decision</dd></div>
+                <div><dt>Reviewer</dt><dd>@HumanReviewReceipt.ReviewerSubjectId</dd></div>
+                <div><dt>Evidence</dt><dd>@HumanReviewReceipt.ReviewEvidenceReference</dd></div>
+                <div><dt>Production effect</dt><dd>@(HumanReviewReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(HumanReviewReceipt.CanAdvance ? "Yes" : "No — Git remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -293,6 +313,9 @@
     private string PrimaryUsers { get; set; } = "Residents and permit officers";
     private string Classification { get; set; } = "Internal";
     private string IntentEvidenceReference { get; set; } = string.Empty;
+    private string ReviewDecision { get; set; } = "Approve";
+    private string ReviewRationale { get; set; } = string.Empty;
+    private string HumanAttestationReference { get; set; } = string.Empty;
     private int DraftScore { get; set; } = 100;
     private string EvaluationMessage { get; set; } = "Draft is complete enough for governed intent submission. Submission remains locked.";
     private bool IsSubmitting { get; set; }
@@ -307,6 +330,7 @@
     private bool IsRunningSecurityValidation { get; set; }
     private bool IsRunningSandbox { get; set; }
     private bool IsRunningTests { get; set; }
+    private bool IsRecordingHumanReview { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -320,6 +344,7 @@
     private GovernedSecurityValidationReceipt? SecurityValidationReceipt { get; set; }
     private GovernedSandboxExecutionReceipt? SandboxReceipt { get; set; }
     private GovernedTestsExecutionReceipt? TestsReceipt { get; set; }
+    private GovernedHumanReviewReceipt? HumanReviewReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -331,6 +356,7 @@
     private Guid SecurityValidationId { get; set; }
     private Guid SandboxExecutionId { get; set; }
     private Guid TestsExecutionId { get; set; }
+    private Guid HumanReviewId { get; set; }
     private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
@@ -400,6 +426,13 @@
         SandboxReceipt is { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false,
             ResultSha256Digest: not null, ExecutionEvidenceReference: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.tests.execute");
+
+    private bool CanRecordHumanReview =>
+        TestsReceipt is { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false,
+            ResultSha256Digest: not null, TestsEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.human-review.decide") &&
+        !string.IsNullOrWhiteSpace(ReviewRationale) &&
+        !string.IsNullOrWhiteSpace(HumanAttestationReference);
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -473,6 +506,7 @@
                 SecurityValidationReceipt = null;
                 SandboxReceipt = null;
                 TestsReceipt = null;
+                HumanReviewReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -484,6 +518,7 @@
                 SecurityValidationId = Guid.NewGuid();
                 SandboxExecutionId = Guid.NewGuid();
                 TestsExecutionId = Guid.NewGuid();
+                HumanReviewId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -923,7 +958,42 @@
         finally { IsRunningTests = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-12", "2026.09.20", "c4e8b2a19f6d3c7e5a0b4d8f2e6c1a9b7d5f3e0c8a6b4d2f1e9c7a5b3d8f6e2c", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero));
+    private async Task RecordHumanReviewAsync()
+    {
+        if (!CanRecordHumanReview || RegistrationReceipt is null || ContextReceipt is null || SystemsReceipt is null ||
+            ArchitectureReceipt is null || PackagesReceipt is null || PlanningReceipt is null ||
+            CodeGenerationReceipt is null || StaticValidationReceipt is null || SecurityValidationReceipt is null ||
+            SandboxReceipt is null || TestsReceipt is null) return;
+        IsRecordingHumanReview = true;
+        try
+        {
+            var request = new HumanReviewRequest(
+                HumanReviewId, DeliveryRunId, "10000000-0000-0000-0000-000000000012",
+                CodeGenerationReceipt.CandidateSha256Digest!, SecurityValidationReceipt.SecurityReportSha256Digest!,
+                SandboxReceipt.ResultSha256Digest!, TestsReceipt.ResultSha256Digest!, TestsReceipt.TestsEvidenceReference!,
+                ReviewDecision, ReviewRationale, HumanAttestationReference,
+                ["10000000-0000-0000-0000-000000000012"], -1,
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation/{CodeGenerationReceipt.GenerationId:D}/static-validation/{StaticValidationReceipt.ValidationId:D}/security-validation/{SecurityValidationReceipt.ValidationId:D}/sandbox/{SandboxReceipt.ExecutionId:D}/tests/{TestsReceipt.ExecutionId:D}/human-review",
+                request);
+            HumanReviewReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedHumanReviewReceipt>()
+                : null;
+            EvaluationMessage = HumanReviewReceipt is
+                { IsRecorded: true, ProductionEffectOccurred: false, CanAdvance: false }
+                ? $"Governed Human Review recorded the explicit {HumanReviewReceipt.Decision} decision with non-repudiable evidence. Git remains locked."
+                : $"Human Review failed closed ({(int)response.StatusCode}). No decision or attestation was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            HumanReviewReceipt = null;
+            EvaluationMessage = "Human Review policy, exact prerequisites, separation of duties, signed attestation verifier, or atomic PostgreSQL record is unavailable. No decision was fabricated.";
+        }
+        finally { IsRecordingHumanReview = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-13", "2026.09.20", "12cf021ad07490c73361bc8701b14698063acae7b13ad0d0cc0f7c815287d142", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1033,6 +1103,8 @@
     private sealed record TestsExecutionRequest(Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest, string ExpectedSandboxEvidenceReference, string TestManifestReference, string ExpectedTestManifestSha256Digest, IReadOnlyList<string> RequiredTestIds, IReadOnlyList<string> AllowedTestCategories, PackageCoordinate TestImage, SandboxIsolationPolicy IsolationPolicy, IReadOnlyDictionary<string, string> NonSecretEnvironmentReferences, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedTestCaseResult(string TestId, string Category, bool Discovered, bool Completed, bool Passed, bool Skipped, string EvidenceReference);
     private sealed record GovernedTestsExecutionReceipt(Guid ExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ProductionEffectOccurred, bool CanAdvance, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestManifestSha256Digest, PackageCoordinate TestImage, IReadOnlyList<GovernedTestCaseResult> TestResults, string? ResultSha256Digest, string? TestsEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record HumanReviewRequest(Guid ReviewId, Guid DeliveryRunId, string InitiatorSubjectId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest, string ExpectedTestsResultSha256Digest, string ExpectedTestsEvidenceReference, string Decision, string Rationale, string HumanAttestationReference, IReadOnlyList<string> DeclaredConflictingSubjectIds, long ExpectedVersion, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedHumanReviewReceipt(Guid ReviewId, Guid TestsExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string ReviewerSubjectId, string PolicyOutcome, bool IsRecorded, bool IsApproved, bool ProductionEffectOccurred, bool CanAdvance, string? Decision, string? Rationale, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestsResultSha256Digest, string? ReviewPackageSha256Digest, long? Version, string? ReviewEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

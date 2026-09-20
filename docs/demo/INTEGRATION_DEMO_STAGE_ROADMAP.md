@@ -32,7 +32,7 @@ The platform foundation is already complete through Phase 30 and Operationalizat
 | 20 | Governed Enterprise Model Contextualization | Operationalization Wave 20 |
 | 21 | Governed Evidence Completion | Operationalization Wave 21 |
 
-Stages 01-12 are complete. Stage 13 is the next separate gate. A later stage is not authorized merely by appearing in this map; its own approved Change Control, prerequisite acceptance, implementation, verification, immutable commit, GitHub synchronization, and green CI are mandatory.
+Stages 01-13 are complete. Stage 14 is the next separate gate. A later stage is not authorized merely by appearing in this map; its own approved Change Control, prerequisite acceptance, implementation, verification, immutable commit, GitHub synchronization, and green CI are mandatory.
 
 ## Meaning of completion
 
