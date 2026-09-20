@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 11 / Governed Security Sandbox</p>
+        <p class="eyebrow">Integration Demo Stage 12 / Governed Tests</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + FIRECRACKER-CLASS RUNTIME + EVIDENCE</span>
-        <strong>Governed Security Sandbox protocol available; institutional runtime required</strong>
-        <small>Exact accepted Security evidence, image assurance, signed policy, and a real attested sovereign runtime precede execution. Repository defaults remain unconfigured and fail closed.</small>
+        <span class="state-chip">OPA + GOVERNED MANIFEST + SIGNED TEST RUNTIME + EVIDENCE</span>
+        <strong>Governed Tests protocol available; institutional runtime required</strong>
+        <small>Exact accepted Sandbox evidence, manifest and image assurance, signed policy, and a real attested sovereign runtime precede tests. Repository defaults remain unconfigured and fail closed.</small>
     </aside>
 </section>
 
@@ -44,6 +44,7 @@
             <button type="button" class="primary-action" disabled="@(!CanRunStaticValidation || IsRunningStaticValidation)" @onclick="RunStaticValidationAsync">@(IsRunningStaticValidation ? "Validating..." : "Run governed Static Validation")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunSecurityValidation || IsRunningSecurityValidation)" @onclick="RunSecurityValidationAsync">@(IsRunningSecurityValidation ? "Validating security..." : "Run governed Security Validation")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunSandbox || IsRunningSandbox)" @onclick="RunSandboxAsync">@(IsRunningSandbox ? "Requesting isolated execution..." : "Run governed Security Sandbox")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRunTests || IsRunningTests)" @onclick="RunTestsAsync">@(IsRunningTests ? "Running governed tests..." : "Run governed Tests")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -172,6 +173,19 @@
                 <div><dt>Can advance</dt><dd>@(SandboxReceipt.CanAdvance ? "Yes" : "No — Tests remains separate")</dd></div>
             </dl>
         }
+        @if (TestsReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Tests receipt">
+                <div><dt>Execution</dt><dd>@TestsReceipt.ExecutionId</dd></div>
+                <div><dt>Policy</dt><dd>@TestsReceipt.PolicyOutcome</dd></div>
+                <div><dt>Accepted</dt><dd>@(TestsReceipt.IsAccepted ? "Yes" : "No")</dd></div>
+                <div><dt>Required tests</dt><dd>@TestsReceipt.TestResults.Count</dd></div>
+                <div><dt>Result digest</dt><dd>@TestsReceipt.ResultSha256Digest</dd></div>
+                <div><dt>Evidence</dt><dd>@TestsReceipt.TestsEvidenceReference</dd></div>
+                <div><dt>Production effect</dt><dd>@(TestsReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(TestsReceipt.CanAdvance ? "Yes" : "No — Human Review remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -292,6 +306,7 @@
     private bool IsRunningStaticValidation { get; set; }
     private bool IsRunningSecurityValidation { get; set; }
     private bool IsRunningSandbox { get; set; }
+    private bool IsRunningTests { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -304,6 +319,7 @@
     private GovernedStaticValidationReceipt? StaticValidationReceipt { get; set; }
     private GovernedSecurityValidationReceipt? SecurityValidationReceipt { get; set; }
     private GovernedSandboxExecutionReceipt? SandboxReceipt { get; set; }
+    private GovernedTestsExecutionReceipt? TestsReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -314,6 +330,7 @@
     private Guid StaticValidationId { get; set; }
     private Guid SecurityValidationId { get; set; }
     private Guid SandboxExecutionId { get; set; }
+    private Guid TestsExecutionId { get; set; }
     private Guid DeliveryRunId { get; set; }
 
     private bool CanSubmit =>
@@ -378,6 +395,11 @@
         SecurityValidationReceipt is { IsAccepted: true, IsExecutable: false, CanAdvance: false,
             SecurityReportSha256Digest: not null, ValidationEvidenceReference: not null } &&
         ExperienceContext.HasPermission("developer.internal-service.sandbox.execute");
+
+    private bool CanRunTests =>
+        SandboxReceipt is { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false,
+            ResultSha256Digest: not null, ExecutionEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.tests.execute");
 
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
@@ -450,6 +472,7 @@
                 StaticValidationReceipt = null;
                 SecurityValidationReceipt = null;
                 SandboxReceipt = null;
+                TestsReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -460,6 +483,7 @@
                 StaticValidationId = Guid.NewGuid();
                 SecurityValidationId = Guid.NewGuid();
                 SandboxExecutionId = Guid.NewGuid();
+                TestsExecutionId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -511,6 +535,7 @@
                 StaticValidationReceipt = null;
                 SecurityValidationReceipt = null;
                 SandboxReceipt = null;
+                TestsReceipt = null;
                 EvaluationMessage = RegistrationReceipt?.Disposition == "Unchanged"
                     ? "Idempotency proven: the exact governed registration was returned unchanged."
                     : "OPA permitted the exact intent and PostgreSQL committed it atomically with evidence.";
@@ -768,6 +793,7 @@
                 : null;
             SecurityValidationReceipt = null;
             SandboxReceipt = null;
+            TestsReceipt = null;
             EvaluationMessage = StaticValidationReceipt is
                 { IsAccepted: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed Static Validation accepted the inert candidate after {StaticValidationReceipt.ControlReports.Count} signed deterministic controls. Security Validation remains locked."
@@ -801,6 +827,7 @@
                 ? await response.Content.ReadFromJsonAsync<GovernedSecurityValidationReceipt>()
                 : null;
             SandboxReceipt = null;
+            TestsReceipt = null;
             EvaluationMessage = SecurityValidationReceipt is
                 { IsAccepted: true, IsExecutable: false, CanAdvance: false }
                 ? $"Governed Security Validation accepted the inert candidate after {SecurityValidationReceipt.ControlReports.Count} signed deterministic controls. Sandbox remains locked."
@@ -840,6 +867,7 @@
             SandboxReceipt = response.IsSuccessStatusCode
                 ? await response.Content.ReadFromJsonAsync<GovernedSandboxExecutionReceipt>()
                 : null;
+            TestsReceipt = null;
             EvaluationMessage = SandboxReceipt is
                 { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false }
                 ? $"Governed Security Sandbox accepted a signed Firecracker-class result with {SandboxReceipt.ProducedArtifactReferences.Count} evidenced outputs. Tests remains locked."
@@ -853,7 +881,49 @@
         finally { IsRunningSandbox = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-11", "2026.09.19", "bfa13a11c0864ed01b8ea3756e612cdc313fb1fac8600e4b117d27b3f6329467", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 19, 0, 0, 0, TimeSpan.Zero));
+    private async Task RunTestsAsync()
+    {
+        if (!CanRunTests || RegistrationReceipt is null || ContextReceipt is null || SystemsReceipt is null ||
+            ArchitectureReceipt is null || PackagesReceipt is null || PlanningReceipt is null ||
+            CodeGenerationReceipt is null || StaticValidationReceipt is null || SecurityValidationReceipt is null ||
+            SandboxReceipt is null) return;
+        IsRunningTests = true;
+        try
+        {
+            var request = new TestsExecutionRequest(
+                TestsExecutionId, DeliveryRunId, CodeGenerationReceipt.CandidateSha256Digest!,
+                SecurityValidationReceipt.SecurityReportSha256Digest!, SandboxReceipt.ResultSha256Digest!,
+                SandboxReceipt.ExecutionEvidenceReference!, "manifest://demo/governed-tests/permit-renewal/v1",
+                "5555555555555555555555555555555555555555555555555555555555555555",
+                ["demo-tests-contract", "demo-tests-policy-boundary"], ["Contract", "Governance"],
+                new PackageCoordinate("SandboxImage", "Platform.Synthetic.Permit.Tests", "1.0.0",
+                    "sha256:4444444444444444444444444444444444444444444444444444444444444444"),
+                new SandboxIsolationPolicy("Firecracker-class", true, true, false, false, true, [], 1, 536870912, TimeSpan.FromSeconds(30)),
+                new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["TEST_PROFILE"] = "reference://demo/config/permit-tests-v1"
+                },
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation/{CodeGenerationReceipt.GenerationId:D}/static-validation/{StaticValidationReceipt.ValidationId:D}/security-validation/{SecurityValidationReceipt.ValidationId:D}/sandbox/{SandboxReceipt.ExecutionId:D}/tests",
+                request);
+            TestsReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedTestsExecutionReceipt>()
+                : null;
+            EvaluationMessage = TestsReceipt is
+                { IsAccepted: true, ProductionEffectOccurred: false, CanAdvance: false }
+                ? $"Governed Tests accepted {TestsReceipt.TestResults.Count} exact manifest-bound, evidence-bearing results. Human Review remains locked."
+                : $"Tests failed closed ({(int)response.StatusCode}). No passing result was fabricated or released.";
+        }
+        catch (HttpRequestException)
+        {
+            TestsReceipt = null;
+            EvaluationMessage = "Tests policy, immutable prerequisites, governed manifest, image assurance, signed sovereign runtime, result authorization, or PostgreSQL is unavailable. No result was fabricated.";
+        }
+        finally { IsRunningTests = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-12", "2026.09.20", "c4e8b2a19f6d3c7e5a0b4d8f2e6c1a9b7d5f3e0c8a6b4d2f1e9c7a5b3d8f6e2c", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -960,6 +1030,9 @@
     private sealed record SandboxIsolationPolicy(string IsolationClass, bool Ephemeral, bool MicroVmIsolation, bool ProductionCredentialsAllowed, bool HostFilesystemAccessAllowed, bool NetworkDefaultDeny, IReadOnlyList<string> AllowedNetworkDestinations, int CpuLimit, long MemoryLimitBytes, TimeSpan ExecutionTimeout);
     private sealed record SandboxExecutionRequest(Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSecurityEvidenceReference, PackageCoordinate SandboxImage, SandboxIsolationPolicy IsolationPolicy, IReadOnlyDictionary<string, string> NonSecretEnvironmentReferences, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedSandboxExecutionReceipt(Guid ExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ProductionEffectOccurred, bool CanAdvance, string CandidateSha256Digest, string SecurityReportSha256Digest, PackageCoordinate SandboxImage, int? ExitCode, bool? TimedOut, bool? IsolationViolationDetected, IReadOnlyList<string> ProducedArtifactReferences, string? ResultSha256Digest, string? ExecutionEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record TestsExecutionRequest(Guid ExecutionId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest, string ExpectedSandboxEvidenceReference, string TestManifestReference, string ExpectedTestManifestSha256Digest, IReadOnlyList<string> RequiredTestIds, IReadOnlyList<string> AllowedTestCategories, PackageCoordinate TestImage, SandboxIsolationPolicy IsolationPolicy, IReadOnlyDictionary<string, string> NonSecretEnvironmentReferences, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedTestCaseResult(string TestId, string Category, bool Discovered, bool Completed, bool Passed, bool Skipped, string EvidenceReference);
+    private sealed record GovernedTestsExecutionReceipt(Guid ExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ProductionEffectOccurred, bool CanAdvance, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestManifestSha256Digest, PackageCoordinate TestImage, IReadOnlyList<GovernedTestCaseResult> TestResults, string? ResultSha256Digest, string? TestsEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

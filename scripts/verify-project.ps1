@@ -2908,6 +2908,39 @@ if (Test-Path $stage11AcceptancePath) {
     @('CR-033','Exact accepted Security report','No fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Tests and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 11 acceptance missing: $_" } }
 }
 
+$stage12AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_12_GOVERNED_TESTS_ACCEPTANCE.md'
+if (Test-Path $stage12AcceptancePath) {
+    $stage12Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-034-INTEGRATION-DEMO-GOVERNED-TESTS.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-12\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-12\opa\decision.rego'
+        BundleVerification = Join-Path $repositoryRoot 'deploy\demo\stage-12\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-12.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-12\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage12Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 12 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage12Paths.Change
+    @('Status: **Approved for bounded implementation**','immutable governed manifest','No fake runtime','Human Review','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 12 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage12Paths.Compose
+    @('017_tests_inputs.sql','018_tests_evidence.sql','integration-demo-stage-12','tests/seed.sql','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 12 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage12Paths.Policy
+    @('internal-service.tests.execute','manifest://demo/governed-tests/permit-renewal/v1','Platform.Synthetic.Permit.Tests','demo-tests-contract','demo-tests-policy-boundary','productionCredentialsAllowed":false','hostFilesystemAccessAllowed":false','networkDefaultDeny":true','"outputKind":"tests-result"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 12 policy guard missing: $_" } }
+    $bundle = Get-Content -Raw $stage12Paths.BundleVerification
+    @('geaip-demo-stage-12','c4e8b2a19f6d3c7e5a0b4d8f2e6c1a9b7d5f3e0c8a6b4d2f1e9c7a5b3d8f6e2c','trust://demo/opa/demo-opa-signing-01') | ForEach-Object { if ($bundle -notmatch [regex]::Escape($_)) { throw "Stage 12 bundle verification missing: $_" } }
+    $preparation = Get-Content -Raw $stage12Paths.Preparation
+    @('--signing-key','exact Tests image record','immutable governed test-manifest seed','real institutionally approved signed Firecracker-class governed test runtime','Stage 12 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 12 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage12Paths.Runbook
+    @('IGovernedTestRuntime','Repository defaults remain empty and fail closed','never substitute a fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Human Review') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 12 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage12Paths.Page
+    @('Run governed Tests','RunTestsAsync','developer.internal-service.tests.execute','demo-tests-contract','demo-tests-policy-boundary','ProductionEffectOccurred: false','CanAdvance: false','geaip-demo-stage-12') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 12 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage12Paths.Realm
+    @('developer.internal-service.sandbox.execute','developer.internal-service.tests.execute') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 12 identity permission missing: $_" } }
+    $acceptance = Get-Content -Raw $stage12AcceptancePath
+    @('CR-034','exact accepted Sandbox and Security evidence chain','No fake runtime','ProductionEffectOccurred: false','CanAdvance: false','Human Review and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 12 acceptance missing: $_" } }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

@@ -25,20 +25,20 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 11 - Governed Security Sandbox",
+    "stage": "Stage 12 - Governed Tests",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-033-INTEGRATION-DEMO-SECURITY-SANDBOX.md",
-    "acceptanceArtifact": "docs/demo/STAGE_11_SECURITY_SANDBOX_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/demo/STAGE_10_SECURITY_VALIDATION_ACCEPTANCE.md",
+    "changeControl": "docs/change-control/CR-034-INTEGRATION-DEMO-GOVERNED-TESTS.md",
+    "acceptanceArtifact": "docs/demo/STAGE_12_GOVERNED_TESTS_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/demo/STAGE_11_SECURITY_SANDBOX_ACCEPTANCE.md",
     "deliveryMap": "docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md",
-    "nextGate": "Stage 12 - Governed Tests (not started)",
-    "executionBoundary": "Stage 11 may request only exact signed-policy-authorized execution through the existing provider-neutral sovereign Sandbox protocol after complete image, trust, isolation, and runtime configuration; repository defaults remain unconfigured and fail closed; no fake execution, production effect, Tests, workflow advancement, or Phase 31 is authorized"
+    "nextGate": "Stage 13 - Governed Human Review (not started)",
+    "executionBoundary": "Stage 12 may request only exact signed-policy-authorized tests through the existing provider-neutral sovereign test protocol after complete prerequisite, manifest, image, trust, isolation, and runtime configuration; repository defaults remain unconfigured and fail closed; no fake result, production effect, Human Review approval, workflow advancement, or Phase 31 is authorized"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_11_SECURITY_SANDBOX_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_12_GOVERNED_TESTS_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
