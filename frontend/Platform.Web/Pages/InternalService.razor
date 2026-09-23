@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 14 / Governed Git</p>
+        <p class="eyebrow">Integration Demo Stage 15 / Governed CI/CD</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + EXACT CHANGE SET + SIGNED COMMIT + EVIDENCE</span>
-        <strong>Governed Git protocol available; institutional gateway and signer required</strong>
-        <small>An approving Human Review, exact clean base, signed policy, reviewed paths, and a real signed institutional Git response precede commit evidence. Repository defaults remain unconfigured and fail closed.</small>
+        <span class="state-chip">OPA + SIGNED GIT + ISOLATED RUNNER + SUPPLY-CHAIN EVIDENCE</span>
+        <strong>Governed CI/CD protocol available; institutional gateway and isolated runner required</strong>
+        <small>An exact signed Git receipt, immutable signed workflow, locked dependencies, signed policy, and real institutional CI/CD response precede pipeline evidence. Repository defaults remain unconfigured and fail closed.</small>
     </aside>
 </section>
 
@@ -49,6 +49,12 @@
         <input id="git-message" @bind="GitCommitMessage" />
         <label for="git-change-set">Expected change-set SHA-256</label>
         <input id="git-change-set" @bind="GitExpectedChangeSetSha256Digest" placeholder="64 lowercase hexadecimal characters from the reviewed change set" />
+        <div class="field-grid">
+            <div><label for="cicd-workflow">Immutable workflow</label><input id="cicd-workflow" @bind="CiCdWorkflowDefinitionId" /></div>
+            <div><label for="cicd-workflow-version">Workflow version</label><input id="cicd-workflow-version" @bind="CiCdWorkflowDefinitionVersion" /></div>
+        </div>
+        <label for="cicd-workflow-digest">Expected workflow SHA-256</label>
+        <input id="cicd-workflow-digest" @bind="CiCdExpectedWorkflowSha256Digest" />
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
@@ -65,6 +71,7 @@
             <button type="button" class="primary-action" disabled="@(!CanRunTests || IsRunningTests)" @onclick="RunTestsAsync">@(IsRunningTests ? "Running governed tests..." : "Run governed Tests")</button>
             <button type="button" class="primary-action" disabled="@(!CanRecordHumanReview || IsRecordingHumanReview)" @onclick="RecordHumanReviewAsync">@(IsRecordingHumanReview ? "Verifying human decision..." : "Record governed Human Review")</button>
             <button type="button" class="primary-action" disabled="@(!CanCreateGitCommit || IsCreatingGitCommit)" @onclick="CreateGitCommitAsync">@(IsCreatingGitCommit ? "Creating governed signed commit..." : "Create governed Git commit")</button>
+            <button type="button" class="primary-action" disabled="@(!CanExecuteCiCd || IsExecutingCiCd)" @onclick="ExecuteCiCdAsync">@(IsExecutingCiCd ? "Executing governed pipeline..." : "Execute governed CI/CD")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -233,6 +240,21 @@
                 <div><dt>Can advance</dt><dd>@(GitReceipt.CanAdvance ? "Yes" : "No — CI/CD remains separate")</dd></div>
             </dl>
         }
+        @if (CiCdReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed CI/CD receipt">
+                <div><dt>Execution</dt><dd>@CiCdReceipt.ExecutionId</dd></div>
+                <div><dt>Policy</dt><dd>@CiCdReceipt.PolicyOutcome</dd></div>
+                <div><dt>Accepted</dt><dd>@(CiCdReceipt.IsAccepted ? "Yes" : "No")</dd></div>
+                <div><dt>Stages</dt><dd>@CiCdReceipt.Stages.Count</dd></div>
+                <div><dt>Output manifest</dt><dd>@CiCdReceipt.PipelineOutputManifestSha256Digest</dd></div>
+                <div><dt>Source mutation</dt><dd>@(CiCdReceipt.SourceMutationOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Artifact published</dt><dd>@(CiCdReceipt.ArtifactPublished ? "Yes" : "No")</dd></div>
+                <div><dt>Deployment</dt><dd>@(CiCdReceipt.DeploymentOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Production effect</dt><dd>@(CiCdReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(CiCdReceipt.CanAdvance ? "Yes" : "No — Artifact remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -359,6 +381,7 @@
     private bool IsRunningTests { get; set; }
     private bool IsRecordingHumanReview { get; set; }
     private bool IsCreatingGitCommit { get; set; }
+    private bool IsExecutingCiCd { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -374,6 +397,7 @@
     private GovernedTestsExecutionReceipt? TestsReceipt { get; set; }
     private GovernedHumanReviewReceipt? HumanReviewReceipt { get; set; }
     private GovernedGitSourceCommitReceipt? GitReceipt { get; set; }
+    private GovernedCiCdExecutionReceipt? CiCdReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -387,6 +411,7 @@
     private Guid TestsExecutionId { get; set; }
     private Guid HumanReviewId { get; set; }
     private Guid GitOperationId { get; set; }
+    private Guid CiCdExecutionId { get; set; }
     private Guid DeliveryRunId { get; set; }
     private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
     private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -394,6 +419,9 @@
     private string GitCommitMessage { get; set; } = "feat(permit): add reviewed renewal service";
     private string GitSigningPolicyReference { get; set; } = "policy://demo/git-signing/v1";
     private string GitExpectedChangeSetSha256Digest { get; set; } = string.Empty;
+    private string CiCdWorkflowDefinitionId { get; set; } = "workflow://demo/internal-service/verify-build-attest";
+    private string CiCdWorkflowDefinitionVersion { get; set; } = "1.0.0";
+    private string CiCdExpectedWorkflowSha256Digest { get; set; } = "7777777777777777777777777777777777777777777777777777777777777777";
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -478,6 +506,14 @@
         GitExpectedChangeSetSha256Digest.Length == 64 &&
         GitExpectedChangeSetSha256Digest.All(Uri.IsHexDigit);
 
+    private bool CanExecuteCiCd =>
+        GitReceipt is { IsCommitted: true, CommitSigned: true, CiCdTriggered: false,
+            ProductionEffectOccurred: false, CanAdvance: false, CommitId: not null,
+            TreeSha256Digest: not null, GitEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.cicd.execute") &&
+        CiCdExpectedWorkflowSha256Digest.Length == 64 &&
+        CiCdExpectedWorkflowSha256Digest.All(Uri.IsHexDigit);
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -552,6 +588,7 @@
                 TestsReceipt = null;
                 HumanReviewReceipt = null;
                 GitReceipt = null;
+                CiCdReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -565,6 +602,7 @@
                 TestsExecutionId = Guid.NewGuid();
                 HumanReviewId = Guid.NewGuid();
                 GitOperationId = Guid.NewGuid();
+                CiCdExecutionId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -1076,7 +1114,42 @@
         finally { IsCreatingGitCommit = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-14", "2026.09.23", "d03618d00a43e9a679db69af965a840fdb3198e69b98d31e497bdd418c3e1117", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
+    private async Task ExecuteCiCdAsync()
+    {
+        if (!CanExecuteCiCd || GitReceipt is null) return;
+        IsExecutingCiCd = true;
+        try
+        {
+            var request = new CiCdExecutionRequest(
+                CiCdExecutionId, DeliveryRunId, GitReceipt.RepositoryId, GitReceipt.CommitId!,
+                GitReceipt.TreeSha256Digest!, GitReceipt.ChangeSetSha256Digest,
+                CiCdWorkflowDefinitionId, CiCdWorkflowDefinitionVersion,
+                CiCdExpectedWorkflowSha256Digest, "signature://demo/cicd/workflow-v1",
+                "demo-sovereign-cicd", "runner-pool://demo/isolated-dotnet10",
+                ["restore", "verify-build", "publish-output", "sbom", "provenance", "attest"],
+                ["locked-dependencies", "project-verifier", "sbom", "provenance", "build-attestation", "output-signature"],
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/git/{GitReceipt.OperationId:D}/cicd", request);
+            CiCdReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedCiCdExecutionReceipt>()
+                : null;
+            EvaluationMessage = CiCdReceipt is
+                { IsAccepted: true, CiCdTriggered: true, SourceMutationOccurred: false,
+                    ArtifactPublished: false, DeploymentOccurred: false,
+                    ProductionEffectOccurred: false, CanAdvance: false }
+                ? "Governed CI/CD completed the exact pipeline and produced a non-released evidence manifest. Artifact remains separately locked."
+                : $"CI/CD failed closed ({(int)response.StatusCode}). No execution, SBOM, attestation, or manifest was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            CiCdReceipt = null;
+            EvaluationMessage = "CI/CD policy, exact Git/run/workflow prerequisites, isolated runner, signed institutional gateway, result authorization, or PostgreSQL is unavailable. No execution was fabricated.";
+        }
+        finally { IsExecutingCiCd = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-15", "2026.09.23", "1515151515151515151515151515151515151515151515151515151515151515", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1190,6 +1263,9 @@
     private sealed record GovernedHumanReviewReceipt(Guid ReviewId, Guid TestsExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string ReviewerSubjectId, string PolicyOutcome, bool IsRecorded, bool IsApproved, bool ProductionEffectOccurred, bool CanAdvance, string? Decision, string? Rationale, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestsResultSha256Digest, string? ReviewPackageSha256Digest, long? Version, string? ReviewEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
     private sealed record GitSourceCommitRequest(Guid OperationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedReviewPackageSha256Digest, string ExpectedReviewEvidenceReference, string ExpectedTestsResultSha256Digest, string ExpectedChangeSetSha256Digest, IReadOnlyList<string> AuthorizedRelativePaths, string RepositoryId, string ExpectedBaseCommitId, string ChangeBranch, string CommitMessage, string SigningPolicyReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedGitSourceCommitReceipt(Guid OperationId, Guid ReviewId, Guid TestsExecutionId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsCommitted, bool SourceMutationOccurred, bool ProductionEffectOccurred, bool CiCdTriggered, bool CanAdvance, string CandidateSha256Digest, string ReviewPackageSha256Digest, string ChangeSetSha256Digest, string RepositoryId, string ChangeBranch, string? BaseCommitId, string? CommitId, string? TreeSha256Digest, bool CommitSigned, IReadOnlyList<object> AppliedChanges, string? GitEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record CiCdExecutionRequest(Guid ExecutionId, Guid DeliveryRunId, string RepositoryId, string ExpectedCommitId, string ExpectedTreeSha256Digest, string ExpectedChangeSetSha256Digest, string WorkflowDefinitionId, string WorkflowDefinitionVersion, string ExpectedWorkflowSha256Digest, string WorkflowSignatureReference, string PipelineProfile, string RunnerPoolId, IReadOnlyList<string> RequiredStageIds, IReadOnlyList<string> RequiredControlIds, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedCiCdStageResult(string StageId, bool Completed, bool Succeeded, bool Skipped, bool TimedOut, IReadOnlyList<string> ControlIds, IReadOnlyList<string> EvidenceReferences, DateTimeOffset CompletedAt);
+    private sealed record GovernedCiCdExecutionReceipt(Guid ExecutionId, Guid GitOperationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool CiCdTriggered, bool SourceMutationOccurred, bool ArtifactPublished, bool DeploymentOccurred, bool ProductionEffectOccurred, bool CanAdvance, string RepositoryId, string CommitId, string WorkflowSha256Digest, string? PipelineOutputManifestSha256Digest, IReadOnlyList<GovernedCiCdStageResult> Stages, string? CiCdEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 

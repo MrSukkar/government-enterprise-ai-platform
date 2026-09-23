@@ -25,20 +25,20 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 14 - Governed Git",
+    "stage": "Stage 15 - Governed CI/CD",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-036-INTEGRATION-DEMO-GOVERNED-GIT.md",
-    "acceptanceArtifact": "docs/demo/STAGE_14_GOVERNED_GIT_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/demo/STAGE_13_GOVERNED_HUMAN_REVIEW_ACCEPTANCE.md",
+    "changeControl": "docs/change-control/CR-037-INTEGRATION-DEMO-GOVERNED-CICD.md",
+    "acceptanceArtifact": "docs/demo/STAGE_15_GOVERNED_CICD_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/demo/STAGE_14_GOVERNED_GIT_ACCEPTANCE.md",
     "deliveryMap": "docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md",
-    "nextGate": "Stage 15 - Governed CI/CD (not started)",
-    "executionBoundary": "Stage 14 may create one signed immutable source commit only through exact signed-policy scope, an approved Human Review, exact change-set validation, a clean immutable base, and a real signed institutional Git gateway; repository defaults remain unconfigured and fail closed; no fake commit, protected-branch mutation, force update, PR, CI/CD trigger, production effect, workflow advancement, or Phase 31 is authorized"
+    "nextGate": "Stage 16 - Governed Artifact Publication (not started)",
+    "executionBoundary": "Stage 15 may execute only the exact immutable signed workflow for exact signed Git evidence in an approved isolated runner through signed policy and a real institutional CI/CD gateway; repository defaults remain unconfigured and fail closed; no fake execution, source mutation, Artifact publication, deployment, production effect, workflow advancement, or Phase 31 is authorized"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_14_GOVERNED_GIT_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_15_GOVERNED_CICD_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

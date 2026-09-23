@@ -3000,11 +3000,44 @@ if (Test-Path $stage14AcceptancePath) {
     $runbook = Get-Content -Raw $stage14Paths.Runbook
     @('IInstitutionalGitGateway','Repository defaults remain empty and fail closed','never substitute a fake repository','SourceMutationOccurred: true','ProductionEffectOccurred: false','CiCdTriggered: false','CanAdvance: false') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 14 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage14Paths.Page
-    @('Integration Demo Stage 14','Create governed Git commit','CreateGitCommitAsync','developer.internal-service.git.commit','GitExpectedChangeSetSha256Digest','SourceMutationOccurred: true','CiCdTriggered: false','CanAdvance: false','geaip-demo-stage-14') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 14 UI guard missing: $_" } }
+    @('Create governed Git commit','CreateGitCommitAsync','developer.internal-service.git.commit','GitExpectedChangeSetSha256Digest','SourceMutationOccurred: true','CiCdTriggered: false','CanAdvance: false','GovernedGitSourceCommitReceipt') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 14 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage14Paths.Realm
     @('developer.internal-service.human-review.decide','developer.internal-service.git.commit','demo.human-reviewer') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 14 identity guard missing: $_" } }
     $acceptance = Get-Content -Raw $stage14AcceptancePath
     @('CR-036','exact approving Human Review','No fake repository','SourceMutationOccurred: true','ProductionEffectOccurred: false','CiCdTriggered: false','CanAdvance: false','CI/CD, and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 14 acceptance missing: $_" } }
+}
+
+$stage15AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_15_GOVERNED_CICD_ACCEPTANCE.md'
+if (Test-Path $stage15AcceptancePath) {
+    $stage15Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-037-INTEGRATION-DEMO-GOVERNED-CICD.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-15\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-15\opa\decision.rego'
+        BundleVerification = Join-Path $repositoryRoot 'deploy\demo\stage-15\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-15.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-15\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage15Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 15 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage15Paths.Change
+    @('Status: **Approved for bounded implementation**','immutable approved workflow','No fake workflow','Artifact publication','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 15 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage15Paths.Compose
+    @('023_cicd_inputs.sql','024_cicd_evidence.sql','integration-demo-stage-15','cicd/seed.sql','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 15 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage15Paths.Policy
+    @('internal-service.cicd.execute','repositoryId','commitId','treeSha256Digest','workflowDefinitionId','runnerPoolId','requiredStageIds','requiredControlIds','sourceMutationAllowed":false','artifactPublicationAllowed":false','deploymentAllowed":false','"outputKind":"cicd-result"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 15 policy guard missing: $_" } }
+    $bundle = Get-Content -Raw $stage15Paths.BundleVerification
+    @('geaip-demo-stage-15','1515151515151515151515151515151515151515151515151515151515151515','trust://demo/opa/demo-opa-signing-01') | ForEach-Object { if ($bundle -notmatch [regex]::Escape($_)) { throw "Stage 15 bundle verification missing: $_" } }
+    $preparation = Get-Content -Raw $stage15Paths.Preparation
+    @('--signing-key','signed Git evidence','Git-stopped delivery-run snapshot','institutionally approved signed CI/CD gateway','Stage 15 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 15 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage15Paths.Runbook
+    @('IInstitutionalCiCdGateway','Repository defaults remain empty and fail closed','never substitute a fake workflow','CiCdTriggered: true','SourceMutationOccurred: false','ArtifactPublished: false','DeploymentOccurred: false','ProductionEffectOccurred: false','CanAdvance: false') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 15 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage15Paths.Page
+    @('Integration Demo Stage 15','Execute governed CI/CD','ExecuteCiCdAsync','developer.internal-service.cicd.execute','CiCdExpectedWorkflowSha256Digest','ArtifactPublished: false','DeploymentOccurred: false','CanAdvance: false','geaip-demo-stage-15') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 15 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage15Paths.Realm
+    @('developer.internal-service.git.commit','developer.internal-service.cicd.execute','demo.human-reviewer') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 15 identity guard missing: $_" } }
+    $acceptance = Get-Content -Raw $stage15AcceptancePath
+    @('CR-037','exact signed Git evidence','No fake workflow','CiCdTriggered: true','SourceMutationOccurred: false','ArtifactPublished: false','DeploymentOccurred: false','ProductionEffectOccurred: false','CanAdvance: false','Artifact publication and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 15 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {
