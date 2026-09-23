@@ -1,4 +1,4 @@
-﻿services:
+services:
   opa:
     image: openpolicyagent/opa:1.20.2-static@sha256:bb245e9e36be0d0ed486c240b606c56be7aba96014a4a87895fed4ba7a6dfa8d
     command: ["run","--server","--addr=0.0.0.0:8181","--min-tls-version=1.2","--tls-cert-file=/runtime/tls/localhost.pem","--tls-private-key-file=/runtime/tls/localhost.key","--verification-key=/runtime/opa/public.pem","--verification-key-id=demo-opa-signing-01","--bundle","/runtime/opa/bundle.tar.gz"]
@@ -74,4 +74,3 @@
 volumes:
   geaip-stage-17-postgres:
   geaip-stage-17-neo4j:
-
