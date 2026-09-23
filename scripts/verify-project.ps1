@@ -2967,11 +2967,44 @@ if (Test-Path $stage13AcceptancePath) {
     $runbook = Get-Content -Raw $stage13Paths.Runbook
     @('IHumanReviewAttestationVerifier','Repository defaults remain empty and fail closed','never substitute a fake reviewer','ProductionEffectOccurred: false','CanAdvance: false','Git') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 13 runbook guard missing: $_" } }
     $page = Get-Content -Raw $stage13Paths.Page
-    @('Record governed Human Review','RecordHumanReviewAsync','developer.internal-service.human-review.decide','ReviewRationale','HumanAttestationReference','ProductionEffectOccurred: false','CanAdvance: false','geaip-demo-stage-13') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 13 UI guard missing: $_" } }
+    @('Record governed Human Review','RecordHumanReviewAsync','developer.internal-service.human-review.decide','ReviewRationale','HumanAttestationReference','ProductionEffectOccurred: false','CanAdvance: false','GovernedHumanReviewReceipt') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 13 UI guard missing: $_" } }
     $realm = Get-Content -Raw $stage13Paths.Realm
     @('developer.internal-service.human-review.decide','demo.human-reviewer','10000000-0000-0000-0000-000000000012','10000000-0000-0000-0000-000000000013') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 13 identity guard missing: $_" } }
     $acceptance = Get-Content -Raw $stage13AcceptancePath
     @('CR-035','enforced separation of duties','No fake reviewer','ProductionEffectOccurred: false','CanAdvance: false','Git and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 13 acceptance missing: $_" } }
+}
+
+$stage14AcceptancePath = Join-Path $repositoryRoot 'docs\demo\STAGE_14_GOVERNED_GIT_ACCEPTANCE.md'
+if (Test-Path $stage14AcceptancePath) {
+    $stage14Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-036-INTEGRATION-DEMO-GOVERNED-GIT.md'
+        Compose = Join-Path $repositoryRoot 'deploy\demo\stage-14\compose.yml'
+        Policy = Join-Path $repositoryRoot 'deploy\demo\stage-14\opa\decision.rego'
+        BundleVerification = Join-Path $repositoryRoot 'deploy\demo\stage-14\opa\bundle_verification.rego'
+        Preparation = Join-Path $repositoryRoot 'scripts\prepare-integration-demo-stage-14.ps1'
+        Runbook = Join-Path $repositoryRoot 'deploy\demo\stage-14\README.md'
+        Page = Join-Path $repositoryRoot 'frontend\Platform.Web\Pages\InternalService.razor'
+        Realm = Join-Path $repositoryRoot 'deploy\demo\keycloak\geaip-demo-realm.json'
+    }
+    $stage14Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "Stage 14 artifact missing: $_" } }
+    $change = Get-Content -Raw $stage14Paths.Change
+    @('Status: **Approved for bounded implementation**','exact clean base','No fake repository','CI/CD trigger','Phase 31') | ForEach-Object { if ($change -notmatch [regex]::Escape($_)) { throw "Stage 14 approval missing: $_" } }
+    $compose = Get-Content -Raw $stage14Paths.Compose
+    @('021_git_inputs.sql','022_git_evidence.sql','integration-demo-stage-14','git/seed.sql','--verification-key') | ForEach-Object { if ($compose -notmatch [regex]::Escape($_)) { throw "Stage 14 composition guard missing: $_" } }
+    $policy = Get-Content -Raw $stage14Paths.Policy
+    @('internal-service.git.commit','candidateSha256Digest','reviewPackageSha256Digest','changeSetSha256Digest','authorizedRelativePaths','expectedBaseCommitId','protectedBranch":false','forceUpdateAllowed":false','ciCdTriggerAllowed":false','"outputKind":"git-commit-result"','"Deny"') | ForEach-Object { if ($policy -notmatch [regex]::Escape($_)) { throw "Stage 14 policy guard missing: $_" } }
+    $bundle = Get-Content -Raw $stage14Paths.BundleVerification
+    @('geaip-demo-stage-14','d03618d00a43e9a679db69af965a840fdb3198e69b98d31e497bdd418c3e1117','trust://demo/opa/demo-opa-signing-01') | ForEach-Object { if ($bundle -notmatch [regex]::Escape($_)) { throw "Stage 14 bundle verification missing: $_" } }
+    $preparation = Get-Content -Raw $stage14Paths.Preparation
+    @('--signing-key','approved Human Review evidence','HumanReview-stopped delivery-run snapshot','real institutionally approved signed Git gateway','Stage 14 infrastructure startup failed') | ForEach-Object { if ($preparation -notmatch [regex]::Escape($_)) { throw "Stage 14 preparation guard missing: $_" } }
+    $runbook = Get-Content -Raw $stage14Paths.Runbook
+    @('IInstitutionalGitGateway','Repository defaults remain empty and fail closed','never substitute a fake repository','SourceMutationOccurred: true','ProductionEffectOccurred: false','CiCdTriggered: false','CanAdvance: false') | ForEach-Object { if ($runbook -notmatch [regex]::Escape($_)) { throw "Stage 14 runbook guard missing: $_" } }
+    $page = Get-Content -Raw $stage14Paths.Page
+    @('Integration Demo Stage 14','Create governed Git commit','CreateGitCommitAsync','developer.internal-service.git.commit','GitExpectedChangeSetSha256Digest','SourceMutationOccurred: true','CiCdTriggered: false','CanAdvance: false','geaip-demo-stage-14') | ForEach-Object { if ($page -notmatch [regex]::Escape($_)) { throw "Stage 14 UI guard missing: $_" } }
+    $realm = Get-Content -Raw $stage14Paths.Realm
+    @('developer.internal-service.human-review.decide','developer.internal-service.git.commit','demo.human-reviewer') | ForEach-Object { if ($realm -notmatch [regex]::Escape($_)) { throw "Stage 14 identity guard missing: $_" } }
+    $acceptance = Get-Content -Raw $stage14AcceptancePath
+    @('CR-036','exact approving Human Review','No fake repository','SourceMutationOccurred: true','ProductionEffectOccurred: false','CiCdTriggered: false','CanAdvance: false','CI/CD, and all later stages remain outside this gate') | ForEach-Object { if ($acceptance -notmatch [regex]::Escape($_)) { throw "Stage 14 acceptance missing: $_" } }
 }
 
 if (-not $NoBuild) {

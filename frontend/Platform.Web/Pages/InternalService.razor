@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 13 / Governed Human Review</p>
+        <p class="eyebrow">Integration Demo Stage 14 / Governed Git</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + HUMAN SEPARATION + SIGNED ATTESTATION + EVIDENCE</span>
-        <strong>Governed Human Review protocol available; institutional verifier required</strong>
-        <small>Exact accepted Tests evidence, a distinct authenticated reviewer, signed policy, and real non-repudiable attestation precede the atomic decision record. Repository defaults remain unconfigured and fail closed.</small>
+        <span class="state-chip">OPA + EXACT CHANGE SET + SIGNED COMMIT + EVIDENCE</span>
+        <strong>Governed Git protocol available; institutional gateway and signer required</strong>
+        <small>An approving Human Review, exact clean base, signed policy, reviewed paths, and a real signed institutional Git response precede commit evidence. Repository defaults remain unconfigured and fail closed.</small>
     </aside>
 </section>
 
@@ -37,6 +37,18 @@
         </div>
         <label for="human-attestation">Signed human attestation reference</label>
         <input id="human-attestation" @bind="HumanAttestationReference" placeholder="attestation://institution/..." />
+        <div class="field-grid">
+            <div><label for="git-repository">Repository identity</label><input id="git-repository" @bind="GitRepositoryId" /></div>
+            <div><label for="git-base">Expected immutable base commit</label><input id="git-base" @bind="GitExpectedBaseCommitId" /></div>
+        </div>
+        <div class="field-grid">
+            <div><label for="git-branch">Non-protected change branch</label><input id="git-branch" @bind="GitChangeBranch" /></div>
+            <div><label for="git-signing-policy">Signing policy reference</label><input id="git-signing-policy" @bind="GitSigningPolicyReference" /></div>
+        </div>
+        <label for="git-message">Controlled commit message</label>
+        <input id="git-message" @bind="GitCommitMessage" />
+        <label for="git-change-set">Expected change-set SHA-256</label>
+        <input id="git-change-set" @bind="GitExpectedChangeSetSha256Digest" placeholder="64 lowercase hexadecimal characters from the reviewed change set" />
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
@@ -52,6 +64,7 @@
             <button type="button" class="primary-action" disabled="@(!CanRunSandbox || IsRunningSandbox)" @onclick="RunSandboxAsync">@(IsRunningSandbox ? "Requesting isolated execution..." : "Run governed Security Sandbox")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunTests || IsRunningTests)" @onclick="RunTestsAsync">@(IsRunningTests ? "Running governed tests..." : "Run governed Tests")</button>
             <button type="button" class="primary-action" disabled="@(!CanRecordHumanReview || IsRecordingHumanReview)" @onclick="RecordHumanReviewAsync">@(IsRecordingHumanReview ? "Verifying human decision..." : "Record governed Human Review")</button>
+            <button type="button" class="primary-action" disabled="@(!CanCreateGitCommit || IsCreatingGitCommit)" @onclick="CreateGitCommitAsync">@(IsCreatingGitCommit ? "Creating governed signed commit..." : "Create governed Git commit")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -206,6 +219,20 @@
                 <div><dt>Can advance</dt><dd>@(HumanReviewReceipt.CanAdvance ? "Yes" : "No — Git remains separate")</dd></div>
             </dl>
         }
+        @if (GitReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Git receipt">
+                <div><dt>Operation</dt><dd>@GitReceipt.OperationId</dd></div>
+                <div><dt>Policy</dt><dd>@GitReceipt.PolicyOutcome</dd></div>
+                <div><dt>Committed</dt><dd>@(GitReceipt.IsCommitted ? "Yes" : "No")</dd></div>
+                <div><dt>Commit</dt><dd>@GitReceipt.CommitId</dd></div>
+                <div><dt>Signed</dt><dd>@(GitReceipt.CommitSigned ? "Yes" : "No")</dd></div>
+                <div><dt>Source mutation</dt><dd>@(GitReceipt.SourceMutationOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>CI/CD triggered</dt><dd>@(GitReceipt.CiCdTriggered ? "Yes" : "No")</dd></div>
+                <div><dt>Production effect</dt><dd>@(GitReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(GitReceipt.CanAdvance ? "Yes" : "No — CI/CD remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -331,6 +358,7 @@
     private bool IsRunningSandbox { get; set; }
     private bool IsRunningTests { get; set; }
     private bool IsRecordingHumanReview { get; set; }
+    private bool IsCreatingGitCommit { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -345,6 +373,7 @@
     private GovernedSandboxExecutionReceipt? SandboxReceipt { get; set; }
     private GovernedTestsExecutionReceipt? TestsReceipt { get; set; }
     private GovernedHumanReviewReceipt? HumanReviewReceipt { get; set; }
+    private GovernedGitSourceCommitReceipt? GitReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -357,7 +386,14 @@
     private Guid SandboxExecutionId { get; set; }
     private Guid TestsExecutionId { get; set; }
     private Guid HumanReviewId { get; set; }
+    private Guid GitOperationId { get; set; }
     private Guid DeliveryRunId { get; set; }
+    private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
+    private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    private string GitChangeBranch { get; set; } = "changes/demo-permit-renewal-stage-14";
+    private string GitCommitMessage { get; set; } = "feat(permit): add reviewed renewal service";
+    private string GitSigningPolicyReference { get; set; } = "policy://demo/git-signing/v1";
+    private string GitExpectedChangeSetSha256Digest { get; set; } = string.Empty;
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -434,6 +470,14 @@
         !string.IsNullOrWhiteSpace(ReviewRationale) &&
         !string.IsNullOrWhiteSpace(HumanAttestationReference);
 
+    private bool CanCreateGitCommit =>
+        HumanReviewReceipt is { IsRecorded: true, IsApproved: true, ProductionEffectOccurred: false, CanAdvance: false,
+            ReviewPackageSha256Digest: not null, ReviewEvidenceReference: not null } &&
+        TestsReceipt is { IsAccepted: true, ResultSha256Digest: not null } &&
+        ExperienceContext.HasPermission("developer.internal-service.git.commit") &&
+        GitExpectedChangeSetSha256Digest.Length == 64 &&
+        GitExpectedChangeSetSha256Digest.All(Uri.IsHexDigit);
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -507,6 +551,7 @@
                 SandboxReceipt = null;
                 TestsReceipt = null;
                 HumanReviewReceipt = null;
+                GitReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -519,6 +564,7 @@
                 SandboxExecutionId = Guid.NewGuid();
                 TestsExecutionId = Guid.NewGuid();
                 HumanReviewId = Guid.NewGuid();
+                GitOperationId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -982,7 +1028,7 @@
                 : null;
             EvaluationMessage = HumanReviewReceipt is
                 { IsRecorded: true, ProductionEffectOccurred: false, CanAdvance: false }
-                ? $"Governed Human Review recorded the explicit {HumanReviewReceipt.Decision} decision with non-repudiable evidence. Git remains locked."
+                ? $"Governed Human Review recorded the explicit {HumanReviewReceipt.Decision} decision with non-repudiable evidence. Git requires the exact reviewed change-set digest and institutional gateway."
                 : $"Human Review failed closed ({(int)response.StatusCode}). No decision or attestation was fabricated.";
         }
         catch (HttpRequestException)
@@ -993,7 +1039,44 @@
         finally { IsRecordingHumanReview = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-13", "2026.09.20", "12cf021ad07490c73361bc8701b14698063acae7b13ad0d0cc0f7c815287d142", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero));
+    private async Task CreateGitCommitAsync()
+    {
+        if (!CanCreateGitCommit || RegistrationReceipt is null || ContextReceipt is null || SystemsReceipt is null ||
+            ArchitectureReceipt is null || PackagesReceipt is null || PlanningReceipt is null ||
+            CodeGenerationReceipt is null || StaticValidationReceipt is null || SecurityValidationReceipt is null ||
+            SandboxReceipt is null || TestsReceipt is null || HumanReviewReceipt is null) return;
+        IsCreatingGitCommit = true;
+        try
+        {
+            var request = new GitSourceCommitRequest(
+                GitOperationId, DeliveryRunId, CodeGenerationReceipt.CandidateSha256Digest!,
+                HumanReviewReceipt.ReviewPackageSha256Digest!, HumanReviewReceipt.ReviewEvidenceReference!,
+                TestsReceipt.ResultSha256Digest!, GitExpectedChangeSetSha256Digest,
+                ["backend/Generated/PermitRenewalService.cs", "frontend/Generated/PermitRenewalView.razor"],
+                GitRepositoryId, GitExpectedBaseCommitId, GitChangeBranch, GitCommitMessage,
+                GitSigningPolicyReference, ExperienceContext.Purpose, Classification,
+                "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/intents/{RegistrationReceipt.RegistrationId:D}/enterprise-context/{ContextReceipt.DiscoveryId:D}/existing-systems/{SystemsReceipt.DiscoveryId:D}/existing-architecture/{ArchitectureReceipt.DiscoveryId:D}/approved-packages/{PackagesReceipt.SelectionId:D}/ai-planning/{PlanningReceipt.PlanningId:D}/code-generation/{CodeGenerationReceipt.GenerationId:D}/static-validation/{StaticValidationReceipt.ValidationId:D}/security-validation/{SecurityValidationReceipt.ValidationId:D}/sandbox/{SandboxReceipt.ExecutionId:D}/tests/{TestsReceipt.ExecutionId:D}/human-review/{HumanReviewReceipt.ReviewId:D}/git",
+                request);
+            GitReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedGitSourceCommitReceipt>()
+                : null;
+            EvaluationMessage = GitReceipt is
+                { IsCommitted: true, SourceMutationOccurred: true, ProductionEffectOccurred: false,
+                    CiCdTriggered: false, CanAdvance: false, CommitSigned: true }
+                ? $"Governed Git created signed commit {GitReceipt.CommitId}. CI/CD remains separately locked."
+                : $"Git failed closed ({(int)response.StatusCode}). No commit or signature was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            GitReceipt = null;
+            EvaluationMessage = "Git policy, exact prerequisites, change validation, signed institutional gateway, result authorization, or PostgreSQL is unavailable. No commit was fabricated.";
+        }
+        finally { IsCreatingGitCommit = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-14", "2026.09.23", "d03618d00a43e9a679db69af965a840fdb3198e69b98d31e497bdd418c3e1117", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1105,6 +1188,8 @@
     private sealed record GovernedTestsExecutionReceipt(Guid ExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ProductionEffectOccurred, bool CanAdvance, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestManifestSha256Digest, PackageCoordinate TestImage, IReadOnlyList<GovernedTestCaseResult> TestResults, string? ResultSha256Digest, string? TestsEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
     private sealed record HumanReviewRequest(Guid ReviewId, Guid DeliveryRunId, string InitiatorSubjectId, string ExpectedCandidateSha256Digest, string ExpectedSecurityReportSha256Digest, string ExpectedSandboxResultSha256Digest, string ExpectedTestsResultSha256Digest, string ExpectedTestsEvidenceReference, string Decision, string Rationale, string HumanAttestationReference, IReadOnlyList<string> DeclaredConflictingSubjectIds, long ExpectedVersion, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedHumanReviewReceipt(Guid ReviewId, Guid TestsExecutionId, Guid SandboxExecutionId, Guid SecurityValidationId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string ReviewerSubjectId, string PolicyOutcome, bool IsRecorded, bool IsApproved, bool ProductionEffectOccurred, bool CanAdvance, string? Decision, string? Rationale, string CandidateSha256Digest, string SecurityReportSha256Digest, string SandboxResultSha256Digest, string TestsResultSha256Digest, string? ReviewPackageSha256Digest, long? Version, string? ReviewEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record GitSourceCommitRequest(Guid OperationId, Guid DeliveryRunId, string ExpectedCandidateSha256Digest, string ExpectedReviewPackageSha256Digest, string ExpectedReviewEvidenceReference, string ExpectedTestsResultSha256Digest, string ExpectedChangeSetSha256Digest, IReadOnlyList<string> AuthorizedRelativePaths, string RepositoryId, string ExpectedBaseCommitId, string ChangeBranch, string CommitMessage, string SigningPolicyReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedGitSourceCommitReceipt(Guid OperationId, Guid ReviewId, Guid TestsExecutionId, Guid GenerationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsCommitted, bool SourceMutationOccurred, bool ProductionEffectOccurred, bool CiCdTriggered, bool CanAdvance, string CandidateSha256Digest, string ReviewPackageSha256Digest, string ChangeSetSha256Digest, string RepositoryId, string ChangeBranch, string? BaseCommitId, string? CommitId, string? TreeSha256Digest, bool CommitSigned, IReadOnlyList<object> AppliedChanges, string? GitEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
