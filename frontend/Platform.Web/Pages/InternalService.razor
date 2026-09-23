@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 16 / Governed Artifact Publication</p>
+        <p class="eyebrow">Integration Demo Stage 17 / Governed Sovereign Deployment</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + EXACT MANIFEST + IMMUTABLE REGISTRY + SUPPLY-CHAIN PROOF</span>
-        <strong>Governed Artifact protocol available; institutional registry gateway and verifiers required</strong>
-        <small>Accepted CI/CD evidence, exact immutable coordinate, no-overwrite proof, six supply-chain controls, and a real signed institutional registry response precede publication evidence.</small>
+        <span class="state-chip">OPA + HUMAN APPROVAL + SOVEREIGN PROFILE + PREFLIGHT</span>
+        <strong>Governed Deployment protocol available; approved non-production runtime required</strong>
+        <small>Exact Artifact evidence, explicit human approval, a signed air-gapped profile, institutional preflight, and a real signed gateway response precede deployment evidence. Public and production deployment remain prohibited.</small>
     </aside>
 </section>
 
@@ -57,6 +57,8 @@
         <input id="cicd-workflow-digest" @bind="CiCdExpectedWorkflowSha256Digest" />
         <label for="artifact-content-digest">Expected Artifact content SHA-256</label>
         <input id="artifact-content-digest" @bind="ArtifactExpectedContentSha256Digest" />
+        <label for="deployment-approval">Deployment human approval reference</label>
+        <input id="deployment-approval" @bind="DeploymentHumanApprovalReference" placeholder="approval://institution/... (required; never fabricated)" />
         <div class="intent-actions">
             <button type="button" class="secondary-action" @onclick="EvaluateDraft">Evaluate intent</button>
             <button type="button" class="primary-action" disabled="@(!CanSubmit || IsSubmitting)" @onclick="SubmitIntentAsync">@(IsSubmitting ? "Validating..." : "Submit governed intent")</button>
@@ -75,6 +77,7 @@
             <button type="button" class="primary-action" disabled="@(!CanCreateGitCommit || IsCreatingGitCommit)" @onclick="CreateGitCommitAsync">@(IsCreatingGitCommit ? "Creating governed signed commit..." : "Create governed Git commit")</button>
             <button type="button" class="primary-action" disabled="@(!CanExecuteCiCd || IsExecutingCiCd)" @onclick="ExecuteCiCdAsync">@(IsExecutingCiCd ? "Executing governed pipeline..." : "Execute governed CI/CD")</button>
             <button type="button" class="primary-action" disabled="@(!CanPublishArtifact || IsPublishingArtifact)" @onclick="PublishArtifactAsync">@(IsPublishingArtifact ? "Publishing governed Artifact..." : "Publish governed Artifact")</button>
+            <button type="button" class="primary-action" disabled="@(!CanDeploy || IsDeploying)" @onclick="DeployAsync">@(IsDeploying ? "Running sovereign preflight..." : "Deploy governed non-production service")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -272,6 +275,19 @@
                 <div><dt>Can advance</dt><dd>@(ArtifactReceipt.CanAdvance ? "Yes" : "No — Deployment remains separate")</dd></div>
             </dl>
         }
+        @if (DeploymentReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Sovereign Deployment receipt">
+                <div><dt>Deployment</dt><dd>@DeploymentReceipt.DeploymentId</dd></div>
+                <div><dt>Policy</dt><dd>@DeploymentReceipt.PolicyOutcome</dd></div>
+                <div><dt>Target</dt><dd>@DeploymentReceipt.TargetEnvironment</dd></div>
+                <div><dt>Runtime</dt><dd>@DeploymentReceipt.RuntimeIdentity</dd></div>
+                <div><dt>External effect</dt><dd>@(DeploymentReceipt.ExternalEffectOccurred ? "Yes — bounded synthetic runtime" : "No")</dd></div>
+                <div><dt>Production effect</dt><dd>@(DeploymentReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Telemetry</dt><dd>@(DeploymentReceipt.TelemetryConfigured ? "Configured" : "Not configured")</dd></div>
+                <div><dt>Can advance</dt><dd>@(DeploymentReceipt.CanAdvance ? "Yes" : "No — OpenTelemetry remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -400,6 +416,7 @@
     private bool IsCreatingGitCommit { get; set; }
     private bool IsExecutingCiCd { get; set; }
     private bool IsPublishingArtifact { get; set; }
+    private bool IsDeploying { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -417,6 +434,7 @@
     private GovernedGitSourceCommitReceipt? GitReceipt { get; set; }
     private GovernedCiCdExecutionReceipt? CiCdReceipt { get; set; }
     private GovernedArtifactPublicationReceipt? ArtifactReceipt { get; set; }
+    private GovernedSovereignDeploymentReceipt? DeploymentReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -432,6 +450,7 @@
     private Guid GitOperationId { get; set; }
     private Guid CiCdExecutionId { get; set; }
     private Guid ArtifactPublicationId { get; set; }
+    private Guid DeploymentId { get; set; }
     private Guid DeliveryRunId { get; set; }
     private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
     private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -443,6 +462,7 @@
     private string CiCdWorkflowDefinitionVersion { get; set; } = "1.0.0";
     private string CiCdExpectedWorkflowSha256Digest { get; set; } = "7777777777777777777777777777777777777777777777777777777777777777";
     private string ArtifactExpectedContentSha256Digest { get; set; } = "8888888888888888888888888888888888888888888888888888888888888888";
+    private string DeploymentHumanApprovalReference { get; set; } = string.Empty;
 
     private bool CanSubmit =>
         ExperienceContext.HasPermission("developer.internal-service.create") &&
@@ -543,6 +563,13 @@
         ExperienceContext.HasPermission("developer.internal-service.artifact.publish") &&
         ArtifactExpectedContentSha256Digest.Length == 64 && ArtifactExpectedContentSha256Digest.All(Uri.IsHexDigit);
 
+    private bool CanDeploy =>
+        ArtifactReceipt is { IsAccepted: true, ArtifactPublished: true, SupplyChainVerified: true,
+            DeploymentOccurred: false, ProductionEffectOccurred: false, CanAdvance: false,
+            ImmutableRegistryReference: not null, ArtifactEvidenceReference: not null } &&
+        ExperienceContext.HasPermission("operator.internal-service.deployment.execute") &&
+        !string.IsNullOrWhiteSpace(DeploymentHumanApprovalReference);
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -619,6 +646,7 @@
                 GitReceipt = null;
                 CiCdReceipt = null;
                 ArtifactReceipt = null;
+                DeploymentReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -634,6 +662,7 @@
                 GitOperationId = Guid.NewGuid();
                 CiCdExecutionId = Guid.NewGuid();
                 ArtifactPublicationId = Guid.NewGuid();
+                DeploymentId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -1214,7 +1243,42 @@
         finally { IsPublishingArtifact = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-16", "2026.09.23", "1616161616161616161616161616161616161616161616161616161616161616", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
+    private async Task DeployAsync()
+    {
+        if (!CanDeploy || ArtifactReceipt is null) return;
+        IsDeploying = true;
+        try
+        {
+            var request = new SovereignDeploymentRequest(
+                DeploymentId, DeliveryRunId, ArtifactReceipt.ContentSha256Digest,
+                ArtifactReceipt.ImmutableRegistryReference!, ArtifactReceipt.ArtifactEvidenceReference!,
+                Guid.Parse("17171717-1717-1717-1717-171717171717"), "1.0.0",
+                "9999999999999999999999999999999999999999999999999999999999999999",
+                "IntegrationDemo-Sovereign", false, DeploymentHumanApprovalReference,
+                "workload-identity://demo/permit-service", "policy://demo/secrets/nonproduction-v1",
+                "policy://demo/rollback/v1", ExperienceContext.Purpose, Classification,
+                "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/artifacts/{ArtifactReceipt.PublicationId:D}/deployment", request);
+            DeploymentReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedSovereignDeploymentReceipt>()
+                : null;
+            EvaluationMessage = DeploymentReceipt is
+                { IsAccepted: true, DeploymentOccurred: true, ExternalEffectOccurred: true,
+                    ProductionEffectOccurred: false, TelemetryConfigured: false,
+                    AutomaticRegistrationOccurred: false, EnterpriseModelMutated: false, CanAdvance: false }
+                ? "Governed sovereign deployment proved one bounded non-production runtime. OpenTelemetry remains separately locked."
+                : $"Deployment failed closed ({(int)response.StatusCode}). No runtime, activation, rollback, or effect proof was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            DeploymentReceipt = null;
+            EvaluationMessage = "Deployment policy, exact Artifact/run/profile, human approval, sovereign preflight, signed gateway, result authorization, or PostgreSQL is unavailable. No deployment was fabricated.";
+        }
+        finally { IsDeploying = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-17", "2026.09.23", "1717171717171717171717171717171717171717171717171717171717171717", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1334,6 +1398,8 @@
     private sealed record ArtifactCoordinate(string Name, string Version, string Kind);
     private sealed record ArtifactPublicationRequest(Guid PublicationId, Guid DeliveryRunId, string ExpectedPipelineManifestSha256Digest, string ExpectedSourceCommitId, string ExpectedWorkflowSha256Digest, ArtifactCoordinate Coordinate, string ExpectedContentSha256Digest, string RegistryId, string RegistryRepository, string SigningPolicyReference, IReadOnlyList<string> RequiredControls, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedArtifactPublicationReceipt(Guid PublicationId, Guid CiCdExecutionId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ArtifactPublished, bool RegistryMutated, bool SourceMutationOccurred, bool DeploymentOccurred, bool ProductionEffectOccurred, bool CanAdvance, ArtifactCoordinate Coordinate, string ContentSha256Digest, string? ImmutableRegistryReference, bool SupplyChainVerified, IReadOnlyList<object> SupplyChainVerifications, string? ArtifactEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record SovereignDeploymentRequest(Guid DeploymentId, Guid DeliveryRunId, string ExpectedArtifactContentSha256Digest, string ExpectedImmutableRegistryReference, string ExpectedArtifactEvidenceReference, Guid DeploymentProfileId, string DeploymentProfileVersion, string ExpectedDeploymentProfileSha256Digest, string TargetEnvironment, bool ProductionDeploymentRequested, string HumanApprovalReference, string WorkloadIdentityReference, string SecretsPolicyReference, string RollbackPolicyReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedSovereignDeploymentReceipt(Guid DeploymentId, Guid ArtifactPublicationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool DeploymentOccurred, bool ExternalEffectOccurred, bool ProductionEffectOccurred, bool TelemetryConfigured, bool AutomaticRegistrationOccurred, bool EnterpriseModelMutated, bool CanAdvance, string ArtifactContentSha256Digest, Guid DeploymentProfileId, string TargetEnvironment, string? RuntimeIdentity, string? RollbackReference, string? DeploymentEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
