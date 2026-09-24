@@ -25,20 +25,20 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 19 - Governed Automatic Registration",
+    "stage": "Stage 20 - Governed Enterprise Model Contextualization",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-041-INTEGRATION-DEMO-GOVERNED-AUTOMATIC-REGISTRATION.md",
-    "acceptanceArtifact": "docs/demo/STAGE_19_GOVERNED_AUTOMATIC_REGISTRATION_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/demo/STAGE_18_GOVERNED_OPENTELEMETRY_ACCEPTANCE.md",
+    "changeControl": "docs/change-control/CR-042-INTEGRATION-DEMO-GOVERNED-ENTERPRISE-MODEL.md",
+    "acceptanceArtifact": "docs/demo/STAGE_20_GOVERNED_ENTERPRISE_MODEL_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/demo/STAGE_19_GOVERNED_AUTOMATIC_REGISTRATION_ACCEPTANCE.md",
     "deliveryMap": "docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md",
-    "nextGate": "Stage 20 - Governed Enterprise Model Contextualization (not started)",
-    "executionBoundary": "Stage 19 may atomically register only the exact accepted deployed and observed synthetic service after signed policy and exact signed manifest validation; defaults remain unconfigured and fail closed; no fake registration, contextualization, evidence completion, production effect, workflow advancement, or Phase 31 is authorized"
+    "nextGate": "Stage 21 - Governed Evidence Completion (not started)",
+    "executionBoundary": "Stage 20 may authorize and revalidate only the exact registered Enterprise Object without mutation; defaults remain unconfigured and fail closed; no fake contextualization, traversal, analysis, Evidence completion, production effect, workflow advancement, or Phase 31 is authorized"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_19_GOVERNED_AUTOMATIC_REGISTRATION_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_20_GOVERNED_ENTERPRISE_MODEL_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",
