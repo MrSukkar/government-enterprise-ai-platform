@@ -34,6 +34,16 @@
     "nextGate": null,
     "executionBoundary": "The synthetic localhost Integration Demo is complete through terminal Evidence; defaults remain unconfigured and fail closed; no institutional or Production authorization, public deployment, post-Evidence station, architectural deviation, or Phase 31 is authorized"
   },
+  "architectureEvolution": {
+    "target": "Project Master Specification V3",
+    "status": "draft-ready-for-owner-approval",
+    "approvedPath": "docs/change-control/CR-044-INTEGRATION-PLATFORM-CAPABILITY.md",
+    "changeControl": "docs/change-control/CR-045-MASTER-SPECIFICATION-V3.md",
+    "draftSpecification": "docs/PROJECT_MASTER_SPECIFICATION_V3.md",
+    "draftRoadmap": "docs/V3_CAPABILITY_ROADMAP.md",
+    "acceptanceArtifact": "docs/v3/V3_SPECIFICATION_PREPARATION_ACCEPTANCE.md",
+    "executionBoundary": "V2 remains the sole implementation authority; no V3 Capability Increment, product selection, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized until CR-045 is explicitly approved and merged with green CI"
+  },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
