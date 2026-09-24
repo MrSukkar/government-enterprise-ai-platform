@@ -42,8 +42,12 @@
     "draftSpecification": "docs/PROJECT_MASTER_SPECIFICATION_V3.md",
     "draftRoadmap": "docs/V3_CAPABILITY_ROADMAP.md",
     "acceptanceArtifact": "docs/v3/V3_SPECIFICATION_PREPARATION_ACCEPTANCE.md",
-    "nextGate": "V3-01 - Constitutional contracts and Enterprise Model types",
-    "executionBoundary": "V3 is the sole implementation authority and V2 is its immutable historical baseline; V3-01 may begin only under independent Change Control and acceptance; no named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
+    "currentIncrement": "V3-01 - Constitutional contracts and Enterprise Model types",
+    "currentIncrementStatus": "complete",
+    "changeControl": "docs/change-control/CR-046-V3-01-CONSTITUTIONAL-CONTRACTS.md",
+    "acceptanceArtifact": "docs/v3/V3_01_CONSTITUTIONAL_CONTRACTS_ACCEPTANCE.md",
+    "nextGate": "V3-02 - Governed consumer/channel registration and lifecycle contracts",
+    "executionBoundary": "V3-01 provides inert product-neutral contracts and deterministic fail-closed validation only; V3-02 requires independent Change Control and acceptance; no runtime adapter, named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
   },
   "lastVerified": {
     "projects": 15,

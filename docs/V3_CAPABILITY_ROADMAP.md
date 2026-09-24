@@ -1,6 +1,6 @@
 # V3 Integration Platform Capability Roadmap
 
-Status: **Approved — V3-01 is the next permitted gate**
+Status: **Approved — V3-01 complete; V3-02 is the next permitted gate after green main CI**
 
 This roadmap does not create Phase 31 and does not alter the historical completion of Phases 01–30.
 

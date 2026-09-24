@@ -3186,10 +3186,39 @@ if (Test-Path $v3SpecificationPath) {
     if ($projectState.architectureEvolution.status -ne 'approved') { throw 'V3 architecture evolution is not approved.' }
 }
 
+$v301AcceptancePath = Join-Path $repositoryRoot 'docs\v3\V3_01_CONSTITUTIONAL_CONTRACTS_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $v301AcceptancePath) {
+    $v301Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-046-V3-01-CONSTITUTIONAL-CONTRACTS.md'
+        Contract = Join-Path $repositoryRoot 'backend\Platform.Integrations\Constitution\IntegrationConstitutionalContract.cs'
+        Semantics = Join-Path $repositoryRoot 'backend\Platform.Integrations\Constitution\IntegrationDeliverySemantics.cs'
+        Types = Join-Path $repositoryRoot 'backend\Platform.Integrations\Constitution\IntegrationEnterpriseModelTypes.cs'
+        Verification = Join-Path $repositoryRoot 'verification\V3.IntegrationContracts.Verification\Program.cs'
+    }
+    $v301Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "V3-01 artifact missing: $_" } }
+    $v301Change = Get-Content -Raw $v301Paths.Change
+    @('Status: **Approved for bounded implementation**','Security','Compliance','Sovereignty','HA/DR','no endpoint','Phase 31') | ForEach-Object { if ($v301Change -notmatch [regex]::Escape($_)) { throw "V3-01 change-control guard missing: $_" } }
+    $v301Contract = Get-Content -Raw $v301Paths.Contract
+    @('TenantId','Purpose','Classification','PolicyReferences','ResidencyPolicyReference','RetentionPolicyReference','EncryptionPolicyReference','RedactionPolicyReference','DeliverySemantics','OpenTelemetryResourceIdentity','EvidenceRequirements','EnterpriseModelRegistrationReference','AnonymousAccessAllowed','AiWorkflowAuthorityAllowed','ProductionEffectAuthorized') | ForEach-Object { if ($v301Contract -notmatch [regex]::Escape($_)) { throw "V3-01 contract guard missing: $_" } }
+    $v301Types = Get-Content -Raw $v301Paths.Types
+    @('Integration.Consumer','Integration.Channel','Integration.Api','Integration.Message','Integration.Schema','Integration.Flow','Integration.Orchestration') | ForEach-Object { if ($v301Types -notmatch [regex]::Escape($_)) { throw "V3-01 Enterprise Model type missing: $_" } }
+    $v301Acceptance = Get-Content -Raw $v301AcceptancePath
+    @('Status: **Satisfied**','15 projects, 0 warnings, 0 errors','153 dependencies','five denied','V3-02 remains prohibited') | ForEach-Object { if ($v301Acceptance -notmatch [regex]::Escape($_)) { throw "V3-01 acceptance guard missing: $_" } }
+    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-02') { throw 'V3-01 project state is not synchronized.' }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
         throw "Solution build failed with exit code $LASTEXITCODE."
+    }
+
+    $v301VerificationProject = Join-Path $repositoryRoot 'verification\V3.IntegrationContracts.Verification\V3.IntegrationContracts.Verification.csproj'
+    if (Test-Path -LiteralPath $v301VerificationProject) {
+        & dotnet run --project $v301VerificationProject --configuration Debug --nologo
+        if ($LASTEXITCODE -ne 0) {
+            throw "V3-01 contract verification failed with exit code $LASTEXITCODE."
+        }
     }
 
     $runtimeVerificationPath = Join-Path $repositoryRoot 'scripts\verify-runtime.ps1'
