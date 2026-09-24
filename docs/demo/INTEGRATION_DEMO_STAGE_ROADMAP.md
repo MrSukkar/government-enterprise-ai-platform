@@ -32,7 +32,7 @@ The platform foundation is already complete through Phase 30 and Operationalizat
 | 20 | Governed Enterprise Model Contextualization | Operationalization Wave 20 |
 | 21 | Governed Evidence Completion | Operationalization Wave 21 |
 
-Stages 01-21 are complete. Independent final Integration Demo acceptance is the next separate closure gate; no later demonstration stage exists.
+Stages 01-21 and independent final Integration Demo acceptance are complete. The bounded localhost demonstration is closed; no later demonstration stage exists.
 
 ## Meaning of completion
 

@@ -3148,6 +3148,16 @@ if (Test-Path $stage21AcceptancePath) {
     $acceptance=Get-Content -Raw $stage21AcceptancePath;@('CR-043','exact accepted Enterprise Model contextualization','No fake chain entry','EvidenceAppended: true','EvidenceCryptographicallyVerified: true','VerticalSliceComplete: true','CanAdvance: false','VerifiedEntryCount: 10','No post-Evidence station exists')|ForEach-Object{if($acceptance-notmatch[regex]::Escape($_)){throw "Stage 21 acceptance missing: $_"}}
 }
 
+$integrationDemoFinalAcceptancePath = Join-Path $repositoryRoot 'docs\demo\INTEGRATION_DEMO_FINAL_ACCEPTANCE.md'
+if (Test-Path $integrationDemoFinalAcceptancePath) {
+    $finalAcceptance = Get-Content -Raw $integrationDemoFinalAcceptancePath
+    @('Status: **Satisfied**','Stages 01–21','15 projects, 0 warnings, 0 errors','153 dependencies fail closed','exactly ten ordered','no direct AI-to-Production path','no secret','Production authorization','Phase 31') | ForEach-Object { if ($finalAcceptance -notmatch [regex]::Escape($_)) { throw "Integration Demo final acceptance missing: $_" } }
+    $status = Get-Content -Raw (Join-Path $repositoryRoot 'PROJECT_STATUS.md')
+    @('Integration Demo complete','INTEGRATION_DEMO_FINAL_ACCEPTANCE.md','None — the bounded localhost demonstration is closed') | ForEach-Object { if ($status -notmatch [regex]::Escape($_)) { throw "Integration Demo final status missing: $_" } }
+    $roadmap = Get-Content -Raw (Join-Path $repositoryRoot 'docs\demo\INTEGRATION_DEMO_STAGE_ROADMAP.md')
+    if ($roadmap -notmatch [regex]::Escape('independent final Integration Demo acceptance are complete')) { throw 'Integration Demo roadmap closure is missing.' }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {
