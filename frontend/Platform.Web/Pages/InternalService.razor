@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 18 / Governed OpenTelemetry</p>
+        <p class="eyebrow">Integration Demo Stage 19 / Governed Automatic Registration</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + DEPLOYMENT EVIDENCE + REDACTION + LOCAL COLLECTORS</span>
-        <strong>Governed OpenTelemetry protocol available; approved local telemetry runtime required</strong>
-        <small>Exact Deployment evidence, a signed profile, strict redaction verification, trusted local collectors, and a real signed gateway response precede telemetry evidence. Registration and production effects remain prohibited.</small>
+        <span class="state-chip">OPA + TELEMETRY EVIDENCE + SIGNED MANIFEST + ATOMIC REGISTRATION</span>
+        <strong>Governed Automatic Registration protocol available; approved manifest and repository required</strong>
+        <small>Exact OpenTelemetry evidence, a signed deployment-controlled manifest, deterministic fingerprinting, and atomic persistence precede registration evidence. Later stations remain prohibited.</small>
     </aside>
 </section>
 
@@ -79,6 +79,7 @@
             <button type="button" class="primary-action" disabled="@(!CanPublishArtifact || IsPublishingArtifact)" @onclick="PublishArtifactAsync">@(IsPublishingArtifact ? "Publishing governed Artifact..." : "Publish governed Artifact")</button>
             <button type="button" class="primary-action" disabled="@(!CanDeploy || IsDeploying)" @onclick="DeployAsync">@(IsDeploying ? "Running sovereign preflight..." : "Deploy governed non-production service")</button>
             <button type="button" class="primary-action" disabled="@(!CanActivateTelemetry || IsActivatingTelemetry)" @onclick="ActivateTelemetryAsync">@(IsActivatingTelemetry ? "Verifying redaction and collectors..." : "Activate governed OpenTelemetry")</button>
+            <button type="button" class="primary-action" disabled="@(!CanRunAutomaticRegistration || IsRunningAutomaticRegistration)" @onclick="RunAutomaticRegistrationAsync">@(IsRunningAutomaticRegistration ? "Registering atomically..." : "Execute governed Automatic Registration")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -301,6 +302,18 @@
                 <div><dt>Can advance</dt><dd>@(OpenTelemetryReceipt.CanAdvance ? "Yes" : "No — Automatic Registration remains separate")</dd></div>
             </dl>
         }
+        @if (AutomaticRegistrationReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Automatic Registration receipt">
+                <div><dt>Registration</dt><dd>@AutomaticRegistrationReceipt.RegistrationId</dd></div>
+                <div><dt>Policy</dt><dd>@AutomaticRegistrationReceipt.PolicyOutcome</dd></div>
+                <div><dt>Service</dt><dd>@($"{AutomaticRegistrationReceipt.ServiceIdentity}:{AutomaticRegistrationReceipt.ServiceVersion}")</dd></div>
+                <div><dt>Disposition</dt><dd>@AutomaticRegistrationReceipt.Disposition</dd></div>
+                <div><dt>Enterprise Object</dt><dd>@AutomaticRegistrationReceipt.EnterpriseObjectId?.Value</dd></div>
+                <div><dt>Workflow advanced</dt><dd>@(AutomaticRegistrationReceipt.WorkflowAdvanced ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(AutomaticRegistrationReceipt.CanAdvance ? "Yes" : "No — Enterprise Model contextualization remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -431,6 +444,7 @@
     private bool IsPublishingArtifact { get; set; }
     private bool IsDeploying { get; set; }
     private bool IsActivatingTelemetry { get; set; }
+    private bool IsRunningAutomaticRegistration { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -450,6 +464,7 @@
     private GovernedArtifactPublicationReceipt? ArtifactReceipt { get; set; }
     private GovernedSovereignDeploymentReceipt? DeploymentReceipt { get; set; }
     private GovernedOpenTelemetryActivationReceipt? OpenTelemetryReceipt { get; set; }
+    private GovernedAutomaticRegistrationReceipt? AutomaticRegistrationReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -467,6 +482,7 @@
     private Guid ArtifactPublicationId { get; set; }
     private Guid DeploymentId { get; set; }
     private Guid OpenTelemetryActivationId { get; set; }
+    private Guid AutomaticRegistrationId { get; set; }
     private Guid DeliveryRunId { get; set; }
     private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
     private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -592,6 +608,12 @@
             DeploymentEvidenceReference: not null, RuntimeIdentity: not null, CanAdvance: false } &&
         ExperienceContext.HasPermission("operator.internal-service.telemetry.activate");
 
+    private bool CanRunAutomaticRegistration =>
+        OpenTelemetryReceipt is { IsAccepted: true, TelemetryConfigured: true, ExternalEffectOccurred: true,
+            ProductionEffectOccurred: false, AutomaticRegistrationOccurred: false,
+            EnterpriseModelMutated: false, OpenTelemetryEvidenceReference: not null, CanAdvance: false } &&
+        ExperienceContext.HasPermission("operator.internal-service.registration.execute");
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -670,6 +692,7 @@
                 ArtifactReceipt = null;
                 DeploymentReceipt = null;
                 OpenTelemetryReceipt = null;
+                AutomaticRegistrationReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -687,6 +710,7 @@
                 ArtifactPublicationId = Guid.NewGuid();
                 DeploymentId = Guid.NewGuid();
                 OpenTelemetryActivationId = Guid.NewGuid();
+                AutomaticRegistrationId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -1338,7 +1362,39 @@
         finally { IsActivatingTelemetry = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-18", "2026.09.23", "1818181818181818181818181818181818181818181818181818181818181818", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
+    private async Task RunAutomaticRegistrationAsync()
+    {
+        if (!CanRunAutomaticRegistration || OpenTelemetryReceipt is null) return;
+        IsRunningAutomaticRegistration = true;
+        try
+        {
+            var request = new AutomaticRegistrationRequest(
+                AutomaticRegistrationId, DeliveryRunId,
+                Guid.Parse("19191919-1919-1919-1919-191919191919"), "1.0.0",
+                "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                OpenTelemetryReceipt.RuntimeIdentity, "service://demo/permit-renewal", "1.0.0",
+                OpenTelemetryReceipt.ArtifactContentSha256Digest, OpenTelemetryReceipt.OpenTelemetryEvidenceReference!,
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/opentelemetry/{OpenTelemetryReceipt.ActivationId:D}/automatic-registration", request);
+            AutomaticRegistrationReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedAutomaticRegistrationReceipt>()
+                : null;
+            EvaluationMessage = AutomaticRegistrationReceipt is
+                { IsAccepted: true, AutomaticRegistrationOccurred: true,
+                    EnterpriseModelObjectPersisted: true, WorkflowAdvanced: false, CanAdvance: false }
+                ? "Governed Automatic Registration persisted one deterministic Enterprise Object. Contextualization remains separately locked."
+                : $"Automatic Registration failed closed ({(int)response.StatusCode}). No manifest, commit, object, or evidence success was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            AutomaticRegistrationReceipt = null;
+            EvaluationMessage = "Registration policy, exact OpenTelemetry/run/manifest, atomic repository, result authorization, or evidence storage is unavailable. No registration was fabricated.";
+        }
+        finally { IsRunningAutomaticRegistration = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-19", "2026.09.23", "1919191919191919191919191919191919191919191919191919191919191919", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1464,6 +1520,10 @@
     private sealed record OpenTelemetryActivationRequest(Guid ActivationId, Guid DeliveryRunId, string ExpectedRuntimeIdentity, string ExpectedArtifactContentSha256Digest, string ExpectedDeploymentEvidenceReference, bool ExpectedProductionEffectOccurred, Guid TelemetryProfileId, string TelemetryProfileVersion, string ExpectedTelemetryProfileSha256Digest, string ExpectedServiceName, string ExpectedServiceVersion, IReadOnlyList<GovernedTelemetrySignal> RequiredSignals, string ExpectedRedactionPolicyReference, string ExpectedRedactionPolicySha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedTelemetrySignalResult(GovernedTelemetrySignal Signal, bool Configured, bool Accepted, string EvidenceReference);
     private sealed record GovernedOpenTelemetryActivationReceipt(Guid ActivationId, Guid DeploymentId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool TelemetryConfigured, bool ExternalEffectOccurred, bool ProductionEffectOccurred, bool AutomaticRegistrationOccurred, bool EnterpriseModelMutated, bool CanAdvance, string RuntimeIdentity, string ArtifactContentSha256Digest, string TelemetryProfileSha256Digest, string ServiceName, string ServiceVersion, IReadOnlyList<GovernedTelemetrySignalResult> Signals, string? OpenTelemetryEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record AutomaticRegistrationRequest(Guid RegistrationId, Guid DeliveryRunId, Guid ManifestId, string ManifestVersion, string ExpectedManifestSha256Digest, string ExpectedRuntimeIdentity, string ExpectedServiceIdentity, string ExpectedServiceVersion, string ExpectedArtifactDigest, string ExpectedOpenTelemetryEvidenceReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private enum RegistrationDisposition { Created, Updated, Unchanged }
+    private sealed record EnterpriseObjectId(Guid Value);
+    private sealed record GovernedAutomaticRegistrationReceipt(Guid RegistrationId, Guid ActivationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool AutomaticRegistrationOccurred, bool EnterpriseModelObjectPersisted, bool WorkflowAdvanced, bool CanAdvance, string ServiceIdentity, string ServiceVersion, string RuntimeIdentity, string ArtifactDigest, string? RequestFingerprint, RegistrationDisposition? Disposition, EnterpriseObjectId? EnterpriseObjectId, string? RegistrationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
