@@ -25,20 +25,20 @@
     "executionBoundary": "Create Internal Service is operationalized through final Evidence completion using exact signed OPA, independently authorized access, atomic append-only PostgreSQL storage, deployment-configured sovereign signing, full ten-stage cryptographic verification, and independent result authorization; all 153 dependencies remain fail closed by default; no workflow advancement, evidence update/deletion, model mutation, production action, or post-Evidence station exists"
   },
   "integrationDemo": {
-    "stage": "Stage 17 - Governed Sovereign Deployment",
+    "stage": "Stage 18 - Governed OpenTelemetry",
     "status": "complete",
-    "changeControl": "docs/change-control/CR-039-INTEGRATION-DEMO-GOVERNED-DEPLOYMENT.md",
-    "acceptanceArtifact": "docs/demo/STAGE_17_GOVERNED_DEPLOYMENT_ACCEPTANCE.md",
-    "precedingAcceptanceArtifact": "docs/demo/STAGE_16_GOVERNED_ARTIFACT_ACCEPTANCE.md",
+    "changeControl": "docs/change-control/CR-040-INTEGRATION-DEMO-GOVERNED-OPENTELEMETRY.md",
+    "acceptanceArtifact": "docs/demo/STAGE_18_GOVERNED_OPENTELEMETRY_ACCEPTANCE.md",
+    "precedingAcceptanceArtifact": "docs/demo/STAGE_17_GOVERNED_DEPLOYMENT_ACCEPTANCE.md",
     "deliveryMap": "docs/demo/INTEGRATION_DEMO_STAGE_ROADMAP.md",
-    "nextGate": "Stage 18 - Governed OpenTelemetry (not started)",
-    "executionBoundary": "Stage 17 may perform only one exact idempotent synthetic non-production sovereign deployment after signed policy, human approval, exact profile, and preflight; defaults remain unconfigured and fail closed; no fake deployment, public or production effect, telemetry, registration, workflow advancement, or Phase 31 is authorized"
+    "nextGate": "Stage 19 - Governed Automatic Registration (not started)",
+    "executionBoundary": "Stage 18 may configure traces, metrics, and logs for the exact accepted synthetic non-production Deployment only after signed policy, exact profile, strict redaction, and trusted local routing; defaults remain unconfigured and fail closed; no fake telemetry, public exporter, registration, model mutation, production effect, workflow advancement, or Phase 31 is authorized"
   },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,
     "buildErrors": 0,
-    "acceptanceArtifact": "docs/demo/STAGE_17_GOVERNED_DEPLOYMENT_ACCEPTANCE.md"
+    "acceptanceArtifact": "docs/demo/STAGE_18_GOVERNED_OPENTELEMETRY_ACCEPTANCE.md"
   },
   "sourceOfTruth": {
     "repository": "https://github.com/MrSukkar/government-enterprise-ai-platform",

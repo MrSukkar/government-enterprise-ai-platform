@@ -1,0 +1,7 @@
+# Integration Demo Stage 18 runtime contract
+
+Stage 18 extends the localhost-only synthetic demonstration to Governed OpenTelemetry. It binds the exact accepted Deployment evidence and `Deployment`-stopped run to signed OPA scope, an immutable signed telemetry profile, strict redaction verification, trusted local collectors, a provider-neutral `IInstitutionalOpenTelemetryGateway`, result authorization, and append-only PostgreSQL evidence.
+
+Operations must provision all Stage 17 inputs outside Git plus `.runtime/integration-demo-stage-18/opentelemetry/seed.sql`, containing the exact signed profile and redaction policy. They must configure `Platform:SoftwareFactory:OpenTelemetryRuntime` with real approved localhost HTTPS endpoints, operator identity, positive bounds, pinned profile/resource/redaction values, signature algorithm, and public verification keys. Repository defaults remain empty and fail closed.
+
+The demo never substitutes a fake profile, collector, redaction decision, signal, gateway response, or successful activation. No credential, secret, private key, endpoint, trust material, institutional data, telemetry, or runtime is stored in Git. The receipt records `TelemetryConfigured: true`, `ExternalEffectOccurred: true`, `ProductionEffectOccurred: false`, `AutomaticRegistrationOccurred: false`, `EnterpriseModelMutated: false`, and `CanAdvance: false`. Public exporters, mandatory external control planes, registration, model mutation, and production effects are prohibited.

@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 17 / Governed Sovereign Deployment</p>
+        <p class="eyebrow">Integration Demo Stage 18 / Governed OpenTelemetry</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + HUMAN APPROVAL + SOVEREIGN PROFILE + PREFLIGHT</span>
-        <strong>Governed Deployment protocol available; approved non-production runtime required</strong>
-        <small>Exact Artifact evidence, explicit human approval, a signed air-gapped profile, institutional preflight, and a real signed gateway response precede deployment evidence. Public and production deployment remain prohibited.</small>
+        <span class="state-chip">OPA + DEPLOYMENT EVIDENCE + REDACTION + LOCAL COLLECTORS</span>
+        <strong>Governed OpenTelemetry protocol available; approved local telemetry runtime required</strong>
+        <small>Exact Deployment evidence, a signed profile, strict redaction verification, trusted local collectors, and a real signed gateway response precede telemetry evidence. Registration and production effects remain prohibited.</small>
     </aside>
 </section>
 
@@ -78,6 +78,7 @@
             <button type="button" class="primary-action" disabled="@(!CanExecuteCiCd || IsExecutingCiCd)" @onclick="ExecuteCiCdAsync">@(IsExecutingCiCd ? "Executing governed pipeline..." : "Execute governed CI/CD")</button>
             <button type="button" class="primary-action" disabled="@(!CanPublishArtifact || IsPublishingArtifact)" @onclick="PublishArtifactAsync">@(IsPublishingArtifact ? "Publishing governed Artifact..." : "Publish governed Artifact")</button>
             <button type="button" class="primary-action" disabled="@(!CanDeploy || IsDeploying)" @onclick="DeployAsync">@(IsDeploying ? "Running sovereign preflight..." : "Deploy governed non-production service")</button>
+            <button type="button" class="primary-action" disabled="@(!CanActivateTelemetry || IsActivatingTelemetry)" @onclick="ActivateTelemetryAsync">@(IsActivatingTelemetry ? "Verifying redaction and collectors..." : "Activate governed OpenTelemetry")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -288,6 +289,18 @@
                 <div><dt>Can advance</dt><dd>@(DeploymentReceipt.CanAdvance ? "Yes" : "No — OpenTelemetry remains separate")</dd></div>
             </dl>
         }
+        @if (OpenTelemetryReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed OpenTelemetry receipt">
+                <div><dt>Activation</dt><dd>@OpenTelemetryReceipt.ActivationId</dd></div>
+                <div><dt>Policy</dt><dd>@OpenTelemetryReceipt.PolicyOutcome</dd></div>
+                <div><dt>Service</dt><dd>@($"{OpenTelemetryReceipt.ServiceName}:{OpenTelemetryReceipt.ServiceVersion}")</dd></div>
+                <div><dt>Signals</dt><dd>@string.Join(", ", OpenTelemetryReceipt.Signals.Select(signal => signal.Signal))</dd></div>
+                <div><dt>Telemetry</dt><dd>@(OpenTelemetryReceipt.TelemetryConfigured ? "Configured" : "Not configured")</dd></div>
+                <div><dt>Production effect</dt><dd>@(OpenTelemetryReceipt.ProductionEffectOccurred ? "Yes" : "No")</dd></div>
+                <div><dt>Can advance</dt><dd>@(OpenTelemetryReceipt.CanAdvance ? "Yes" : "No — Automatic Registration remains separate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -417,6 +430,7 @@
     private bool IsExecutingCiCd { get; set; }
     private bool IsPublishingArtifact { get; set; }
     private bool IsDeploying { get; set; }
+    private bool IsActivatingTelemetry { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -435,6 +449,7 @@
     private GovernedCiCdExecutionReceipt? CiCdReceipt { get; set; }
     private GovernedArtifactPublicationReceipt? ArtifactReceipt { get; set; }
     private GovernedSovereignDeploymentReceipt? DeploymentReceipt { get; set; }
+    private GovernedOpenTelemetryActivationReceipt? OpenTelemetryReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -451,6 +466,7 @@
     private Guid CiCdExecutionId { get; set; }
     private Guid ArtifactPublicationId { get; set; }
     private Guid DeploymentId { get; set; }
+    private Guid OpenTelemetryActivationId { get; set; }
     private Guid DeliveryRunId { get; set; }
     private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
     private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -570,6 +586,12 @@
         ExperienceContext.HasPermission("operator.internal-service.deployment.execute") &&
         !string.IsNullOrWhiteSpace(DeploymentHumanApprovalReference);
 
+    private bool CanActivateTelemetry =>
+        DeploymentReceipt is { IsAccepted: true, DeploymentOccurred: true, ExternalEffectOccurred: true,
+            ProductionEffectOccurred: false, TelemetryConfigured: false,
+            DeploymentEvidenceReference: not null, RuntimeIdentity: not null, CanAdvance: false } &&
+        ExperienceContext.HasPermission("operator.internal-service.telemetry.activate");
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -647,6 +669,7 @@
                 CiCdReceipt = null;
                 ArtifactReceipt = null;
                 DeploymentReceipt = null;
+                OpenTelemetryReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -663,6 +686,7 @@
                 CiCdExecutionId = Guid.NewGuid();
                 ArtifactPublicationId = Guid.NewGuid();
                 DeploymentId = Guid.NewGuid();
+                OpenTelemetryActivationId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -1278,7 +1302,43 @@
         finally { IsDeploying = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-17", "2026.09.23", "1717171717171717171717171717171717171717171717171717171717171717", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
+    private async Task ActivateTelemetryAsync()
+    {
+        if (!CanActivateTelemetry || DeploymentReceipt is null) return;
+        IsActivatingTelemetry = true;
+        try
+        {
+            var request = new OpenTelemetryActivationRequest(
+                OpenTelemetryActivationId, DeliveryRunId, DeploymentReceipt.RuntimeIdentity!,
+                DeploymentReceipt.ArtifactContentSha256Digest, DeploymentReceipt.DeploymentEvidenceReference!, false,
+                Guid.Parse("18181818-1818-1818-1818-181818181818"), "1.0.0",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "PermitRenewalService", "1.0.0",
+                [GovernedTelemetrySignal.Traces, GovernedTelemetrySignal.Metrics, GovernedTelemetrySignal.Logs],
+                "policy://demo/telemetry-redaction/v1",
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/deployments/{DeploymentReceipt.DeploymentId:D}/opentelemetry", request);
+            OpenTelemetryReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedOpenTelemetryActivationReceipt>()
+                : null;
+            EvaluationMessage = OpenTelemetryReceipt is
+                { IsAccepted: true, TelemetryConfigured: true, ExternalEffectOccurred: true,
+                    ProductionEffectOccurred: false, AutomaticRegistrationOccurred: false,
+                    EnterpriseModelMutated: false, CanAdvance: false }
+                ? "Governed OpenTelemetry proved traces, metrics, logs, strict redaction, and trusted local routing. Automatic Registration remains locked."
+                : $"OpenTelemetry failed closed ({(int)response.StatusCode}). No profile, collector, signal, redaction, or activation success was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            OpenTelemetryReceipt = null;
+            EvaluationMessage = "OpenTelemetry policy, exact Deployment/run/profile, redaction verifier, trusted collectors, signed gateway, result authorization, or PostgreSQL is unavailable. No telemetry success was fabricated.";
+        }
+        finally { IsActivatingTelemetry = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-18", "2026.09.23", "1818181818181818181818181818181818181818181818181818181818181818", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1400,6 +1460,10 @@
     private sealed record GovernedArtifactPublicationReceipt(Guid PublicationId, Guid CiCdExecutionId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool ArtifactPublished, bool RegistryMutated, bool SourceMutationOccurred, bool DeploymentOccurred, bool ProductionEffectOccurred, bool CanAdvance, ArtifactCoordinate Coordinate, string ContentSha256Digest, string? ImmutableRegistryReference, bool SupplyChainVerified, IReadOnlyList<object> SupplyChainVerifications, string? ArtifactEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
     private sealed record SovereignDeploymentRequest(Guid DeploymentId, Guid DeliveryRunId, string ExpectedArtifactContentSha256Digest, string ExpectedImmutableRegistryReference, string ExpectedArtifactEvidenceReference, Guid DeploymentProfileId, string DeploymentProfileVersion, string ExpectedDeploymentProfileSha256Digest, string TargetEnvironment, bool ProductionDeploymentRequested, string HumanApprovalReference, string WorkloadIdentityReference, string SecretsPolicyReference, string RollbackPolicyReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedSovereignDeploymentReceipt(Guid DeploymentId, Guid ArtifactPublicationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool DeploymentOccurred, bool ExternalEffectOccurred, bool ProductionEffectOccurred, bool TelemetryConfigured, bool AutomaticRegistrationOccurred, bool EnterpriseModelMutated, bool CanAdvance, string ArtifactContentSha256Digest, Guid DeploymentProfileId, string TargetEnvironment, string? RuntimeIdentity, string? RollbackReference, string? DeploymentEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private enum GovernedTelemetrySignal { Traces, Metrics, Logs }
+    private sealed record OpenTelemetryActivationRequest(Guid ActivationId, Guid DeliveryRunId, string ExpectedRuntimeIdentity, string ExpectedArtifactContentSha256Digest, string ExpectedDeploymentEvidenceReference, bool ExpectedProductionEffectOccurred, Guid TelemetryProfileId, string TelemetryProfileVersion, string ExpectedTelemetryProfileSha256Digest, string ExpectedServiceName, string ExpectedServiceVersion, IReadOnlyList<GovernedTelemetrySignal> RequiredSignals, string ExpectedRedactionPolicyReference, string ExpectedRedactionPolicySha256Digest, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedTelemetrySignalResult(GovernedTelemetrySignal Signal, bool Configured, bool Accepted, string EvidenceReference);
+    private sealed record GovernedOpenTelemetryActivationReceipt(Guid ActivationId, Guid DeploymentId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool TelemetryConfigured, bool ExternalEffectOccurred, bool ProductionEffectOccurred, bool AutomaticRegistrationOccurred, bool EnterpriseModelMutated, bool CanAdvance, string RuntimeIdentity, string ArtifactContentSha256Digest, string TelemetryProfileSha256Digest, string ServiceName, string ServiceVersion, IReadOnlyList<GovernedTelemetrySignalResult> Signals, string? OpenTelemetryEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
