@@ -1,6 +1,6 @@
 # CR-044 — Integration Platform Capability
 
-Status: **Proposed — architectural decision required; implementation not authorized**
+Status: **Approved — Master Specification V3 path; capability implementation remains unauthorized**
 
 Authority baseline: `docs/PROJECT_MASTER_SPECIFICATION_V2.md` and the completed fixed 30-phase roadmap.
 
@@ -67,8 +67,10 @@ V3 should define a new governed roadmap without renaming the capability as Phase
 
 If organizational ownership, funding, or regulatory accountability cannot be unified under the platform authority, the fallback is a separate governed program after Phase 30 with binding interface, identity, policy, sovereignty, observability, and evidence contracts back to the platform.
 
-## 7. Decision boundary
+## 7. Recorded decision
 
-Required owner decision: **Approve Master Specification V3**, **direct a separate governed program after Phase 30**, or **reject/defer the capability**.
+Repository-owner decision: **Approve the Master Specification V3 path**.
 
-Until that decision is recorded, no implementation, product selection, architectural change, new roadmap item, public deployment, Production action, or use of the name Phase 31 is authorized.
+Decision date: **2026-09-24**.
+
+This approval authorizes preparation, review, and approval workflow for V3 only. V2 remains the sole implementation authority until an approved V3 replaces it. No capability implementation, product selection, architectural change, new roadmap item, public deployment, Production action, or use of the name Phase 31 is authorized by this decision.
