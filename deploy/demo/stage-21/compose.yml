@@ -1,0 +1,88 @@
+services:
+  opa:
+    image: openpolicyagent/opa:1.20.2-static@sha256:bb245e9e36be0d0ed486c240b606c56be7aba96014a4a87895fed4ba7a6dfa8d
+    command: ["run","--server","--addr=0.0.0.0:8181","--min-tls-version=1.2","--tls-cert-file=/runtime/tls/localhost.pem","--tls-private-key-file=/runtime/tls/localhost.key","--verification-key=/runtime/opa/public.pem","--verification-key-id=demo-opa-signing-01","--bundle","/runtime/opa/bundle.tar.gz"]
+    ports: ["127.0.0.1:8181:8181"]
+    volumes: ["../../../.runtime/integration-demo-stage-21:/runtime:ro"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+  postgres:
+    image: postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af
+    environment:
+      POSTGRES_DB: geaip_demo
+      POSTGRES_USER: geaip_demo
+      POSTGRES_PASSWORD: ${GEAIP_DEMO_POSTGRES_PASSWORD:?GEAIP_DEMO_POSTGRES_PASSWORD is required}
+    entrypoint: ["/bin/bash","-ec"]
+    command: ["cp /runtime/tls/localhost.pem /var/lib/postgresql/server.crt; cp /runtime/tls/localhost.key /var/lib/postgresql/server.key; chown postgres:postgres /var/lib/postgresql/server.crt /var/lib/postgresql/server.key; chmod 600 /var/lib/postgresql/server.key; exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/var/lib/postgresql/server.crt -c ssl_key_file=/var/lib/postgresql/server.key"]
+    ports: ["127.0.0.1:5433:5432"]
+    volumes:
+      - ../../../.runtime/integration-demo-stage-21:/runtime:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/001_governed_intent_registration.sql:/docker-entrypoint-initdb.d/001.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/002_enterprise_context_evidence.sql:/docker-entrypoint-initdb.d/002.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/003_existing_systems_evidence.sql:/docker-entrypoint-initdb.d/003.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/004_existing_architecture_evidence.sql:/docker-entrypoint-initdb.d/004.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/005_institutional_package_catalog.sql:/docker-entrypoint-initdb.d/005.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/006_approved_packages_evidence.sql:/docker-entrypoint-initdb.d/006.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/007_ai_planning_inputs.sql:/docker-entrypoint-initdb.d/007.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/008_ai_planning_evidence.sql:/docker-entrypoint-initdb.d/008.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/009_code_generation_inputs.sql:/docker-entrypoint-initdb.d/009.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/010_code_generation_evidence.sql:/docker-entrypoint-initdb.d/010.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/011_static_validation_inputs.sql:/docker-entrypoint-initdb.d/011.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/012_static_validation_evidence.sql:/docker-entrypoint-initdb.d/012.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/013_security_validation_inputs.sql:/docker-entrypoint-initdb.d/013.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/014_security_validation_evidence.sql:/docker-entrypoint-initdb.d/014.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/015_sandbox_inputs.sql:/docker-entrypoint-initdb.d/015.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/016_sandbox_evidence.sql:/docker-entrypoint-initdb.d/016.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/017_tests_inputs.sql:/docker-entrypoint-initdb.d/017.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/018_tests_evidence.sql:/docker-entrypoint-initdb.d/018.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/019_human_review_inputs.sql:/docker-entrypoint-initdb.d/019.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/020_human_review_evidence.sql:/docker-entrypoint-initdb.d/020.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/021_git_inputs.sql:/docker-entrypoint-initdb.d/021.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/022_git_evidence.sql:/docker-entrypoint-initdb.d/022.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/023_cicd_inputs.sql:/docker-entrypoint-initdb.d/023.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/024_cicd_evidence.sql:/docker-entrypoint-initdb.d/024.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/025_artifact_inputs.sql:/docker-entrypoint-initdb.d/025.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/026_artifact_evidence.sql:/docker-entrypoint-initdb.d/026.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/027_deployment_inputs.sql:/docker-entrypoint-initdb.d/027.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/028_deployment_evidence.sql:/docker-entrypoint-initdb.d/028.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/029_opentelemetry_inputs.sql:/docker-entrypoint-initdb.d/029.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/030_opentelemetry_evidence.sql:/docker-entrypoint-initdb.d/030.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/031_automatic_registration_inputs.sql:/docker-entrypoint-initdb.d/031.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/032_automatic_registration_evidence.sql:/docker-entrypoint-initdb.d/032.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/033_enterprise_model_inputs.sql:/docker-entrypoint-initdb.d/033.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/034_enterprise_model_evidence.sql:/docker-entrypoint-initdb.d/034.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/035_evidence_completion_inputs.sql:/docker-entrypoint-initdb.d/035.sql:ro
+      - ../../../backend/Platform.SoftwareFactory/Persistence/Migrations/036_evidence_chain.sql:/docker-entrypoint-initdb.d/036.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/packages/seed.sql:/docker-entrypoint-initdb.d/037.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/ai-planning/seed.sql:/docker-entrypoint-initdb.d/038.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/code-generation/seed.sql:/docker-entrypoint-initdb.d/039.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/tests/seed.sql:/docker-entrypoint-initdb.d/040.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/human-review/seed.sql:/docker-entrypoint-initdb.d/041.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/git/seed.sql:/docker-entrypoint-initdb.d/042.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/cicd/seed.sql:/docker-entrypoint-initdb.d/043.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/artifact/seed.sql:/docker-entrypoint-initdb.d/044.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/deployment/seed.sql:/docker-entrypoint-initdb.d/045.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/opentelemetry/seed.sql:/docker-entrypoint-initdb.d/046.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/automatic-registration/seed.sql:/docker-entrypoint-initdb.d/047.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/enterprise-model/seed.sql:/docker-entrypoint-initdb.d/048.sql:ro
+      - ../../../.runtime/integration-demo-stage-21/evidence/seed.sql:/docker-entrypoint-initdb.d/049.sql:ro
+      - geaip-stage-21-postgres:/var/lib/postgresql
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    cap_add: [CHOWN,DAC_OVERRIDE,FOWNER,SETGID,SETUID]
+  neo4j:
+    image: neo4j:2025.10-community@sha256:155c8aad10d5c838bc3bbc476c0418779086547822acb214ec5e3d49ba336907
+    environment:
+      NEO4J_AUTH: neo4j/${GEAIP_DEMO_NEO4J_PASSWORD:?GEAIP_DEMO_NEO4J_PASSWORD is required}
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    ports: ["127.0.0.1:7687:7687"]
+    volumes:
+      - ../../../.runtime/integration-demo-stage-21:/runtime:ro
+      - ./neo4j/neo4j.conf:/conf/neo4j.conf:ro
+      - geaip-stage-21-neo4j:/data
+    security_opt: ["no-new-privileges:true"]
+volumes:
+  geaip-stage-21-postgres:
+  geaip-stage-21-neo4j:

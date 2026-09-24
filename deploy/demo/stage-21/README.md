@@ -1,0 +1,7 @@
+# Integration Demo Stage 21 runtime contract
+
+Stage 21 completes the localhost-only synthetic demonstration with Governed Evidence Completion. It binds the exact accepted Enterprise Model contextualization and `EnterpriseModel`-stopped run to signed OPA scope, independent append/read/classification authorization, the existing Phase 30 append-only atomic chain store, deployment-configured sovereign signing and verification, exact ten-stage proof, and independent final result authorization.
+
+Operations must provision all Stage 20 inputs outside Git plus `.runtime/integration-demo-stage-21/evidence/seed.sql`, containing the exact nine-entry chain headed by `Telemetry`, contextualization receipt, and run snapshot. Real signing private material and trusted public verification keys must be supplied only through runtime configuration outside Git. Repository defaults contain no keys and fail closed.
+
+The demo never substitutes fake chain entries, keys, signatures, authorization, proof, or completion. No credential, secret, private key, certificate, trust material, institutional data, or runtime is stored in Git. The receipt records `EvidenceAppended: true`, `EvidenceCryptographicallyVerified: true`, `EvidenceCompleted: true`, `VerticalSliceComplete: true`, `WorkflowAdvanced: false`, `CanAdvance: false`, and `VerifiedEntryCount: 10`. No post-Evidence station or production action exists.

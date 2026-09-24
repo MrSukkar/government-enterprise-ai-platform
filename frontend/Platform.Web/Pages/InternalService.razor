@@ -7,14 +7,14 @@
 
 <section class="studio-hero" aria-labelledby="studio-heading">
     <div>
-        <p class="eyebrow">Integration Demo Stage 20 / Governed Enterprise Model Contextualization</p>
+        <p class="eyebrow">Integration Demo Stage 21 / Governed Evidence Completion</p>
         <h1 id="studio-heading">Create Internal Service Workspace</h1>
         <p class="hero-copy">Turn a government service intent into governed software, operational registration, and verifiable evidence.</p>
     </div>
     <aside class="studio-state" aria-label="Product execution status">
-        <span class="state-chip">OPA + REGISTRATION EVIDENCE + AUTHORIZED OBJECT READ</span>
-        <strong>Governed Enterprise Model contextualization available; no model mutation</strong>
-        <small>Exact Automatic Registration evidence and an authorized exact-object read precede revalidation and contextualization evidence. Traversal, analysis, mutation, and later stations remain prohibited.</small>
+        <span class="state-chip">OPA + APPEND-ONLY CHAIN + SOVEREIGN SIGNATURES + TEN-STAGE PROOF</span>
+        <strong>Governed Evidence Completion available; approved runtime keys required</strong>
+        <small>Exact contextualization evidence, independent access authorization, atomic append, sovereign signing, and full cryptographic verification precede the final proof. No later station exists.</small>
     </aside>
 </section>
 
@@ -81,6 +81,7 @@
             <button type="button" class="primary-action" disabled="@(!CanActivateTelemetry || IsActivatingTelemetry)" @onclick="ActivateTelemetryAsync">@(IsActivatingTelemetry ? "Verifying redaction and collectors..." : "Activate governed OpenTelemetry")</button>
             <button type="button" class="primary-action" disabled="@(!CanRunAutomaticRegistration || IsRunningAutomaticRegistration)" @onclick="RunAutomaticRegistrationAsync">@(IsRunningAutomaticRegistration ? "Registering atomically..." : "Execute governed Automatic Registration")</button>
             <button type="button" class="primary-action" disabled="@(!CanContextualizeEnterpriseModel || IsContextualizingEnterpriseModel)" @onclick="ContextualizeEnterpriseModelAsync">@(IsContextualizingEnterpriseModel ? "Revalidating Enterprise Object..." : "Contextualize governed Enterprise Model")</button>
+            <button type="button" class="primary-action" disabled="@(!CanCompleteEvidence || IsCompletingEvidence)" @onclick="CompleteEvidenceAsync">@(IsCompletingEvidence ? "Verifying ten-stage chain..." : "Complete governed Evidence chain")</button>
         </div>
         <p class="evaluation" role="status">@EvaluationMessage</p>
         @if (LastReceipt is not null)
@@ -327,6 +328,18 @@
                 <div><dt>Can advance</dt><dd>@(EnterpriseModelReceipt.CanAdvance ? "Yes" : "No — Evidence completion remains separate")</dd></div>
             </dl>
         }
+        @if (EvidenceCompletionReceipt is not null)
+        {
+            <dl class="validation-receipt" aria-label="Governed Evidence completion receipt">
+                <div><dt>Completion</dt><dd>@EvidenceCompletionReceipt.CompletionId</dd></div>
+                <div><dt>Policy</dt><dd>@EvidenceCompletionReceipt.PolicyOutcome</dd></div>
+                <div><dt>Chain</dt><dd>@EvidenceCompletionReceipt.ChainId</dd></div>
+                <div><dt>Entries verified</dt><dd>@EvidenceCompletionReceipt.VerifiedEntryCount</dd></div>
+                <div><dt>Cryptographic proof</dt><dd>@(EvidenceCompletionReceipt.EvidenceCryptographicallyVerified ? "Valid" : "Invalid")</dd></div>
+                <div><dt>Vertical slice</dt><dd>@(EvidenceCompletionReceipt.VerticalSliceComplete ? "Complete" : "Incomplete")</dd></div>
+                <div><dt>Can advance</dt><dd>@(EvidenceCompletionReceipt.CanAdvance ? "Yes" : "No — terminal Evidence gate")</dd></div>
+            </dl>
+        }
     </div>
 
     <aside class="workspace-card context-panel">
@@ -459,6 +472,7 @@
     private bool IsActivatingTelemetry { get; set; }
     private bool IsRunningAutomaticRegistration { get; set; }
     private bool IsContextualizingEnterpriseModel { get; set; }
+    private bool IsCompletingEvidence { get; set; }
     private IntentValidationReceipt? LastReceipt { get; set; }
     private IntentSubmissionRequest? LastSubmission { get; set; }
     private IntentRegistrationReceipt? RegistrationReceipt { get; set; }
@@ -480,6 +494,7 @@
     private GovernedOpenTelemetryActivationReceipt? OpenTelemetryReceipt { get; set; }
     private GovernedAutomaticRegistrationReceipt? AutomaticRegistrationReceipt { get; set; }
     private GovernedEnterpriseModelContextualizationReceipt? EnterpriseModelReceipt { get; set; }
+    private GovernedEvidenceCompletionReceipt? EvidenceCompletionReceipt { get; set; }
     private Guid RegistrationId { get; set; }
     private Guid ContextDiscoveryId { get; set; }
     private Guid SystemsDiscoveryId { get; set; }
@@ -499,6 +514,7 @@
     private Guid OpenTelemetryActivationId { get; set; }
     private Guid AutomaticRegistrationId { get; set; }
     private Guid EnterpriseModelContextualizationId { get; set; }
+    private Guid EvidenceCompletionId { get; set; }
     private Guid DeliveryRunId { get; set; }
     private string GitRepositoryId { get; set; } = "repository://demo/permit-renewal-service";
     private string GitExpectedBaseCommitId { get; set; } = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -636,6 +652,14 @@
             EnterpriseObjectId: not null, RequestFingerprint: not null, RegistrationEvidenceReference: not null } &&
         ExperienceContext.HasPermission("operator.internal-service.enterprise-model.contextualize");
 
+    private bool CanCompleteEvidence =>
+        EnterpriseModelReceipt is { IsAccepted: true, EnterpriseModelContextualized: true,
+            EnterpriseModelMutated: false, WorkflowAdvanced: false, EvidenceCompleted: false,
+            ContextualizationEvidenceReference: not null, CanAdvance: false } &&
+        ExperienceContext.HasPermission("operator.internal-service.evidence.complete") &&
+        ExperienceContext.HasPermission("evidence.append") &&
+        ExperienceContext.HasPermission("evidence.verify");
+
     private static IReadOnlyList<StudioStage> Stages { get; } =
     [
         new(1, "Intent", "Identity + purpose"),
@@ -716,6 +740,7 @@
                 OpenTelemetryReceipt = null;
                 AutomaticRegistrationReceipt = null;
                 EnterpriseModelReceipt = null;
+                EvidenceCompletionReceipt = null;
                 RegistrationId = Guid.NewGuid();
                 ContextDiscoveryId = Guid.NewGuid();
                 SystemsDiscoveryId = Guid.NewGuid();
@@ -735,6 +760,7 @@
                 OpenTelemetryActivationId = Guid.NewGuid();
                 AutomaticRegistrationId = Guid.NewGuid();
                 EnterpriseModelContextualizationId = Guid.NewGuid();
+                EvidenceCompletionId = Guid.NewGuid();
                 DeliveryRunId = Guid.NewGuid();
                 EvaluationMessage = "Intent validated. It is ready for signed OPA authorization and atomic PostgreSQL registration.";
             }
@@ -1449,7 +1475,39 @@
         finally { IsContextualizingEnterpriseModel = false; }
     }
 
-    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-20", "2026.09.23", "2020202020202020202020202020202020202020202020202020202020202020", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
+    private async Task CompleteEvidenceAsync()
+    {
+        if (!CanCompleteEvidence || EnterpriseModelReceipt is null) return;
+        IsCompletingEvidence = true;
+        try
+        {
+            var request = new EvidenceCompletionRequest(
+                EvidenceCompletionId, DeliveryRunId, Guid.Parse("21212121-2121-2121-2121-212121212121"),
+                "demo-permit-renewal", EnterpriseModelReceipt.ContextualizationEvidenceReference!,
+                "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                ["trace://demo/permit-renewal/deployment", "trace://demo/permit-renewal/request"],
+                ExperienceContext.Purpose, Classification, "IntegrationDemo", DemoPolicyBundle());
+            var response = await Http.PostAsJsonAsync(
+                $"api/v1/internal-services/enterprise-model/{EnterpriseModelReceipt.ContextualizationId:D}/evidence", request);
+            EvidenceCompletionReceipt = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<GovernedEvidenceCompletionReceipt>()
+                : null;
+            EvaluationMessage = EvidenceCompletionReceipt is
+                { IsAccepted: true, EvidenceAppended: true, EvidenceCryptographicallyVerified: true,
+                    EvidenceCompleted: true, VerticalSliceComplete: true, WorkflowAdvanced: false,
+                    CanAdvance: false, VerifiedEntryCount: 10 }
+                ? "The complete ten-stage chain is authorized, linked, signed, and cryptographically verified. The Integration Demo has no later station."
+                : $"Evidence completion failed closed ({(int)response.StatusCode}). No entry, signature, proof, or completion was fabricated.";
+        }
+        catch (HttpRequestException)
+        {
+            EvidenceCompletionReceipt = null;
+            EvaluationMessage = "Evidence policy, exact contextualization/run/chain, access authorization, signer, verifier, store, or result authorization is unavailable. No completion was fabricated.";
+        }
+        finally { IsCompletingEvidence = false; }
+    }
+
+    private static IntentPolicyBundle DemoPolicyBundle() => new("geaip-demo-stage-21", "2026.09.23", "2121212121212121212121212121212121212121212121212121212121212121", "signature://demo/opa/demo-opa-signing-01", "IntegrationDemo", new DateTimeOffset(2026, 9, 23, 0, 0, 0, TimeSpan.Zero));
 
     private sealed record StudioStage(int Ordinal, string Name, string Gate);
     private sealed record IntentSubmissionRequest(
@@ -1581,6 +1639,8 @@
     private sealed record GovernedAutomaticRegistrationReceipt(Guid RegistrationId, Guid ActivationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool AutomaticRegistrationOccurred, bool EnterpriseModelObjectPersisted, bool WorkflowAdvanced, bool CanAdvance, string ServiceIdentity, string ServiceVersion, string RuntimeIdentity, string ArtifactDigest, string? RequestFingerprint, RegistrationDisposition? Disposition, EnterpriseObjectId? EnterpriseObjectId, string? RegistrationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
     private sealed record EnterpriseModelContextualizationRequest(Guid ContextualizationId, Guid DeliveryRunId, Guid ExpectedEnterpriseObjectId, string ExpectedRequestFingerprint, string ExpectedRegistrationEvidenceReference, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
     private sealed record GovernedEnterpriseModelContextualizationReceipt(Guid ContextualizationId, Guid RegistrationId, Guid DeliveryRunId, string TenantId, string PolicyOutcome, bool IsAccepted, bool EnterpriseModelContextualized, bool EnterpriseModelMutated, bool WorkflowAdvanced, bool EvidenceCompleted, bool CanAdvance, EnterpriseObjectId EnterpriseObjectId, string RequestFingerprint, string? ContextualizationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
+    private sealed record EvidenceCompletionRequest(Guid CompletionId, Guid DeliveryRunId, Guid ChainId, string CorrelationId, string ExpectedContextualizationEvidenceReference, string PayloadSha256Digest, IReadOnlyList<string> TraceReferences, string Purpose, string MaximumClassification, string Environment, IntentPolicyBundle PolicyBundle);
+    private sealed record GovernedEvidenceCompletionReceipt(Guid CompletionId, Guid ContextualizationId, Guid DeliveryRunId, Guid ChainId, string TenantId, string PolicyOutcome, bool IsAccepted, bool EvidenceAppended, bool EvidenceCryptographicallyVerified, bool EvidenceCompleted, bool VerticalSliceComplete, bool WorkflowAdvanced, bool CanAdvance, string? RootSha256Digest, string? HeadSha256Digest, int VerifiedEntryCount, string? VerificationAuthorizationEvidenceReference, IReadOnlyList<string> EvidenceReferences, string NextRequiredGate, DateTimeOffset CompletedAt);
 
     protected override void OnInitialized() => ExperienceContext.Changed += Refresh;
 
