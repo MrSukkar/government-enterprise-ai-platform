@@ -18,5 +18,7 @@ Status: **Integration Demo complete — final acceptance satisfied**
 - Next permitted V3 gate: **V3-04 — Gateway enforcement adapters with identity, OPA, throttling, redaction, and fail-closed routing, after V3-03 green main CI**
 - V3 specification: `docs/PROJECT_MASTER_SPECIFICATION_V3.md`
 - V3 roadmap: `docs/V3_CAPABILITY_ROADMAP.md`
+- Fixed post-V3 path: **After V3-12 and V3 final acceptance, stop for an entity-specific Government Pilot Change Request and Pilot Readiness Acceptance; no institutional pilot or Production authority exists yet.**
+- Government pilot handoff plan: `docs/pilot/GOVERNMENT_PILOT_HANDOFF_PLAN.md`
 
 The approved platform foundation remains complete through Phase 30. The Integration Demo advances independently and remains synthetic, localhost-only, and fail closed outside its explicit runtime configuration.

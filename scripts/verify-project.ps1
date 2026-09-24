@@ -3253,6 +3253,14 @@ if (Test-Path -LiteralPath $v303AcceptancePath) {
     if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-04') { throw 'V3-03 project state is not synchronized.' }
 }
 
+$governmentPilotPlanPath = Join-Path $repositoryRoot 'docs\pilot\GOVERNMENT_PILOT_HANDOFF_PLAN.md'
+if (Test-Path -LiteralPath $governmentPilotPlanPath) {
+    $governmentPilotPlan = Get-Content -Raw $governmentPilotPlanPath
+    @('Status: **Planned — not yet authorized for institutional execution**','V3-12','Government Pilot Change Request','Pilot Readiness Acceptance','signed OCI container images','OpenAPI **3.1.0**','Current operations: **26** total','Read-only source access','not a substitute for signed release artifacts','Production authorization') | ForEach-Object { if ($governmentPilotPlan -notmatch [regex]::Escape($_)) { throw "Government pilot handoff guard missing: $_" } }
+    if ($projectState.postV3GovernmentPilot.status -ne 'planned-not-authorized' -or $projectState.postV3GovernmentPilot.handoffPlan -ne 'docs/pilot/GOVERNMENT_PILOT_HANDOFF_PLAN.md') { throw 'Government pilot project state is not synchronized.' }
+    if ($agentsContract -notmatch [regex]::Escape('Fixed post-V3 government pilot path')) { throw 'AGENTS.md does not preserve the post-V3 pilot path.' }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

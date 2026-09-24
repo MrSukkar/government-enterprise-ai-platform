@@ -49,6 +49,15 @@
     "nextGate": "V3-04 - Gateway enforcement adapters with identity, OPA, throttling, redaction, and fail-closed routing",
     "executionBoundary": "V3-03 provides product-neutral strict OpenAPI 3.1 validation, exact policy-before-mutation enforcement, atomic catalog Evidence, independent result-release authorization, and forward-only API lifecycle without configured adapters; V3-04 requires independent Change Control and acceptance; no endpoint, named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
   },
+  "postV3GovernmentPilot": {
+    "status": "planned-not-authorized",
+    "entryGate": "V3-12 and independent V3 final acceptance complete",
+    "requiredChangeControl": "Entity-specific Government Pilot Change Request",
+    "requiredAcceptance": "Pilot Readiness Acceptance",
+    "handoffPlan": "docs/pilot/GOVERNMENT_PILOT_HANDOFF_PLAN.md",
+    "deliveryModel": "Signed immutable release artifacts imported into an isolated government-controlled non-Production environment; optional read-only Git access is for audit and is not the installation mechanism",
+    "executionBoundary": "No institutional pilot, Production endpoint, public deployment, credential, trust material, real government data, or named product is authorized before the separate pilot gate"
+  },
   "lastVerified": {
     "projects": 15,
     "buildWarnings": 0,

@@ -75,3 +75,11 @@ Continue autonomously for repository reads/writes, builds, tests, documentation,
 ## Visual Studio
 
 Visual Studio is a development viewer, debugger, and interactive runner—not the source of truth. The filesystem, verification scripts, Git history, and GitHub repository are authoritative. Do not block repository work merely because an IDE window needs refresh or reload.
+
+## Fixed post-V3 government pilot path
+
+1. Complete V3-04 through V3-12 and independent V3 final acceptance before institutional execution.
+2. Then stop for an entity-specific Government Pilot Change Request and Pilot Readiness Acceptance.
+3. The pilot is isolated and non-Production, starts with synthetic then approved masked/read-only integrations, and cannot use a direct AI-to-Production path.
+4. Deliver a signed immutable release, SBOM, provenance, signatures, schemas, deployment profile, runbooks, and acceptance kit through the entity's controlled supply chain. Read-only Git access is optional for audit; cloning `main` is not the installation mechanism.
+5. Follow `docs/pilot/GOVERNMENT_PILOT_HANDOFF_PLAN.md`; do not infer pilot or Production authorization from V3 completion.

@@ -30,3 +30,9 @@ Repository defaults remain unconfigured and fail closed throughout. Institutiona
 ## Completion condition
 
 The program is complete only when V3-01 through V3-12 are independently accepted and the final synthetic demonstration proves permitted and denied paths across all six layers with cryptographic Evidence. Completion does not itself authorize institutional or Production operation.
+
+## Fixed post-V3 path
+
+After V3-12 and independent V3 final acceptance, the next candidate gate is an entity-specific **Government Pilot Change Request** followed by **Pilot Readiness Acceptance**. The pilot is isolated, non-Production, begins with synthetic then approved masked/read-only integrations, and follows `docs/pilot/GOVERNMENT_PILOT_HANDOFF_PLAN.md`.
+
+The authoritative handoff is a signed immutable release and verification package imported into the entity's controlled environment. Read-only Git access may support audit, but cloning `main` is not the installation or release mechanism. Production readiness remains a later independent decision.
