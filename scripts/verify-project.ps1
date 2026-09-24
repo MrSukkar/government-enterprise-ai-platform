@@ -3158,6 +3158,34 @@ if (Test-Path $integrationDemoFinalAcceptancePath) {
     if ($roadmap -notmatch [regex]::Escape('independent final Integration Demo acceptance are complete')) { throw 'Integration Demo roadmap closure is missing.' }
 }
 
+$v3SpecificationPath = Join-Path $repositoryRoot 'docs\PROJECT_MASTER_SPECIFICATION_V3.md'
+if (Test-Path $v3SpecificationPath) {
+    $v3Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-045-MASTER-SPECIFICATION-V3.md'
+        Roadmap = Join-Path $repositoryRoot 'docs\V3_CAPABILITY_ROADMAP.md'
+        Acceptance = Join-Path $repositoryRoot 'docs\v3\V3_SPECIFICATION_PREPARATION_ACCEPTANCE.md'
+        Agents = Join-Path $repositoryRoot 'AGENTS.md'
+        Status = Join-Path $repositoryRoot 'PROJECT_STATUS.md'
+        State = Join-Path $repositoryRoot 'project-os\project-state.json'
+    }
+    $v3Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "V3 governance artifact missing: $_" } }
+    $v3 = Get-Content -Raw $v3SpecificationPath
+    @('Status: **Approved — sole implementation authority**','Consumers & Channels','API Management & Gateway','Integration & Orchestration','Event & Messaging','Security & Governance','Observability & Operations','Security gate','Compliance gate','Sovereignty gate','HA/DR gate','no direct `AI -> Production` path','Repository defaults remain unconfigured and fail closed','V3-01','Phase 31') | ForEach-Object { if ($v3 -notmatch [regex]::Escape($_)) { throw "V3 authority guard missing: $_" } }
+    $v3Change = Get-Content -Raw $v3Paths.Change
+    @('Status: **Approved**','Decision date: **2026-09-24**','adopt Master Specification V3','does not approve any named product') | ForEach-Object { if ($v3Change -notmatch [regex]::Escape($_)) { throw "V3 change-control guard missing: $_" } }
+    $v3Roadmap = Get-Content -Raw $v3Paths.Roadmap
+    @('Status: **Approved','V3-01','V3-12','independently governed','fail closed','does not create Phase 31') | ForEach-Object { if ($v3Roadmap -notmatch [regex]::Escape($_)) { throw "V3 roadmap guard missing: $_" } }
+    $v3Acceptance = Get-Content -Raw $v3Paths.Acceptance
+    @('Status: **Satisfied','V3 is the sole implementation authority','2026-09-24','V3-01','Phase 31') | ForEach-Object { if ($v3Acceptance -notmatch [regex]::Escape($_)) { throw "V3 acceptance guard missing: $_" } }
+    $agentsContract = Get-Content -Raw $v3Paths.Agents
+    if ($agentsContract -notmatch [regex]::Escape('docs/PROJECT_MASTER_SPECIFICATION_V3.md` is the only implementation authority')) { throw 'AGENTS.md does not identify V3 as implementation authority.' }
+    $projectStatus = Get-Content -Raw $v3Paths.Status
+    @('docs/PROJECT_MASTER_SPECIFICATION_V3.md','V3-01 — Constitutional contracts') | ForEach-Object { if ($projectStatus -notmatch [regex]::Escape($_)) { throw "V3 project status guard missing: $_" } }
+    $projectState = Get-Content -Raw $v3Paths.State | ConvertFrom-Json
+    if ($projectState.specification -ne 'PROJECT MASTER SPECIFICATION v3 — APPROVED') { throw 'Project state does not identify approved V3.' }
+    if ($projectState.architectureEvolution.status -ne 'approved') { throw 'V3 architecture evolution is not approved.' }
+}
+
 if (-not $NoBuild) {
     & dotnet build $solutionPath --no-restore --nologo
     if ($LASTEXITCODE -ne 0) {

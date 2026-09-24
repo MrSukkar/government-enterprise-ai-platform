@@ -1,6 +1,6 @@
-# V3 Integration Platform Capability Roadmap — DRAFT
+# V3 Integration Platform Capability Roadmap
 
-Status: **Draft — execution prohibited until Master Specification V3 approval**
+Status: **Approved — V3-01 is the next permitted gate**
 
 This roadmap does not create Phase 31 and does not alter the historical completion of Phases 01–30.
 

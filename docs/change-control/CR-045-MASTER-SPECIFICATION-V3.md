@@ -1,6 +1,6 @@
 # CR-045 — Adopt Project Master Specification V3
 
-Status: **Proposed — owner approval required**
+Status: **Approved**
 
 Predecessor: `docs/change-control/CR-044-INTEGRATION-PLATFORM-CAPABILITY.md`.
 
@@ -46,4 +46,6 @@ Approve V3 as proposed. It maintains one identity, policy, sovereignty, observab
 
 Approval authorizes V3 Capability Increment V3-01 to begin under its own Change Control and acceptance gate. It does not approve any named product, institutional pilot, Production deployment, public endpoint, credential, private key, certificate, trust material, or direct AI action.
 
-Owner decision: **Pending**.
+Owner decision: **Approved — adopt Master Specification V3 and its Capability Increment roadmap**.
+
+Decision date: **2026-09-24**.

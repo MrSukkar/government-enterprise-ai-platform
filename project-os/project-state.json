@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "project": "Government Enterprise AI Platform",
-  "specification": "PROJECT MASTER SPECIFICATION v2 — APPROVED",
+  "specification": "PROJECT MASTER SPECIFICATION v3 — APPROVED",
   "currentPhase": {
     "number": 30,
     "name": "Evidence Engine",
@@ -36,13 +36,14 @@
   },
   "architectureEvolution": {
     "target": "Project Master Specification V3",
-    "status": "draft-ready-for-owner-approval",
+    "status": "approved",
     "approvedPath": "docs/change-control/CR-044-INTEGRATION-PLATFORM-CAPABILITY.md",
     "changeControl": "docs/change-control/CR-045-MASTER-SPECIFICATION-V3.md",
     "draftSpecification": "docs/PROJECT_MASTER_SPECIFICATION_V3.md",
     "draftRoadmap": "docs/V3_CAPABILITY_ROADMAP.md",
     "acceptanceArtifact": "docs/v3/V3_SPECIFICATION_PREPARATION_ACCEPTANCE.md",
-    "executionBoundary": "V2 remains the sole implementation authority; no V3 Capability Increment, product selection, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized until CR-045 is explicitly approved and merged with green CI"
+    "nextGate": "V3-01 - Constitutional contracts and Enterprise Model types",
+    "executionBoundary": "V3 is the sole implementation authority and V2 is its immutable historical baseline; V3-01 may begin only under independent Change Control and acceptance; no named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
   },
   "lastVerified": {
     "projects": 15,

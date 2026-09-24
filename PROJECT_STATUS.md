@@ -1,7 +1,7 @@
 # Project Status
 
 Status: **Integration Demo complete — final acceptance satisfied**
-- Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V2.md`
+- Source of truth: `docs/PROJECT_MASTER_SPECIFICATION_V3.md`
 - Roadmap: `docs/30_PHASE_ROADMAP.md`
 - Current implementation phase: **Phase 30 complete**
 - Completed phases: **01 — Product Constitution** through **30 — Evidence Engine**
@@ -13,8 +13,9 @@ Status: **Integration Demo complete — final acceptance satisfied**
 - Final Integration Demo acceptance: `docs/demo/INTEGRATION_DEMO_FINAL_ACCEPTANCE.md`
 - Next Integration Demo gate: **None — the bounded localhost demonstration is closed**
 - Execution boundary: **The synthetic localhost Integration Demo is complete through terminal Evidence. Defaults remain unconfigured and fail closed; no institutional or Production authorization, public deployment, post-Evidence station, architectural deviation, or Phase 31 is authorized.**
-- Architecture evolution: **Master Specification V3 proposal prepared under approved CR-044 path; CR-045 owner decision pending. V2 remains the sole implementation authority and no V3 Capability Increment is authorized.**
-- V3 draft: `docs/PROJECT_MASTER_SPECIFICATION_V3.md`
-- V3 draft roadmap: `docs/V3_CAPABILITY_ROADMAP.md`
+- Architecture evolution: **Master Specification V3 approved under CR-045 as the sole implementation authority; V2 remains the immutable historical baseline.**
+- Next permitted V3 gate: **V3-01 — Constitutional contracts and Enterprise Model types**
+- V3 specification: `docs/PROJECT_MASTER_SPECIFICATION_V3.md`
+- V3 roadmap: `docs/V3_CAPABILITY_ROADMAP.md`
 
 The approved platform foundation remains complete through Phase 30. The Integration Demo advances independently and remains synthetic, localhost-only, and fail closed outside its explicit runtime configuration.

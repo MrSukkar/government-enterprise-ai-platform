@@ -1,10 +1,10 @@
-# PROJECT MASTER SPECIFICATION v3 — DRAFT FOR APPROVAL
+# PROJECT MASTER SPECIFICATION v3 — APPROVED
 
-Status: **Draft — not implementation authority**
+Status: **Approved — sole implementation authority**
 
 Decision basis: `docs/change-control/CR-044-INTEGRATION-PLATFORM-CAPABILITY.md`.
 
-Until this document is explicitly approved, `docs/PROJECT_MASTER_SPECIFICATION_V2.md` remains the sole implementation authority. This draft authorizes no implementation, procurement, institutional pilot, public deployment, Production action, credential, trust material, product selection, or Phase 31.
+Approved by the repository owner on **2026-09-24** under CR-045. V2 remains the immutable historical baseline incorporated by this specification. Approval authorizes only the sequential V3 Capability Increments under their own Change Control and acceptance gates; it does not authorize procurement, institutional pilot, public deployment, Production action, credentials, trust material, named product selection, or Phase 31.
 
 ## 1. Purpose and continuity
 
@@ -208,7 +208,7 @@ An increment cannot begin before the preceding increment is accepted, merged, an
 
 ## 10. Acceptance boundary
 
-V3 becomes implementation authority only after:
+V3 became implementation authority after:
 
 1. CR-045 is explicitly approved by the repository owner;
 2. all four hard gates are represented in the specification and roadmap;
@@ -217,4 +217,4 @@ V3 becomes implementation authority only after:
 5. the approved document is merged fast-forward with green final CI on `main`;
 6. `PROJECT_STATUS.md`, `project-os/project-state.json`, and `AGENTS.md` identify V3 as the sole implementation authority.
 
-Until all six conditions are met, this document remains a non-authoritative draft and no Capability Increment may be implemented.
+All six conditions were satisfied for the specification-approval gate. V3-01 is the next permitted Capability Increment and must use its own Change Control and acceptance gate.

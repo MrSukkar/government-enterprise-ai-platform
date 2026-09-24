@@ -1,6 +1,6 @@
 # Master Specification V3 Preparation Acceptance
 
-Status: **Satisfied — preparation only; owner approval pending**
+Status: **Satisfied — V3 approved as implementation authority**
 
 ## Accepted preparation scope
 
@@ -10,7 +10,7 @@ Status: **Satisfied — preparation only; owner approval pending**
 - V2 constitutional invariants and completed Phase 01–30 history are preserved.
 - The roadmap uses V3 Capability Increments and does not create Phase 31.
 - Product selection, implementation, institutional pilot, public deployment, and Production remain unauthorized.
-- V2 remains the sole implementation authority while CR-045 is pending.
+- V3 is the sole implementation authority; V2 remains its immutable historical baseline.
 
 ## Verification
 
@@ -20,4 +20,4 @@ Status: **Satisfied — preparation only; owner approval pending**
 
 ## Decision boundary
 
-This acceptance establishes that the V3 proposal is ready for architectural approval. It does not approve V3 and cannot authorize V3-01 or any runtime implementation.
+Repository-owner approval was recorded on 2026-09-24. This acceptance closes the specification-approval gate and authorizes V3-01 to begin only under its own Change Control and acceptance gate. It does not authorize named products, institutional pilots, public deployment, Production, credentials, trust material, or Phase 31.

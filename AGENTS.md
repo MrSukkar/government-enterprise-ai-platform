@@ -4,7 +4,7 @@ This file is the persistent operating contract for every Codex session working i
 
 ## Authority and scope
 
-1. `docs/PROJECT_MASTER_SPECIFICATION_V2.md` is the only implementation authority.
+1. `docs/PROJECT_MASTER_SPECIFICATION_V3.md` is the only implementation authority. V2 remains the immutable historical baseline incorporated by V3.
 2. `docs/30_PHASE_ROADMAP.md` defines the fixed phase order.
 3. `PROJECT_STATUS.md` and `project-os/project-state.json` define the current gate.
 4. Do not use or restore any previous unapproved package.
