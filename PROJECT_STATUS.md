@@ -14,8 +14,8 @@ Status: **Integration Demo complete — final acceptance satisfied**
 - Next Integration Demo gate: **None — the bounded localhost demonstration is closed**
 - Execution boundary: **The synthetic localhost Integration Demo is complete through terminal Evidence. Defaults remain unconfigured and fail closed; no institutional or Production authorization, public deployment, post-Evidence station, architectural deviation, or Phase 31 is authorized.**
 - Architecture evolution: **Master Specification V3 approved under CR-045 as the sole implementation authority; V2 remains the immutable historical baseline.**
-- Completed V3 gates: **V3-01–02 — Constitutional contracts through governed Consumer/Channel lifecycle**
-- Next permitted V3 gate: **V3-03 — API lifecycle, catalog, OpenAPI 3.1 validation, and result-release contracts, after V3-02 green main CI**
+- Completed V3 gates: **V3-01–03 — Constitutional contracts through governed API lifecycle and catalog**
+- Next permitted V3 gate: **V3-04 — Gateway enforcement adapters with identity, OPA, throttling, redaction, and fail-closed routing, after V3-03 green main CI**
 - V3 specification: `docs/PROJECT_MASTER_SPECIFICATION_V3.md`
 - V3 roadmap: `docs/V3_CAPABILITY_ROADMAP.md`
 

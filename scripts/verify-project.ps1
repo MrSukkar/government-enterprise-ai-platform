@@ -3227,7 +3227,30 @@ if (Test-Path -LiteralPath $v302AcceptancePath) {
     @('AuthorizeRegistrationAsync','decision.ValidateFor','repository.RegisterAtomicallyAsync','AuthorizeLifecycleAsync','repository.TransitionAtomicallyAsync') | ForEach-Object { if ($v302Engine -notmatch [regex]::Escape($_)) { throw "V3-02 orchestration guard missing: $_" } }
     $v302Acceptance = Get-Content -Raw $v302AcceptancePath
     @('Status: **Satisfied**','three denied paths rejected without mutation','15 projects, 0 warnings, 0 errors','153 dependencies','V3-03 remains prohibited') | ForEach-Object { if ($v302Acceptance -notmatch [regex]::Escape($_)) { throw "V3-02 acceptance guard missing: $_" } }
-    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-03') { throw 'V3-02 project state is not synchronized.' }
+    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete') { throw 'V3-02 project state is not synchronized.' }
+}
+
+$v303AcceptancePath = Join-Path $repositoryRoot 'docs\v3\V3_03_API_LIFECYCLE_CATALOG_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $v303AcceptancePath) {
+    $v303Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-048-V3-03-API-LIFECYCLE-CATALOG.md'
+        Validation = Join-Path $repositoryRoot 'backend\Platform.Integrations\ApiCatalog\OpenApi31ContractValidator.cs'
+        Contracts = Join-Path $repositoryRoot 'backend\Platform.Integrations\ApiCatalog\ApiCatalogContracts.cs'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.Integrations\ApiCatalog\GovernedApiCatalog.cs'
+        Verification = Join-Path $repositoryRoot 'verification\V3.IntegrationContracts.Verification\Program.cs'
+    }
+    $v303Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "V3-03 artifact missing: $_" } }
+    $v303Change = Get-Content -Raw $v303Paths.Change
+    @('Status: **Approved for bounded implementation**','Security','Compliance','Sovereignty','HA/DR','before mutation','result-release authorization','fail closed','Phase 31') | ForEach-Object { if ($v303Change -notmatch [regex]::Escape($_)) { throw "V3-03 change-control guard missing: $_" } }
+    $v303Validation = Get-Content -Raw $v303Paths.Validation
+    @('StrictOpenApi31ContractValidator','3.1.0','operationId','DocumentSha256Digest','RequireAccepted') | ForEach-Object { if ($v303Validation -notmatch [regex]::Escape($_)) { throw "V3-03 validation guard missing: $_" } }
+    $v303Contracts = Get-Content -Raw $v303Paths.Contracts
+    @('ComputeFingerprint','ApiCatalogPolicyDecision','ApiCatalogReleaseDecision','ExpectedVersion','Proposed, ApiLifecycleState.Published','Published, ApiLifecycleState.Deprecated','Deprecated, ApiLifecycleState.Retired') | ForEach-Object { if ($v303Contracts -notmatch [regex]::Escape($_)) { throw "V3-03 contract guard missing: $_" } }
+    $v303Engine = Get-Content -Raw $v303Paths.Engine
+    @('validator.Validate','AuthorizePublicationAsync','policy.RequireExact','PublishAtomicallyAsync','AuthorizeReleaseAsync','release.RequireExact') | ForEach-Object { if ($v303Engine -notmatch [regex]::Escape($_)) { throw "V3-03 orchestration guard missing: $_" } }
+    $v303Acceptance = Get-Content -Raw $v303AcceptancePath
+    @('Status: **Satisfied**','release denial','15 projects, 0 warnings, 0 errors','153 dependencies','V3-04 remains prohibited') | ForEach-Object { if ($v303Acceptance -notmatch [regex]::Escape($_)) { throw "V3-03 acceptance guard missing: $_" } }
+    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-04') { throw 'V3-03 project state is not synchronized.' }
 }
 
 if (-not $NoBuild) {

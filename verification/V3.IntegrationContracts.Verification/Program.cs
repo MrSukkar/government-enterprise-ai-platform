@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Platform.Domain.Security;
 using Platform.EnterpriseModel.Model;
 using Platform.Integrations.Constitution;
+using Platform.Integrations.ApiCatalog;
 using Platform.Integrations.Registry;
 
 var required = new IntegrationSemanticRule(IntegrationSemanticDisposition.Required, "policy://delivery/required");
@@ -98,6 +99,48 @@ if (repository.LifecycleMutations != 1) throw new InvalidOperationException("Inv
 
 Console.WriteLine("V3-02 REGISTRY VERIFIED: permitted registration and lifecycle transition committed atomically; denial, scope mismatch, and rollback fail closed without mutation.");
 
+const string validOpenApi = """
+{"openapi":"3.1.0","info":{"title":"Synthetic","version":"1.0.0"},"paths":{"/orders":{"get":{"operationId":"getOrders"}}}}
+""";
+var apiRequest = new ApiCatalogPublicationRequest(
+    Guid.Parse("05050505-0505-0505-0505-050505050505"), "subject://synthetic-publisher", contract,
+    validOpenApi, 0, DateTimeOffset.Parse("2026-09-24T00:02:00Z"));
+var apiPolicy = new VerifyingApiCatalogPolicyAuthorizer { Permit = true };
+var apiRepository = new VerifyingApiCatalogRepository();
+var apiRelease = new VerifyingApiCatalogResultAuthorizer { Permit = true };
+var apiCatalog = new GovernedApiCatalog(new StrictOpenApi31ContractValidator(), apiPolicy, apiRepository, apiRelease);
+var publication = await apiCatalog.PublishAsync(apiRequest, CancellationToken.None);
+if (publication.Lifecycle != ApiLifecycleState.Published || apiRepository.Mutations != 1 || apiRelease.Calls != 1)
+    throw new InvalidOperationException("Permitted API publication was not atomically committed and released.");
+
+await ExpectDeniedAsync(() => apiCatalog.PublishAsync(apiRequest with
+{
+    RequestId = Guid.NewGuid(), OpenApiDocument = validOpenApi.Replace("3.1.0", "3.0.3", StringComparison.Ordinal)
+}, CancellationToken.None), "OpenAPI 3.0 document");
+await ExpectDeniedAsync(() => apiCatalog.PublishAsync(apiRequest with
+{
+    RequestId = Guid.NewGuid(),
+    OpenApiDocument = """
+    {"openapi":"3.1.0","info":{"title":"Synthetic","version":"1.0.0"},"paths":{"/a":{"get":{"operationId":"duplicate"}},"/b":{"post":{"operationId":"duplicate"}}}}
+    """
+}, CancellationToken.None), "duplicate operationId");
+if (apiRepository.Mutations != 1) throw new InvalidOperationException("Invalid OpenAPI reached persistence.");
+
+apiPolicy.Permit = false;
+await ExpectDeniedAsync(() => apiCatalog.PublishAsync(apiRequest with { RequestId = Guid.NewGuid() }, CancellationToken.None), "API catalog OPA denial");
+if (apiRepository.Mutations != 1) throw new InvalidOperationException("Denied API publication reached persistence.");
+
+apiPolicy.Permit = true;
+apiRelease.Permit = false;
+await ExpectDeniedAsync(() => apiCatalog.PublishAsync(apiRequest with { RequestId = Guid.NewGuid() }, CancellationToken.None), "result release denial");
+if (apiRepository.Mutations != 2 || apiRelease.Calls != 2)
+    throw new InvalidOperationException("Result release authorization did not follow the atomic commit exactly once.");
+
+_ = new ApiLifecycleTransitionRequest(ApiLifecycleState.Proposed, ApiLifecycleState.Published).Validate();
+await ExpectDeniedAsync(() => Task.Run(() => new ApiLifecycleTransitionRequest(ApiLifecycleState.Published, ApiLifecycleState.Proposed).Validate()), "API lifecycle rollback");
+
+Console.WriteLine("V3-03 API CATALOG VERIFIED: strict OpenAPI 3.1, OPA-before-mutation, atomic publication, result-release authorization, and forward-only lifecycle enforced.");
+
 static void ExpectDenied(IntegrationConstitutionalContract denied, string caseName)
 {
     try
@@ -163,5 +206,42 @@ sealed class VerifyingRepository : IConsumerChannelRegistryRepository
         return Task.FromResult(new ConsumerChannelLifecycleCommit(
             request.TransitionId, request.RegistrationId, request.ComputeFingerprint(), request.From, request.To,
             request.ExpectedVersion + 1, ["evidence://lifecycle/v3-02"], DateTimeOffset.Parse("2026-09-24T00:01:01Z")));
+    }
+}
+
+sealed class VerifyingApiCatalogPolicyAuthorizer : IApiCatalogPolicyAuthorizer
+{
+    public bool Permit { get; set; }
+
+    public Task<ApiCatalogPolicyDecision> AuthorizePublicationAsync(ApiCatalogPublicationRequest request, OpenApi31ValidationReport report, CancellationToken cancellationToken) =>
+        Task.FromResult(new ApiCatalogPolicyDecision(Guid.NewGuid(), "integration.api.catalog.publish",
+            request.ComputeFingerprint(report.DocumentSha256Digest), report.DocumentSha256Digest,
+            request.Contract.TenantId, request.Contract.Purpose, request.Contract.Environment, Permit,
+            "opa://bundle/v3-03", ["evidence://opa/v3-03"]));
+}
+
+sealed class VerifyingApiCatalogRepository : IApiCatalogRepository
+{
+    public int Mutations { get; private set; }
+
+    public Task<ApiCatalogCommit> PublishAtomicallyAsync(ApiCatalogPublicationRequest request, OpenApi31ValidationReport report, ApiCatalogPolicyDecision decision, CancellationToken cancellationToken)
+    {
+        Mutations++;
+        return Task.FromResult(new ApiCatalogCommit(Guid.NewGuid(), request.RequestId, request.Contract.ContractId,
+            request.Contract.Version, report.DocumentSha256Digest, ApiLifecycleState.Published, request.ExpectedVersion + 1,
+            report.OperationIds, ["evidence://catalog/v3-03"], DateTimeOffset.Parse("2026-09-24T00:02:01Z")));
+    }
+}
+
+sealed class VerifyingApiCatalogResultAuthorizer : IApiCatalogResultAuthorizer
+{
+    public bool Permit { get; set; }
+    public int Calls { get; private set; }
+
+    public Task<ApiCatalogReleaseDecision> AuthorizeReleaseAsync(ApiCatalogCommit commit, CancellationToken cancellationToken)
+    {
+        Calls++;
+        return Task.FromResult(new ApiCatalogReleaseDecision(Guid.NewGuid(), commit.CatalogEntryId,
+            commit.DocumentSha256Digest, Permit, ["evidence://release/v3-03"]));
     }
 }
