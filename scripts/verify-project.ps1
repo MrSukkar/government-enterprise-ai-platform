@@ -3180,7 +3180,7 @@ if (Test-Path $v3SpecificationPath) {
     $agentsContract = Get-Content -Raw $v3Paths.Agents
     if ($agentsContract -notmatch [regex]::Escape('docs/PROJECT_MASTER_SPECIFICATION_V3.md` is the only implementation authority')) { throw 'AGENTS.md does not identify V3 as implementation authority.' }
     $projectStatus = Get-Content -Raw $v3Paths.Status
-    @('docs/PROJECT_MASTER_SPECIFICATION_V3.md','V3-01 — Constitutional contracts') | ForEach-Object { if ($projectStatus -notmatch [regex]::Escape($_)) { throw "V3 project status guard missing: $_" } }
+    @('docs/PROJECT_MASTER_SPECIFICATION_V3.md','Completed V3 gates:') | ForEach-Object { if ($projectStatus -notmatch [regex]::Escape($_)) { throw "V3 project status guard missing: $_" } }
     $projectState = Get-Content -Raw $v3Paths.State | ConvertFrom-Json
     if ($projectState.specification -ne 'PROJECT MASTER SPECIFICATION v3 — APPROVED') { throw 'Project state does not identify approved V3.' }
     if ($projectState.architectureEvolution.status -ne 'approved') { throw 'V3 architecture evolution is not approved.' }
@@ -3204,7 +3204,30 @@ if (Test-Path -LiteralPath $v301AcceptancePath) {
     @('Integration.Consumer','Integration.Channel','Integration.Api','Integration.Message','Integration.Schema','Integration.Flow','Integration.Orchestration') | ForEach-Object { if ($v301Types -notmatch [regex]::Escape($_)) { throw "V3-01 Enterprise Model type missing: $_" } }
     $v301Acceptance = Get-Content -Raw $v301AcceptancePath
     @('Status: **Satisfied**','15 projects, 0 warnings, 0 errors','153 dependencies','five denied','V3-02 remains prohibited') | ForEach-Object { if ($v301Acceptance -notmatch [regex]::Escape($_)) { throw "V3-01 acceptance guard missing: $_" } }
-    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-02') { throw 'V3-01 project state is not synchronized.' }
+    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete') { throw 'V3 capability project state is not synchronized.' }
+}
+
+$v302AcceptancePath = Join-Path $repositoryRoot 'docs\v3\V3_02_CONSUMER_CHANNEL_LIFECYCLE_ACCEPTANCE.md'
+if (Test-Path -LiteralPath $v302AcceptancePath) {
+    $v302Paths = @{
+        Change = Join-Path $repositoryRoot 'docs\change-control\CR-047-V3-02-CONSUMER-CHANNEL-LIFECYCLE.md'
+        Registration = Join-Path $repositoryRoot 'backend\Platform.Integrations\Registry\ConsumerChannelRegistrationContracts.cs'
+        Lifecycle = Join-Path $repositoryRoot 'backend\Platform.Integrations\Registry\ConsumerChannelLifecycleContracts.cs'
+        Engine = Join-Path $repositoryRoot 'backend\Platform.Integrations\Registry\GovernedConsumerChannelRegistry.cs'
+        Verification = Join-Path $repositoryRoot 'verification\V3.IntegrationContracts.Verification\Program.cs'
+    }
+    $v302Paths.Values | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { throw "V3-02 artifact missing: $_" } }
+    $v302Change = Get-Content -Raw $v302Paths.Change
+    @('Status: **Approved for bounded implementation**','Security','Compliance','Sovereignty','HA/DR','policy authorization occurs before mutation','fail closed','Phase 31') | ForEach-Object { if ($v302Change -notmatch [regex]::Escape($_)) { throw "V3-02 change-control guard missing: $_" } }
+    $v302Registration = Get-Content -Raw $v302Paths.Registration
+    @('ComputeFingerprint','ConsumerChannelPolicyDecision','Permit','PolicyBundleReference','EvidenceReferences','ExpectedVersion','ConsumerChannelRegistrationDisposition') | ForEach-Object { if ($v302Registration -notmatch [regex]::Escape($_)) { throw "V3-02 registration guard missing: $_" } }
+    $v302Lifecycle = Get-Content -Raw $v302Paths.Lifecycle
+    @('(LifecycleState.Proposed, LifecycleState.Active)','(LifecycleState.Active, LifecycleState.Deprecated)','(LifecycleState.Deprecated, LifecycleState.Retired)','EvidenceReferences') | ForEach-Object { if ($v302Lifecycle -notmatch [regex]::Escape($_)) { throw "V3-02 lifecycle guard missing: $_" } }
+    $v302Engine = Get-Content -Raw $v302Paths.Engine
+    @('AuthorizeRegistrationAsync','decision.ValidateFor','repository.RegisterAtomicallyAsync','AuthorizeLifecycleAsync','repository.TransitionAtomicallyAsync') | ForEach-Object { if ($v302Engine -notmatch [regex]::Escape($_)) { throw "V3-02 orchestration guard missing: $_" } }
+    $v302Acceptance = Get-Content -Raw $v302AcceptancePath
+    @('Status: **Satisfied**','three denied paths rejected without mutation','15 projects, 0 warnings, 0 errors','153 dependencies','V3-03 remains prohibited') | ForEach-Object { if ($v302Acceptance -notmatch [regex]::Escape($_)) { throw "V3-02 acceptance guard missing: $_" } }
+    if ($projectState.architectureEvolution.currentIncrementStatus -ne 'complete' -or $projectState.architectureEvolution.nextGate -notmatch '^V3-03') { throw 'V3-02 project state is not synchronized.' }
 }
 
 if (-not $NoBuild) {

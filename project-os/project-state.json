@@ -42,12 +42,12 @@
     "draftSpecification": "docs/PROJECT_MASTER_SPECIFICATION_V3.md",
     "draftRoadmap": "docs/V3_CAPABILITY_ROADMAP.md",
     "acceptanceArtifact": "docs/v3/V3_SPECIFICATION_PREPARATION_ACCEPTANCE.md",
-    "currentIncrement": "V3-01 - Constitutional contracts and Enterprise Model types",
+    "currentIncrement": "V3-02 - Governed consumer/channel registration and lifecycle contracts",
     "currentIncrementStatus": "complete",
-    "changeControl": "docs/change-control/CR-046-V3-01-CONSTITUTIONAL-CONTRACTS.md",
-    "acceptanceArtifact": "docs/v3/V3_01_CONSTITUTIONAL_CONTRACTS_ACCEPTANCE.md",
-    "nextGate": "V3-02 - Governed consumer/channel registration and lifecycle contracts",
-    "executionBoundary": "V3-01 provides inert product-neutral contracts and deterministic fail-closed validation only; V3-02 requires independent Change Control and acceptance; no runtime adapter, named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
+    "changeControl": "docs/change-control/CR-047-V3-02-CONSUMER-CHANNEL-LIFECYCLE.md",
+    "acceptanceArtifact": "docs/v3/V3_02_CONSUMER_CHANNEL_LIFECYCLE_ACCEPTANCE.md",
+    "nextGate": "V3-03 - API lifecycle, catalog, OpenAPI 3.1 validation, and result-release contracts",
+    "executionBoundary": "V3-02 provides product-neutral registration and lifecycle contracts, exact policy-before-mutation enforcement, and atomic Evidence boundaries without configured adapters; V3-03 requires independent Change Control and acceptance; no endpoint, named product, institutional pilot, public deployment, Production action, Phase 31, credential, or trust material is authorized"
   },
   "lastVerified": {
     "projects": 15,
